@@ -37,12 +37,9 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 
 \examples{
 data(hockey)
-
-## fit a regularization path for 20 significant players
-## team effects are unpenalized
-fit <- gamlr(covars=cbind(Xteam,Xplayer), response=Ygoals,
-               free=1:30, verb=1, family="binomial", scale=FALSE,
-               stoparg=list(rule="maxvar", val=20))	
+fit <- gamlr(x=cbind(Xteam,Xplayer), y=response=Ygoals,
+               weight=c(rep(0,ncol(Xteam)),rep(1,ncol(Xplayer))), 
+               family="binomial", standardize=FALSE)	
 plot(fit)
 summary(fit)
 
