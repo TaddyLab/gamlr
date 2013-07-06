@@ -178,7 +178,7 @@ summary.gamlr <- function(object, ...){
 
   return(data.frame(
     pen=object$penalty,
-    par=diff(fit$b@p)+1,
+    par=diff(object$b@p)+1,
     df=object$df,
     r2=1-object$dev/object$dev[1],
     bic=BIC(object)))
@@ -200,8 +200,6 @@ logLik.gamlr <- function(object, ...){
   ll
 }
 
-family.gamlr <- function(object, ...)
-  return(object$family)
 
 
 

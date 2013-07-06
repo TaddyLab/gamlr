@@ -72,7 +72,7 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
 plot.cv.gamlr <- function(x, ...){
   argl = list(...)
   if(is.null(argl$xlab)) argl$xlab="log penalty"
-  if(is.null(argl$ylab)) argl$ylab=sprintf("%s deviance",family(x))
+  if(is.null(argl$ylab)) argl$ylab=sprintf("%s deviance",x$family)
   if(is.null(argl$pch)) argl$pch=20
   if(is.null(argl$col)) argl$col=4
 
@@ -128,11 +128,6 @@ print.cv.gamlr <- function(x, ...){
     x$nfold, x$gamlr$family))
   cat("\n\n")
 }
-
-family.cv.gamlr <- function(object, ...)
-  return(object$family)
-
-
 
 
 

@@ -16,17 +16,15 @@ gamlr(x, y,
    npen=100, pen.min.ratio=0.01, 
    pen.start=Inf,  weight=NULL, 
    standardize=TRUE, verb=FALSE,
-   thresh=1e-6, maxit=1e5, qn=FALSE, ...)
-plot.gamlr(fit, against=c("pen","dev"), col="navy", ...)
+   thresh=1e-6, maxit=1e5, qn=FALSE)
+plot.gamlr(x, against=c("pen","dev"), col="navy", ...)
 coef.gamlr(object, select=which.min(BIC(object)),
             type = c("link", "response"), ...)
 predict.gamlr(object, newdata,
-            select=which.min(BIC(object)),
-            type = c("link", "response"))
+            select=which.min(BIC(object)))
 summary.gamlr(object, ...)
-print.gamlr(object, ...)
+print.gamlr(x, ...)
 logLik.gamlr(object, ...)
-family.gamlr(object, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 

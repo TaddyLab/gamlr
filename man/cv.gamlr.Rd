@@ -10,12 +10,11 @@
 \description{Cross validation for log penalty selection. }
 \usage{
 cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
-plot.cv.gamlr(fit, ...)
+plot.cv.gamlr(x, ...)
 coef.cv.gamlr(object, seg=c("1se","min"), ...)
 predict.cv.gamlr(object, newdata, seg=c("1se","min"), ...)
 summary.cv.gamlr(object, ...)
-print.cv.gamlr(object, ...)
-family.cv.gamlr(object, ...)
+print.cv.gamlr(x, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 
