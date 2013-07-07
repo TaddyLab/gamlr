@@ -7,7 +7,7 @@ Maintainer: Matt Taddy <taddy@chicagobooth.edu>
 Depends: R (>= 2.10), Matrix
 Description: This package provides log penalized linear model estimation.
 	It calculates regularization paths via coordinate descent.
-	The log penalty is s*log(r+|b|), which spans the rage
+	The log penalty is s*log(r+|b|), which spans the range
 	of non-convex cost functions between L0 and L1 norms.
 	As much as possible, usage is analogous to that for 
 	the glmnet package (which does the same thing for 
