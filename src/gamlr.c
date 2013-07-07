@@ -120,6 +120,7 @@ double dof(int seg){
         if(!isfinite(par[0]) | !isfinite(V[j])) continue;
         if(fixlam){ if(B[j]!=0) df ++; }
         else{
+          if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
           s = par[0]*V[j];
           r = par[1]*V[j]; 
           df += pgamma(ag0[j], s, 1.0/r, 1, 0); }

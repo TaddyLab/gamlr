@@ -85,4 +85,4 @@ plot(cvfit$gamlr)
 
 }
 
-\seealso{gamlr}
+\seealso{gamlr, hockey}

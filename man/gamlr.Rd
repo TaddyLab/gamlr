@@ -86,13 +86,17 @@ to the same domain as \code{y}.}
 \item{...}{ Extra arguments to each method. }
 }
 \details{ Finds the posterior modes along a regularization path
-		   for regression parameters using coordinate descent.
+		   of \emph{prior expected L1 penalties} using coordinate descent.
 
-  \emph{Coefficient penalization} is based upon the precision parameters
-  \eqn{\lambda} of independent L1 penalties. Via the
-       \code{varpen} argument, this precision is either fixed (\code{varpen=0}, i.e. the lasso) or it is assigned a
-       \eqn{Gamma(s, r)} prior, with expectation \code{pen = s/r} 
-       and variance \code{varpen = s/r^2}. This is equivalent to a log penalty \eqn{s*log[r + |b|]}.
+  Given L1 penalty \eqn{\lambda}, each path segment minimizes
+  \eqn{ 0.5*Deviance(\beta_1 ... \beta_p) 
+  + (\lambda/n) [ \sum |\beta_j| ]. }
+  Via the \code{varpen} argument, 
+  \eqn{\lambda} is either fixed (\code{varpen=0}, i.e. the lasso) 
+  or it is assigned a \eqn{Gamma(s, r)} prior, 
+  with expectation \code{pen = s/r}
+  and variance \code{varpen = s/r^2}. 
+  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |b|]}, and the  path is in \code{pen} = \eqn{E[\lambda]}.
 }
 \value{
   The returned \code{gamlr} object list including some of the
@@ -135,4 +139,4 @@ plot(fitgl1, ylim=ylim, col="maroon")
 plot(fitgl10, ylim=ylim, col="darkorange")
 
  }
-\seealso{cv.gamlr,hockey}
+\seealso{cv.gamlr, hockey}

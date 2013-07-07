@@ -75,7 +75,7 @@ gamlr <- function(x, y,
   npen <- fit$npen
   if(npen == 0) stop("could not converge for any penalty.")
   alpha <- head(fit$alpha,npen)
-  names(alpha) <- paste0('s',(1:npen))
+  names(alpha) <- paste0('seg',(1:npen))
   beta <- Matrix(head(fit$beta,npen*p),
                     nrow=p, ncol=npen, 
                     dimnames=list(colnames(x),names(alpha)),
