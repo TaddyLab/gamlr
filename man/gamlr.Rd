@@ -13,18 +13,19 @@
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
    varpen=0,
-   npen=100, pen.min.ratio=0.01, 
-   pen.start=Inf,  weight=NULL, 
+   npen=100, pen.start=Inf,  
+   pen.min.ratio=0.01, weight=NULL, 
    standardize=TRUE, verb=FALSE,
    thresh=1e-6, maxit=1e5, qn=FALSE)
-plot.gamlr(x, against=c("pen","dev"), col="navy", ...)
-coef.gamlr(object, select=which.min(BIC(object)),
+
+\method{plot}{gamlr}(x, against=c("pen","dev"), col="navy", ...)
+\method{coef}{gamlr}(object, select=which.min(BIC(object)), ...)
+\method{predict}{gamlr}(object, newdata,
+            select=which.min(BIC(object)),
             type = c("link", "response"), ...)
-predict.gamlr(object, newdata,
-            select=which.min(BIC(object)))
-summary.gamlr(object, ...)
-print.gamlr(x, ...)
-logLik.gamlr(object, ...)
+\method{summary}{gamlr}(object, ...)
+\method{print}{gamlr}(x, ...)
+\method{logLik}{gamlr}(object, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 
@@ -71,6 +72,18 @@ logLik.gamlr(object, ...)
   \item{qn}{ Whether to us quasi-newton acceleration. 
   This is useful for high dimensions with high multicollinearity, 
   but the overhead is too costly otherwise. }
+  \item{object}{ A gamlr object.}
+  \item{against}{ Whether to plot paths 
+  against log penalty or deviance.}
+\item{newdata}{ New \code{x} data for prediction.}
+\item{col}{ The single, or vector of \code{ncol(x)} colors for each
+    regularization path. }
+\item{select}{ Index of the path segment 
+  for which you want coefficients. }
+\item{type}{ Either "link" for the linear equation, 
+or "response" for predictions transformed 
+to the same domain as \code{y}.}
+\item{...}{ Extra arguments to each method. }
 }
 \details{ Finds the posterior modes along a regularization path
 		   for regression parameters using coordinate descent.
@@ -111,12 +124,12 @@ diag(xvar) <- 1
 x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
-fitlasso <- gamlr(x, y, penvar=0) # lasso
-fitgl1 <- gamlr(x, y, penvar=1) # log penalty var 1
-fitgl10 <- gamlr(x, y, penvar=10) # log penalty var 10
+fitlasso <- gamlr(x, y, varpen=0) # lasso
+fitgl1 <- gamlr(x, y, varpen=1) # log penalty var 1
+fitgl10 <- gamlr(x, y, varpen=10) # log penalty var 10
 
 par(mfrow=c(1,3))
-ylim = range(c(fitgl10$beta$x))
+ylim = range(c(fitgl10$beta@x))
 plot(fitlasso, ylim=ylim)
 plot(fitgl1, ylim=ylim, col="maroon")
 plot(fitgl10, ylim=ylim, col="darkorange")

@@ -4,7 +4,7 @@ Version: 1.0
 Date: 7/2013  
 Author: Matt Taddy <taddy@chicagobooth.edu>  
 Maintainer: Matt Taddy <taddy@chicagobooth.edu>  
-Depends: Matrix  
+Depends: R (>= 2.10), Matrix
 Description: This package provides log penalized linear model estimation.
 	It calculates regularization paths via coordinate descent.
 	The log penalty is s*log(r+|b|), which spans the rage

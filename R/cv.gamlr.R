@@ -130,6 +130,10 @@ print.cv.gamlr <- function(x, ...){
 }
 
 
+family.cv.gamlr <- function(object, ...) object$family
+
+
+
 
 
 

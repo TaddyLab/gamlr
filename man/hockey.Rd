@@ -10,7 +10,7 @@
   and the players on ice (including goalies) for every
   even strength goal during the four regular seasons of 2007-2008
   through 2010-2011.  There were  1467 players involved in  18154
-  goals. All matrices are stored as slam simple triplet matrices.
+  goals. All matrices are stored as sparse \code{Matrix} objects.
 }
 
 \value{
@@ -37,7 +37,7 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 
 \examples{
 data(hockey)
-fit <- gamlr(x=cbind(Xteam,Xplayer), y=response=Ygoals,
+fit <- gamlr(x=cBind(Xteam,Xplayer), y=Ygoals,
                weight=c(rep(0,ncol(Xteam)),rep(1,ncol(Xplayer))), 
                family="binomial", standardize=FALSE)	
 plot(fit)

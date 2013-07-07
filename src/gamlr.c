@@ -433,7 +433,8 @@ int cdsolve(double tol, int M, int qn)
     exits[s] = cdsolve(*thresh,*maxit,*qn);
     itertotal += npass;
 
-    if(exits[s] | (Lold < NLLHD)){ 
+
+    if(exits[s] | (Lold < NLLHD) | (npass>=*maxit)){ 
       myprintf(mystderr, 
         "Terminating path: Did you choose the wrong response family?\n");
       *npen = s; break; }

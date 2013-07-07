@@ -10,11 +10,11 @@
 \description{Cross validation for log penalty selection. }
 \usage{
 cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
-plot.cv.gamlr(x, ...)
-coef.cv.gamlr(object, seg=c("1se","min"), ...)
-predict.cv.gamlr(object, newdata, seg=c("1se","min"), ...)
-summary.cv.gamlr(object, ...)
-print.cv.gamlr(x, ...)
+\method{plot}{cv.gamlr}(x, ...)
+\method{coef}{cv.gamlr}(object, seg=c("1se","min"), ...)
+\method{predict}{cv.gamlr}(object, newdata, seg=c("1se","min"), ...)
+\method{summary}{cv.gamlr}(object, ...)
+\method{print}{cv.gamlr}(x, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 
@@ -28,9 +28,14 @@ print.cv.gamlr(x, ...)
       \code{family} is could cause problems. }
   \item{nfold}{ The number of cross validation folds. }
   \item{verb}{ Whether to print progress through folds. }
-  \item{seg}{ Whether to select the minimum or 1se OOS deviance segment;
-        see details.}
   \item{...}{ Arguments to \code{gamlr}. }
+  \item{object}{ A gamlr object.}
+  \item{newdata}{ New \code{x} data for prediction.}
+  \item{seg}{ In prediction and coefficient extraction, 
+  select which "best" model to return: 
+  \code{seg="min"} is that with minimum average OOS deviance,
+  and  \code{seg="1se"} is that whose average OOS deviance is
+  no more than 1 standard error away from the minimum.}
 }
 \details{ Fits a \code{gamlr} log penalized regression to the full dataset, and then performs \code{nfold} 
 cross validation to evaluate out-of-sample (OOS)
@@ -39,11 +44,6 @@ performance  for different penalty weights.
 \code{plot.cv.gamlr} can be used to plot the results: it 
 shows mean OOS deviance with 1se error bars as a function
 of the penalty weight.
-
-The other S3 methods return information relevant to the `best'
-penalty: \code{seg="min"} is that with minimum average OOS deviance,
-and  \code{seg="1se"} is that whose average OOS deviance is
-no more than 1 standard error away from the minimum.
 } 
 \value{
   \item{gamlr}{ The full-data fitted \code{gamlr} object.}

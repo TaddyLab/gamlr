@@ -153,7 +153,7 @@ coef.gamlr <- function(object,
 
 predict.gamlr <- function(object, newdata,
                     select=which.min(BIC(object)),
-                    type = c("link", "response"))
+                    type = c("link", "response"), ...)
 {
   stopifnot(inherits(newdata, c("matrix","Matrix")))
   if(is.null(select)) select <- 1:ncol(object$beta)
@@ -200,6 +200,7 @@ logLik.gamlr <- function(object, ...){
   ll
 }
 
+family.gamlr <- function(object, ...) object$family
 
 
 
