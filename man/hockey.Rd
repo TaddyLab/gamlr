@@ -45,5 +45,10 @@ round(B[order(-abs(B))[1:20],],2)
 ## fit plot
 plot(fit, col=c(rep("slategrey",ncol(onice)),
                 rep("darkorange",ncol(player))))
+
+## predict the last goal 
+tail(x,1)[,x[fit$n,]!=0]
+predict(fit,x[fit$n,,drop=FALSE],type="response")
+goal[fit$n,]
 }
 \seealso{gamlr}

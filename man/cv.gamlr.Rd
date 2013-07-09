@@ -8,8 +8,8 @@
 \usage{
 cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
 \method{plot}{cv.gamlr}(x, ...)
-\method{coef}{cv.gamlr}(object, seg=c("1se","min"), ...)
-\method{predict}{cv.gamlr}(object, newdata, seg=c("1se","min"), ...)
+\method{coef}{cv.gamlr}(object, select=c("1se","min"), ...)
+\method{predict}{cv.gamlr}(object, newdata, select=c("1se","min"), ...)
 }
 \arguments{
   \item{x}{ Covariates; see \code{gamlr}. }
@@ -19,10 +19,10 @@ cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
   \item{...}{ Arguments to \code{gamlr}. }
   \item{object}{ A gamlr object.}
   \item{newdata}{ New \code{x} data for prediction.}
-  \item{seg}{ In prediction and coefficient extraction, 
+  \item{select}{ In prediction and coefficient extraction, 
   select which "best" model to return: 
-  \code{seg="min"} is that with minimum average OOS deviance,
-  and  \code{seg="1se"} is that whose average OOS deviance is
+  \code{select="min"} is that with minimum average OOS deviance,
+  and  \code{select="1se"} is that whose average OOS deviance is
   no more than 1 standard error away from the minimum.}
 }
 \details{ Fits a \code{gamlr} log penalized regression to the full dataset, and then performs \code{nfold} 
@@ -60,7 +60,10 @@ y <- mu + rnorm(n,sd=sd(as.matrix(mu))/2)
 cvfit <- cv.gamlr(x, y, verb=TRUE)
 
 coef(cvfit)[1:3,] # 1se default
-coef(cvfit, seg="min")[1:3,] # min OOS deviance
+coef(cvfit, select="min")[1:3,] # min OOS deviance
+
+predict(cvfit, x[1:2,], select="min")
+predict(cvfit$gamlr, x[1:2,], select=cvfit$seg.min)
 
 par(mfrow=c(1,2))
 plot(cvfit)

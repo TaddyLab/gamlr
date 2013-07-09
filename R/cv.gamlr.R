@@ -101,14 +101,14 @@ plot.cv.gamlr <- function(x, ...){
 }
 
 coef.cv.gamlr <- function(object, 
-                          seg=c("1se","min"), ...){
-  seg = paste("seg",match.arg(seg),sep=".")
+                          select=c("1se","min"), ...){
+  seg = paste("seg",match.arg(select),sep=".")
   coef(object$gamlr, select=object[[seg]])
 }
 
 predict.cv.gamlr <- function(object, newdata,
-                          seg=c("1se","min"), ...){
-  seg = paste("seg",match.arg(seg),sep=".")
+                          select=c("1se","min"), ...){
+  seg = paste("seg",match.arg(select),sep=".")
   predict.gamlr(object$gamlr, newdata, select=object[[seg]], ...)
 }
 
