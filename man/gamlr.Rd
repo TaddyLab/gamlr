@@ -90,13 +90,14 @@ to the same domain as \code{y}.}
 
   Given L1 penalty \eqn{\lambda}, each path segment minimizes
   \eqn{ 0.5*Deviance(\beta_1 ... \beta_p) 
-  + (\lambda/n) [ \sum |\beta_j| ]. }
+  + n\lambda \sum |\beta_j|. }, with deviance replaced by MSE 
+  for \code{family="gaussian"}.
   Via the \code{varpen} argument, 
   \eqn{\lambda} is either fixed (\code{varpen=0}, i.e. the lasso) 
   or it is assigned a \eqn{Gamma(s, r)} prior, 
   with expectation \code{pen = s/r}
   and variance \code{varpen = s/r^2}. 
-  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |b|]}, and the  path is in \code{pen} = \eqn{E[\lambda]}.
+  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the  path is in \code{pen} = \eqn{E[\lambda]}.
 }
 \value{
   The returned \code{gamlr} object list including some of the
