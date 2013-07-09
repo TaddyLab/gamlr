@@ -34,8 +34,7 @@ data(hockey)
 
 x <- cBind(onice,player)
 y <- as.numeric(goal$who=="HOME")
-
-fit <- gamlr(x=x, y=y, family="binomial",
+fit <- gamlr(x=x, y=y, family="binomial", npen=10,
             standardize=FALSE, varpen=1e-3, verb=TRUE)
 
 ## BIC selected coefficients
@@ -46,6 +45,5 @@ round(B[order(-abs(B))[1:20],],2)
 ## fit plot
 plot(fit, col=c(rep("slategrey",ncol(onice)),
                 rep("darkorange",ncol(player))))
-
 }
 \seealso{gamlr}

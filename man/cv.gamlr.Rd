@@ -3,9 +3,6 @@
 \alias{plot.cv.gamlr}
 \alias{coef.cv.gamlr}
 \alias{predict.cv.gamlr}
-\alias{summary.cv.gamlr}
-\alias{print.cv.gamlr}
-\alias{family.cv.gamlr}
 \title{ Cross Validation for gamlr}
 \description{Cross validation for log penalty selection. }
 \usage{
@@ -13,19 +10,10 @@ cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
 \method{plot}{cv.gamlr}(x, ...)
 \method{coef}{cv.gamlr}(object, seg=c("1se","min"), ...)
 \method{predict}{cv.gamlr}(object, newdata, seg=c("1se","min"), ...)
-\method{summary}{cv.gamlr}(object, ...)
-\method{print}{cv.gamlr}(x, ...)
 }
 \arguments{
-  \item{x}{ A dense \code{matrix} 
-      or sparse \code{Matrix} of covariates,
-      with \code{ncol(x)} variables and 
-      \code{length(y)} observations.
-      This should not include the intercept.}
-  \item{y}{A vector of response values. 
-      Note that there is no argument checking; 
-      if you choose the wrong 
-      \code{family} is could cause problems. }
+  \item{x}{ Covariates; see \code{gamlr}. }
+  \item{y}{ Response; see \code{gamlr}. }
   \item{nfold}{ The number of cross validation folds. }
   \item{verb}{ Whether to print progress through folds. }
   \item{...}{ Arguments to \code{gamlr}. }
@@ -42,12 +30,10 @@ cross validation to evaluate out-of-sample (OOS)
 performance  for different penalty weights.
 
 \code{plot.cv.gamlr} can be used to plot the results: it 
-shows mean OOS deviance with 1se error bars as a function
-of the penalty weight.
+shows mean OOS deviance with 1se error bars.
 } 
 \value{
   \item{gamlr}{ The full-data fitted \code{gamlr} object.}
-  \item{family}{ The linear model exponential family. }
   \item{nfold}{ The number of CV folds. }
   \item{cvm}{ Mean OOS deviance by \code{gamlr\$penalty} }
   \item{cvs}{ The standard errors on \code{cvm}.}
@@ -56,9 +42,6 @@ of the penalty weight.
   \item{pen.min}{ Penalty at minimum \code{cvm}. }
   \item{pen.1se}{ Penalty at \code{1se} \code{cvm}. }
  }
-\references{
-  Taddy 2013.
-}
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
 }

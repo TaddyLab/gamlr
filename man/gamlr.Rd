@@ -1,12 +1,9 @@
 \name{gamlr}
 \alias{gamlr}
-\alias{print.gamlr}
-\alias{summary.gamlr}
 \alias{predict.gamlr}
 \alias{plot.gamlr}
 \alias{coef.gamlr}
 \alias{logLik.gamlr}
-\alias{family.gamlr}
 \title{Gamma-Lasso regression}
 \description{ Log penalized regression estimation. }
 \usage{
@@ -23,8 +20,6 @@ gamlr(x, y,
 \method{predict}{gamlr}(object, newdata,
             select=which.min(BIC(object)),
             type = c("link", "response"), ...)
-\method{summary}{gamlr}(object, ...)
-\method{print}{gamlr}(x, ...)
 \method{logLik}{gamlr}(object, ...)
 }
 \arguments{
@@ -34,29 +29,31 @@ gamlr(x, y,
       \code{nrow(x)==length(y)} observations.
       This should not include the intercept.}
   \item{y}{A vector of response values. 
-      Note that there is no argument checking; 
-      if you choose the wrong 
-      \code{family} is could cause problems. }
+      There is almost no argument checking, 
+      so be careful to match \code{y} with the appropriate \code{family}. 
+      }
   \item{family}{ Response model type; 
   either "gaussian", "poisson", or "binomial".  
   Note that for "binomial", \code{y} is in \eqn{[0,1]}. }
   \item{varpen}{ Prior variance of the 
       L1 cost parameter \eqn{\lambda}.  
       The default of zero corresponds to the lasso,
-      and higher values correspond to a MORE concave penalty.  
+      and higher values correspond to a more concave penalty.  
       See details. }
   \item{npen}{ Number of regularization path segments. }
   \item{pen.start}{ Initial penalty value.  Default of \code{Inf}
   implies the suppremum penalty that returns all zero
   coefficients.  This is the largest absolute coefficient gradient at the null model. }
   \item{pen.min.ratio}{ The smallest penalty weight 
-    (expected L1 cost) as a ratio of the path start value. }
+    (expected L1 cost) as a ratio of the path start value.  
+    Our default is always 0.01; note that this differs from \code{glmnet}
+    whose default depends upon the dimension of \code{x}. }
   \item{weight}{ Parameter weights; for \code{varpen>0} 
       this is an up-scaling of 
       \code{varpen} that is specific to each covariate (see details). 
       For the lasso (\code{varpen=0}), 
       these are multipliers on the L1 penalty.  The default is 
-      all \code{1.0}, and a \code{weight} entry of \code{0} always
+      all 1.0, and a \code{weight} entry of 0 always
       means that the corresponding coefficient is unpenalized. }
   \item{standardize}{ Whether to standardize 
     the coefficients to have standard deviation of one.  
@@ -64,10 +61,10 @@ gamlr(x, y,
     by each coefficient standard deviation. }
   \item{verb}{ Whether to print some output for each path segment. }
   \item{thresh}{ Optimization convergence tolerance for each 
-    inner coordinate-descent loop.  This is measured as the 
+    inner coordinate-descent loop.  This is measured against the 
     drop in negative log posterior after a full parameter set update, 
     relative to the null model negative log likelihood. }
-  \item{maxit}{ Max iterations for a segment
+  \item{maxit}{ Max iterations for a single segment
          coordinate descent routine. }
   \item{qn}{ Whether to us quasi-newton acceleration. 
   This is useful for high dimensions with high multicollinearity, 
@@ -75,11 +72,11 @@ gamlr(x, y,
   \item{object}{ A gamlr object.}
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}
-\item{newdata}{ New \code{x} data for prediction.}
 \item{col}{ The single, or vector of \code{ncol(x)} colors for each
     regularization path. }
+\item{newdata}{ New \code{x} data for prediction.}
 \item{select}{ Index of the path segment 
-  for which you want coefficients. }
+  for which you want coefficients or prediction. }
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
 to the same domain as \code{y}.}
@@ -90,30 +87,25 @@ to the same domain as \code{y}.}
 
   Given L1 penalty \eqn{\lambda}, each path segment minimizes
   \eqn{ 0.5*Deviance(\beta_1 ... \beta_p) 
-  + n\lambda \sum |\beta_j|. }, with deviance replaced by MSE 
-  for \code{family="gaussian"}.
+  + (n\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
+  family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
+  one otherwise).
   Via the \code{varpen} argument, 
   \eqn{\lambda} is either fixed (\code{varpen=0}, i.e. the lasso) 
   or it is assigned a \eqn{Gamma(s, r)} prior, 
   with expectation \code{pen = s/r}
   and variance \code{varpen = s/r^2}. 
-  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the  path is in \code{pen} = \eqn{E[\lambda]}.
+  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
 }
 \value{
-  The returned \code{gamlr} object list including some of the
-  input variables (possibly cleaned or updated), as well as
-  \item{penalty}{The path of fitted expected L1 penalties.}
+  \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
   \item{nobs}{ The number of observations.}
   \item{alpha}{Intercepts.}
   \item{beta}{Regression coefficients.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
   -2( logLHD.fitted - logLHD.saturated). }
-  \item{iterations}{Total number of passes through updates for the
-    full parameter set. }
-}
-\references{
-  Taddy 2013.
+  \item{iterations}{Total number of coordinate descent cycles. }
 }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}

@@ -6,15 +6,22 @@
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
             varpen=0, npen=100, 
-            pen.start=Inf,  pen.min.ratio=0.01, 
+            pen.start=Inf,  
+            pen.min.ratio=0.01, 
             weight=NULL, standardize=TRUE, verb=FALSE,
             thresh=1e-6, maxit=1e5, qn=FALSE)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
 
+  ## integer family codes
+  family=match.arg(family)
+  famid = switch(family, 
+    "gaussian"=1, "binomial"=2, "poisson"=3)
+
   ## data formatting
   y <- drop(y)
   stopifnot(is.null(dim(y)))
+  if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
   y <- as.double(y)
   n <- length(y)
 
@@ -24,10 +31,6 @@ gamlr <- function(x, y,
   if(is.null(colnames(x))) colnames(x) <- 1:p
   stopifnot(nrow(x)==n) 
 
-  ## integer family codes
-  family=match.arg(family)
-  famid = switch(family, 
-    "gaussian"=1, "binomial"=2, "poisson"=3)
 
   ## precision weights
   if(is.null(weight)) weight <- rep(1,p)
@@ -115,8 +118,14 @@ plot.gamlr <- function(x, against=c("pen","dev"),
                       col="navy",...)
 {
   npen <- ncol(x$beta)
+  p <- nrow(x$beta)
   nzr <- unique(x$beta@i)+1
   nzr <- nzr[x$weight[nzr]!=0 & is.finite(x$weight[nzr])]
+  beta <- as.matrix(x$beta[nzr,,drop=FALSE])
+
+  if(length(col)==1) col <- rep(col,p)
+  col <- col[nzr]
+
   against=match.arg(against)
   if(against=="pen"){
       xv <- log(x$penalty)
@@ -128,12 +137,13 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     stop("unrecognized 'against' argument.")
 
   argl = list(...)
-  if(is.null(argl$ylim)) argl$ylim=range(x$beta[nzr,])
+  if(is.null(argl$ylim)) argl$ylim=range(beta)
   if(is.null(argl$ylab)) argl$ylab="coefficient"
   if(is.null(argl$xlab)) argl$xlab=xvn
-  if(length(col)==1) col <- rep(col,npen)
+  if(is.null(argl$lty)) argl$lty=1
   do.call(plot, c(list(x=xv, y=rep(0,npen), col="grey70", type="l"), argl))
-  for(i in nzr) lines(xv, c(as.matrix(x$beta[i,])), col=col[i])
+
+  matplot(xv, t(beta), col=col, add=TRUE, type="l", lty=argl$lty)
 
   dfi <- unique(round(
     seq(1,npen,length=ceiling(length(axTicks(1))))))
