@@ -153,11 +153,9 @@ plot.gamlr <- function(x, against=c("pen","dev"),
 
   dfi <- unique(round(
     seq(1,npen,length=ceiling(length(axTicks(1))))))
-  axis(3,at=log(x$penalty[dfi]), 
-    labels=round(x$df[dfi],1),tick=FALSE, line=-.5)
+  axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5)
 
-  abline(v=log(x$penalty[which.min(BIC(x))]), 
-    lty=3, col="grey50")
+  abline(v=xv[which.min(BIC(x))], lty=3, col="grey50")
 }
 
 coef.gamlr <- function(object, 
