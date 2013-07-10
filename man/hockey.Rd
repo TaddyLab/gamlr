@@ -46,7 +46,7 @@ round(B[order(-abs(B))[1:20],],2)
 plot(fit, col=c(rep("slategrey",ncol(onice)),
                 rep("darkorange",ncol(player))))
 
-## predict the last goal 
+## predict the last goal of the 2013 playoffs
 tail(x,1)[,x[fit$n,]!=0]
 predict(fit,x[fit$n,,drop=FALSE],type="response")
 goal[fit$n,]
