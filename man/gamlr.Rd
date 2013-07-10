@@ -86,8 +86,8 @@ to the same domain as \code{y}.}
 		   of \emph{prior expected L1 penalties} using coordinate descent.
 
   Given L1 penalty \eqn{\lambda}, each path segment minimizes
-  \eqn{ 0.5*Deviance(\beta_1 ... \beta_p) 
-  + (n\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
+ -logLHD\eqn{(\beta_1 ... \beta_p) 
+  + (\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
   family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
   one otherwise).
   Via the \code{varpen} argument, 
@@ -102,6 +102,11 @@ to the same domain as \code{y}.}
       the coefficient with highest absolute gradient.  The reported
       \code{penalty} is just \code{exp(-df)}, where \code{df} is 
       the number of nonzero coefficients.
+
+  Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
+  the number of observations as it is in \code{glmnet}.  Thus to get 
+  values comparable to \code{glmnet}'s \code{lambda} you divide 
+  \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
 }
 \value{
   \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
@@ -128,14 +133,14 @@ x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
 fitlasso <- gamlr(x, y, varpen=0) # lasso
-fitgl01 <- gamlr(x, y, varpen=0.1) # log penalty var 1/10
-fitgl1 <- gamlr(x, y, varpen=1) # log penalty var 1
+fitgl <- gamlr(x, y, varpen=n/5) # log penalty
+fitglbv <- gamlr(x, y, varpen=n) # big variance log penalty
 
 par(mfrow=c(1,3))
-ylim = range(c(fitgl1$beta@x))
+ylim = range(c(fitglbv$beta@x))
 plot(fitlasso, ylim=ylim)
-plot(fitgl01, ylim=ylim, col="maroon")
-plot(fitgl1, ylim=ylim, col="darkorange")
+plot(fitgl, ylim=ylim, col="maroon")
+plot(fitglbv, ylim=ylim, col="darkorange")
 
  }
 \seealso{cv.gamlr, hockey}

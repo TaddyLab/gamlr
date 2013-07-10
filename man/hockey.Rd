@@ -35,7 +35,7 @@ data(hockey)
 x <- cBind(onice,player)
 y <- as.numeric(goal$who=="HOME")
 fit <- gamlr(x=x, y=y, family="binomial", npen=10,
-            standardize=FALSE, varpen=1e-3, verb=TRUE)
+            standardize=FALSE, varpen=1, verb=TRUE)
 
 ## BIC selected coefficients
 B <- as.matrix(coef(fit))
@@ -47,8 +47,7 @@ plot(fit, col=c(rep("slategrey",ncol(onice)),
                 rep("darkorange",ncol(player))))
 
 ## predict the last goal of the 2013 playoffs
-tail(x,1)[,x[fit$n,]!=0]
-predict(fit,x[fit$n,,drop=FALSE],type="response")
 goal[fit$n,]
+predict(fit,x[fit$n,,drop=FALSE],type="response")
 }
 \seealso{gamlr}
