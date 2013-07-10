@@ -34,6 +34,7 @@ int itertotal, npass;
 
 double gam;
 unsigned int fixlam;
+unsigned int subsel;
 
 double ysum,ybar;
 double *xm = NULL;
@@ -110,21 +111,58 @@ void checkdata(int standardize){
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
 }
 
-double dof(int seg){
+// calculates degrees of freedom, as well as
+// other gradient dependent statistics.
+double dof(double *mu){
   double df =  1.0;
   int j;
-  double s,r;
+  
+  // subset selection
+  if(subsel){
+    int jnext = 0;
+    double gnext = 0.0;
+    for(j=0; j<p; j++){
+      if(!isfinite(V[j])){
+        G[j] = (*calcG)(xp[j+1]-xp[j], &xv[xp[j]], 
+                        &xi[xp[j]], E, &xy[j]); 
+        ag0[j] = fabs(G[j])/xs[j];
+        if(ag0[j]>gnext){
+          V[jnext] = INFINITY;
+          jnext = j;
+          V[j] = 0.0;
+          gnext = G[j]; }
+      }
+      else df++; }
+    mu[0] = exp(-df);
+    return df; }
 
-  for(j=0; j<p; j++)
-      if(V[j] > 0.0){
-        if(!isfinite(par[0]) | !isfinite(V[j])) continue;
-        if(fixlam){ if(B[j]!=0) df ++; }
-        else{
-          if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
-          s = par[0]*V[j];
-          r = par[1]*V[j]; 
-          df += pgamma(ag0[j], s, 1.0/r, 1, 0); }
-      } else df++;
+  // lasso or log pen initialization  
+  if(!isfinite(mu[0])){
+    for(j=0; j<p; j++){
+      ag0[j] = fabs(G[j])/xs[j];  
+      if(V[j] == 0.0) df++; }
+    mu[0] = dmax(ag0,p)/nd; 
+    return df; }
+
+  // lasso 
+  if(fixlam){
+    for(j=0; j<p; j++)
+      if( (B[j]!=0.0) | (V[j]==0.0) ) df ++;
+    return df;
+  }
+  
+  // log penalty
+  double s,r;
+  for(j=0; j<p; j++){
+    if(V[j]>0.0){
+      if(!isfinite(V[j])) continue;
+      if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
+      s = par[0]*V[j];
+      r = par[1]*V[j]; 
+      df += pgamma(ag0[j], s, 1.0/r, 1, 0); 
+    } else df++;
+  }
+
   return df;
 }
 
@@ -399,12 +437,16 @@ int cdsolve(double tol, int M, int qn)
   }
 
   B = new_dzero(p);
-  G = new_dvec(p);
+  G = new_dzero(p);
+  par = new_dvec(2); 
+  ag0 = new_dvec(p);
 
   gam = *varpen;
-  fixlam = (gam == 0.0);
-  if(fixlam) par = new_dvec(1);
-  else par = new_dvec(2);
+  fixlam = (gam == 0.0); // lasso
+  subsel = !isfinite(gam); // subset selection
+  if(subsel)
+    for(int j=0; j<p; j++) 
+      if(V[j]>0) V[j] = INFINITY;
 
   if(*qn) 
     { QN0 = new_dvec(p); 
@@ -427,7 +469,7 @@ int cdsolve(double tol, int M, int qn)
       mu[s] = mu[s-1]*delta;
 
     par[0] = mu[s]*nd;
-    if(!fixlam){ 
+    if(!fixlam & !subsel){ 
       par[1] = mu[s]/gam;
       par[0] *= par[1]; }
 
@@ -443,15 +485,10 @@ int cdsolve(double tol, int M, int qn)
     deviance[s] = 2.0*NLLHD;
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
-
-    if(s==0){
+    if(s==0)
       *thresh *= fabs(deviance[0]); 
-      ag0 = new_dvec(p);
-      for(int j=0; j<p; j++) ag0[j] = fabs(G[j])/xs[j];  
-      if(!isfinite(mu[s])) 
-        mu[0] = dmax(ag0,p)/nd;
-    }
-    df[s] = dof(s);
+
+    df[s] = dof(&mu[s]);
 
     if(*verb) 
       myprintf(mystdout, 

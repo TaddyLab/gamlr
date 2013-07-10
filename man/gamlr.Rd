@@ -96,6 +96,12 @@ to the same domain as \code{y}.}
   with expectation \code{pen = s/r}
   and variance \code{varpen = s/r^2}. 
   The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
+
+  For completeness, setting \code{varpen=Inf} yields a stepwise
+      subset selection algorithm: each step adds (unpenalized)
+      the coefficient with highest absolute gradient.  The reported
+      \code{penalty} is just \code{exp(-df)}, where \code{df} is 
+      the number of nonzero coefficients.
 }
 \value{
   \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
@@ -122,14 +128,14 @@ x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
 fitlasso <- gamlr(x, y, varpen=0) # lasso
+fitgl01 <- gamlr(x, y, varpen=0.1) # log penalty var 1/10
 fitgl1 <- gamlr(x, y, varpen=1) # log penalty var 1
-fitgl10 <- gamlr(x, y, varpen=10) # log penalty var 10
 
 par(mfrow=c(1,3))
-ylim = range(c(fitgl10$beta@x))
+ylim = range(c(fitgl1$beta@x))
 plot(fitlasso, ylim=ylim)
-plot(fitgl1, ylim=ylim, col="maroon")
-plot(fitgl10, ylim=ylim, col="darkorange")
+plot(fitgl01, ylim=ylim, col="maroon")
+plot(fitgl1, ylim=ylim, col="darkorange")
 
  }
 \seealso{cv.gamlr, hockey}

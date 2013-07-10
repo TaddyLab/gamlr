@@ -42,6 +42,9 @@ gamlr <- function(x, y,
   stopifnot(all(c(npen,pen.min.ratio)>0))
   stopifnot(all(c(pen.start,varpen)>=0))
   stopifnot(all(c(thresh,maxit)>0))
+  if(is.infinite(varpen)){
+    npen=min(npen,sum(weight!=0)+1)
+    pen.start=Inf }
   mu <- double(npen)
   mu[1] <- pen.start
 
@@ -93,6 +96,9 @@ gamlr <- function(x, y,
   ## nonzero saturated poisson deviance
   if(family=="poisson")
     dev <- dev + 2*sum(ifelse(y>0,y*log(y),0) - y) 
+
+  if(is.infinite(varpen)) 
+    fit$weight <- weight+fit$weight
 
   ## build return object and exit
   out <- list(penalty=pen, 
