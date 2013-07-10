@@ -97,16 +97,16 @@ to the same domain as \code{y}.}
   and variance \code{varpen = s/r^2}. 
   The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
 
-  For completeness, setting \code{varpen=Inf} yields a stepwise
-      subset selection algorithm: each step adds (unpenalized)
-      the coefficient with highest absolute gradient.  The reported
-      \code{penalty} is just \code{exp(-df)}, where \code{df} is 
-      the number of nonzero coefficients.
-
   Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
   the number of observations as it is in \code{glmnet}.  Thus to get 
   values comparable to \code{glmnet}'s \code{lambda} you divide 
   \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
+
+  Finally, for completeness, setting \code{varpen=Inf} yields a stepwise
+      subset selection algorithm: each step adds (unpenalized)
+      the coefficient with highest absolute gradient.  The reported
+      \code{penalty} is just \code{exp(-df)}, where \code{df} is 
+      the number of nonzero coefficients.
 }
 \value{
   \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
