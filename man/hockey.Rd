@@ -31,15 +31,13 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 
 \examples{
 data(hockey)
-
 x <- cBind(onice,player)
 y <- as.numeric(goal$who=="HOME")
 fit <- gamlr(x=x, y=y, family="binomial", npen=10,
             standardize=FALSE, varpen=1, verb=TRUE)
 
 ## BIC selected coefficients
-B <- as.matrix(coef(fit))
-sum(B!=0)
+sum( (B <- as.matrix(coef(fit))) !=0)
 round(B[order(-abs(B))[1:20],],2)
 
 ## fit plot

@@ -98,7 +98,7 @@ to the same domain as \code{y}.}
   The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
 
   Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
-  the number of observations as it is in \code{glmnet}.  Thus to get 
+  the number of observations as is done in \code{glmnet}.  Thus to get 
   values comparable to \code{glmnet}'s \code{lambda} you divide 
   \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
 
