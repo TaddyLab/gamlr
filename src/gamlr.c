@@ -130,7 +130,7 @@ double dof(double *mu){
           V[jnext] = INFINITY;
           jnext = j;
           V[j] = 0.0;
-          gnext = G[j]; }
+          gnext = ag0[j]; }
       }
       else df++; }
     mu[0] = exp(-df);
@@ -141,7 +141,7 @@ double dof(double *mu){
     for(j=0; j<p; j++){
       ag0[j] = fabs(G[j])/xs[j];  
       if(V[j] == 0.0) df++; }
-    mu[0] = dmax(ag0,p);///nd; 
+    mu[0] = dmax(ag0,p)/nd; 
     return df; }
 
   // lasso 
@@ -468,7 +468,7 @@ int cdsolve(double tol, int M, int qn)
     if(s>0)
       mu[s] = mu[s-1]*delta;
 
-    par[0] = mu[s];//*nd;
+    par[0] = mu[s]*nd;
     if(!fixlam & !subsel){ 
       par[1] = mu[s]/gam;
       par[0] *= par[1]; }

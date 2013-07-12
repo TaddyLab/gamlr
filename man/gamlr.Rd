@@ -87,7 +87,7 @@ to the same domain as \code{y}.}
 
   Given L1 penalty \eqn{\lambda}, each path segment minimizes
  -logLHD\eqn{(\beta_1 ... \beta_p) 
-  + (\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
+  + (n\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
   family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
   one otherwise).
   Via the \code{varpen} argument, 
@@ -97,10 +97,10 @@ to the same domain as \code{y}.}
   and variance \code{varpen = s/r^2}. 
   The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
 
-  Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
-  the number of observations as is done in \code{glmnet}.  Thus to get 
-  values comparable to \code{glmnet}'s \code{lambda} you divide 
-  \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
+  % Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
+  % the number of observations as is done in \code{glmnet}.  Thus to get 
+  % values comparable to \code{glmnet}'s \code{lambda} you divide 
+  % \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
 
   Finally, for completeness, setting \code{varpen=Inf} yields a stepwise
       subset selection algorithm: each step adds (unpenalized)
