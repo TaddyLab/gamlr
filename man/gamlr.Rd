@@ -107,6 +107,10 @@ to the same domain as \code{y}.}
       the coefficient with highest absolute gradient.  The reported
       \code{penalty} is just \code{exp(-df)}, where \code{df} is 
       the number of nonzero coefficients.
+
+      \code{plot.gamlr} can be used to plot the results: it 
+      shows the regularization paths for \emph{beta} and marks
+      the minimum AIC and BIC models.
 }
 \value{
   \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
@@ -133,8 +137,8 @@ x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
 fitlasso <- gamlr(x, y, varpen=0) # lasso
-fitgl <- gamlr(x, y, varpen=1/6) # log penalty
-fitglbv <- gamlr(x, y, varpen=1) # big variance log penalty
+fitgl <- gamlr(x, y, varpen=1/5) # log penalty
+fitglbv <- gamlr(x, y, varpen=5) # big variance log penalty
 
 par(mfrow=c(1,3))
 ylim = range(c(fitglbv$beta@x))

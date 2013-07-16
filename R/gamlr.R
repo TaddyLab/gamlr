@@ -156,6 +156,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5)
 
   abline(v=xv[which.min(BIC(x))], lty=3, col="grey50")
+  abline(v=xv[which.min(AIC(x))], lty=3, col="grey50")
 }
 
 coef.gamlr <- function(object, 
