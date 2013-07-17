@@ -121,7 +121,7 @@ gamlr <- function(x, y,
 #### S3 method functions
 
 plot.gamlr <- function(x, against=c("pen","dev"), 
-                      col="navy",...)
+                      col=rgb(0,0,.5,.75),...)
 {
   npen <- ncol(x$beta)
   p <- nrow(x$beta)

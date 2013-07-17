@@ -15,7 +15,7 @@ gamlr(x, y,
    standardize=TRUE, verb=FALSE,
    thresh=1e-6, maxit=1e5, qn=FALSE)
 
-\method{plot}{gamlr}(x, against=c("pen","dev"), col="navy", ...)
+\method{plot}{gamlr}(x, against=c("pen","dev"), col=rgb(0,0,.5,.75), ...)
 \method{coef}{gamlr}(object, select=which.min(BIC(object)), ...)
 \method{predict}{gamlr}(object, newdata,
             select=which.min(BIC(object)),
@@ -72,7 +72,8 @@ gamlr(x, y,
   \item{object}{ A gamlr object.}
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}
-\item{col}{ The single, or vector of \code{ncol(x)} colors for each
+\item{col}{ A single plot color (default is 3/4 opaque navy), 
+  or vector of length \code{ncol(x)} colors for each coefficient
     regularization path. }
 \item{newdata}{ New \code{x} data for prediction.}
 \item{select}{ Index of the path segment 
@@ -96,11 +97,6 @@ to the same domain as \code{y}.}
   with expectation \code{pen = s/r}
   and variance \code{varpen = s/r^2}. 
   The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
-
-  % Note that the \code{penalty} here, \eqn{E[\lambda]}, is not scaled by 
-  % the number of observations as is done in \code{glmnet}.  Thus to get 
-  % values comparable to \code{glmnet}'s \code{lambda} you divide 
-  % \code{fit$penalty/fit$nobs} from a \code{gamlr} object. 
 
   Finally, for completeness, setting \code{varpen=Inf} yields a stepwise
       subset selection algorithm: each step adds (unpenalized)
