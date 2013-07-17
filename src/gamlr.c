@@ -111,6 +111,7 @@ void checkdata(int standardize){
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
 }
 
+
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
 double dof(double *mu){
