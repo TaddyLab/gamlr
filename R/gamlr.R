@@ -25,12 +25,15 @@ gamlr <- function(x, y,
   y <- as.double(y)
   n <- length(y)
 
-  if(is.data.frame(x)) x <- as.matrix(x)
+  if(inherits(x,"data.frame")) x <- as.matrix(x)
+  if(inherits(x,"simple_triplet_matrix"))
+    x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
+              dims=dim(x),dimnames=dimnames(x))
   x=as(x,"dgCMatrix") 
-  p <- ncol(x)
-  if(is.null(colnames(x))) colnames(x) <- 1:p
+  if(is.null(colnames(x))) 
+    colnames(x) <- 1:ncol(x)
   stopifnot(nrow(x)==n) 
-
+  p <- ncol(x)
 
   ## precision weights
   if(is.null(weight)) weight <- rep(1,p)
@@ -170,7 +173,16 @@ predict.gamlr <- function(object, newdata,
                     select=which.min(BIC(object)),
                     type = c("link", "response"), ...)
 {
-  stopifnot(inherits(newdata, c("matrix","Matrix")))
+  if(inherits(newdata,"data.frame")) 
+    newdata <- as.matrix(newdata)
+  if(inherits(newdata,"simple_triplet_matrix"))
+    newdata <- sparseMatrix(
+                    i=newdata$i,
+                    j=newdata$j,
+                    x=newdata$v,
+                    dims=dim(newdata),
+                    dimnames=dimnames(newdata))
+
   if(is.null(select)) select <- 1:ncol(object$beta)
   
   eta <- matrix(object$alpha[select],
