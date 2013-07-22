@@ -15,7 +15,8 @@ gamlr(x, y,
    standardize=TRUE, verb=FALSE,
    thresh=1e-6, maxit=1e5, qn=FALSE)
 
-\method{plot}{gamlr}(x, against=c("pen","dev"), col=rgb(0,0,.5,.75), ...)
+\method{plot}{gamlr}(x, against=c("pen","dev"), 
+    col=rgb(0,0,.5,.75), select=TRUE, df=TRUE, ...)
 \method{coef}{gamlr}(object, select=which.min(BIC(object)), ...)
 \method{predict}{gamlr}(object, newdata,
             select=which.min(BIC(object)),
@@ -75,9 +76,11 @@ gamlr(x, y,
 \item{col}{ A single plot color (default is 3/4 opaque navy), 
   or vector of length \code{ncol(x)} colors for each coefficient
     regularization path. }
-\item{newdata}{ New \code{x} data for prediction.}
 \item{select}{ Index of the path segment 
-  for which you want coefficients or prediction. }
+  for which you want coefficients or prediction, or in \code{plot} 
+  whether to add lines marking AIC and BIC selected models.}
+\item{df}{ Whether to add to the plot degrees of freedom along the top axis.}
+\item{newdata}{ New \code{x} data for prediction.}
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
 to the same domain as \code{y}.}

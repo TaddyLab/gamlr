@@ -124,7 +124,8 @@ gamlr <- function(x, y,
 #### S3 method functions
 
 plot.gamlr <- function(x, against=c("pen","dev"), 
-                      col=rgb(0,0,.5,.75),...)
+                      col=rgb(0,0,.5,.75), 
+                      select=TRUE, df=TRUE, ...)
 {
   npen <- ncol(x$beta)
   p <- nrow(x$beta)
@@ -150,16 +151,19 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   if(is.null(argl$ylab)) argl$ylab="coefficient"
   if(is.null(argl$xlab)) argl$xlab=xvn
   if(is.null(argl$lty)) argl$lty=1
+  if(is.null(argl$bty)) argl$bty="n"
   do.call(plot, c(list(x=xv, y=rep(0,npen), col="grey70", type="l"), argl))
 
   matplot(xv, t(beta), col=col, add=TRUE, type="l", lty=argl$lty)
 
-  dfi <- unique(round(
-    seq(1,npen,length=ceiling(length(axTicks(1))))))
-  axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5)
+  if(df){
+    dfi <- unique(round(
+      seq(1,npen,length=ceiling(length(axTicks(1))))))
+    axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5) }
 
-  abline(v=xv[which.min(BIC(x))], lty=3, col="grey50")
-  abline(v=xv[which.min(AIC(x))], lty=3, col="grey50")
+  if(select){
+    abline(v=xv[which.min(BIC(x))], lty=3, col="grey20")
+    abline(v=xv[which.min(AIC(x))], lty=3, col="grey20") }
 }
 
 coef.gamlr <- function(object, 
