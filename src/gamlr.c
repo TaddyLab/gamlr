@@ -158,8 +158,8 @@ double dof(double *mu){
     if(V[j]>0.0){
       if(!isfinite(V[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
-      s = par[0]*V[j] + 1.0;
-      r = par[1]*V[j] + fabs(B[j]); 
+      s = par[0]*V[j]; //+ 1.0;
+      r = par[1]*V[j]; //+ fabs(B[j]); 
       df += pgamma(ag0[j], s, 1.0/r, 1, 0); 
     } else df++;
   }
