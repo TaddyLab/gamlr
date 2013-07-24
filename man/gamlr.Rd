@@ -10,8 +10,8 @@
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
    varpen=0,
-   npen=100, pen.start=Inf,  
-   pen.min.ratio=0.01, weight=NULL, 
+   nlambda=100, lambda.start=Inf,  
+   lambda.min.ratio=0.01, weight=NULL, 
    standardize=TRUE, verb=FALSE,
    thresh=1e-6, maxit=1e5, qn=FALSE)
 
@@ -41,11 +41,11 @@ gamlr(x, y,
       The default of zero corresponds to the lasso,
       and higher values correspond to a more concave penalty.  
       See details. }
-  \item{npen}{ Number of regularization path segments. }
-  \item{pen.start}{ Initial penalty value.  Default of \code{Inf}
-  implies the suppremum penalty that returns all zero
+  \item{nlambda}{ Number of regularization path segments. }
+  \item{lambda.start}{ Initial penalty value.  Default of \code{Inf}
+  implies the suppremum lambda that returns all zero
   coefficients.  This is the largest absolute coefficient gradient at the null model. }
-  \item{pen.min.ratio}{ The smallest penalty weight 
+  \item{lambda.min.ratio}{ The smallest penalty weight 
     (expected L1 cost) as a ratio of the path start value.  
     Our default is always 0.01; note that this differs from \code{glmnet}
     whose default depends upon the dimension of \code{x}. }
@@ -97,14 +97,14 @@ to the same domain as \code{y}.}
   Via the \code{varpen} argument, 
   \eqn{\lambda} is either fixed (\code{varpen=0}, i.e. the lasso) 
   or it is assigned a \eqn{Gamma(s, r)} prior, 
-  with expectation \code{pen = s/r}
+  with expectation \code{lambda = s/r}
   and variance \code{varpen = s/r^2}. 
-  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{pen} is then in terms of \eqn{E[\lambda]}.
+  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{lambda} is then in terms of \eqn{E[\lambda]}.
 
   Finally, for completeness, setting \code{varpen=Inf} yields a stepwise
       subset selection algorithm: each step adds (unpenalized)
       the coefficient with highest absolute gradient.  The reported
-      \code{penalty} is just \code{exp(-df)}, where \code{df} is 
+      \code{lambda} is just \code{exp(-df)}, where \code{df} is 
       the number of nonzero coefficients.
 
       \code{plot.gamlr} can be used to plot the results: it 
@@ -112,13 +112,15 @@ to the same domain as \code{y}.}
       the minimum AIC and BIC models.
 }
 \value{
-  \item{penalty}{The path of fitted \emph{prior expected} L1 penalties.}
+  \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}
   \item{nobs}{ The number of observations.}
   \item{alpha}{Intercepts.}
   \item{beta}{Regression coefficients.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
   -2( logLHD.fitted - logLHD.saturated). }
+  \item{dispersion}{Exponential family dispersion: MAP estimated 
+  \eqn{\sigma^2} for \code{family="gaussian"}, one otherwise) }
   \item{iterations}{Total number of coordinate descent cycles. }
 }
 \author{

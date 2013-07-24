@@ -33,7 +33,8 @@ double trbnd;
 int itertotal, npass;
 
 double gam;
-unsigned int fixlam;
+double phi;
+unsigned int fixpen;
 unsigned int subsel;
 
 double ysum,ybar;
@@ -111,10 +112,30 @@ void checkdata(int standardize){
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
 }
 
+// gaussian family dispersion
+double sigma2(void){
+  double s,r,a,b;
+  a = NLLHD;
+  b = 0.5*nd + 1.0;
+  for(int j=0; j<p; j++){
+    if(V[j]>0.0){
+      if(!isfinite(V[j])) continue;
+      b += 1.0;
+      if(B[j]!=0.0){
+        if(fixpen) a += par[0]*fabs(B[j])*xs[j]*V[j];
+        else{
+          s = par[0]*V[j]; 
+          r = par[1]*V[j];
+          a += s*log(1.0+fabs(B[j])*xs[j]/r); }
+      }
+    }
+  }
+  return a/b;
+}
 
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
-double dof(double *mu){
+double dof(double *lam){
   double df =  1.0;
   int j;
   
@@ -134,19 +155,19 @@ double dof(double *mu){
           gnext = ag0[j]; }
       }
       else df++; }
-    mu[0] = exp(-df);
+    lam[0] = exp(-df);
     return df; }
 
   // lasso or log pen initialization  
-  if(!isfinite(mu[0])){
+  if(!isfinite(lam[0])){
     for(j=0; j<p; j++){
       ag0[j] = fabs(G[j])/xs[j];  
       if(V[j] == 0.0) df++; }
-    mu[0] = dmax(ag0,p)/nd; 
+    lam[0] = dmax(ag0,p)/nd; 
     return df; }
 
   // lasso 
-  if(fixlam){
+  if(fixpen){
     for(j=0; j<p; j++)
       if( (B[j]!=0.0) | (V[j]==0.0) ) df ++;
     return df;
@@ -158,9 +179,9 @@ double dof(double *mu){
     if(V[j]>0.0){
       if(!isfinite(V[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
-      s = par[0]*V[j]; //+ 1.0;
-      r = par[1]*V[j]; //+ fabs(B[j]); 
-      df += pgamma(ag0[j], s, 1.0/r, 1, 0); 
+      s = par[0]*V[j];
+      r = par[1]*V[j];
+      df += pgamma(ag0[j], s/phi, 1.0/r, 1, 0); 
     } else df++;
   }
 
@@ -174,7 +195,7 @@ double calcC(double *b){
   double s,r;
   for(j=0; j<p; j++)
       if( (V[j] > 0.0) & isfinite(V[j]) ){
-        if(fixlam) cost += par[0]*fabs(b[j])*xs[j]*V[j];
+        if(fixpen) cost += par[0]*fabs(b[j])*xs[j]*V[j];
         else{
           s = par[0]*V[j];
           r = par[1]*V[j]; 
@@ -192,7 +213,7 @@ double Bmove(int j)
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    if(fixlam) l1pen = xs[j]*par[0]*V[j];
+    if(fixpen) l1pen = xs[j]*par[0]*V[j];
     else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < l1pen) dbet = -B[j];
@@ -381,9 +402,10 @@ int cdsolve(double tol, int M, int qn)
               int *n_in, int *p_in, int *l_in, 
               int *xi_in, int *xp_in, double *xv_in, 
               double *y_in, double *weight, int *standardize,
-              int *npen, double *pminratio, double *varpen,  
+              int *nlam, double *minratio, double *varpen,  
               double *thresh, int *maxit, int *qn,  
-              double *mu, double *deviance, double *df, 
+              double *lam, double *deviance, 
+              double *df, double *dispersion,
               double *alpha,  double *beta, 
               int *exits, int *verb)
  {
@@ -425,6 +447,7 @@ int cdsolve(double tol, int M, int qn)
       calcH = &bin_curve;
       A = log(ybar/(1-ybar));
       E = drep(exp(A),n);
+      phi = 1.0;
       break;
     case 3:
       calcL = &po_nllhd;
@@ -433,6 +456,7 @@ int cdsolve(double tol, int M, int qn)
       calcH = &po_curve;
       A = log(ybar);
       E = drep(exp(A), n);
+      phi = 1.0;
       break;
     default: error( "unrecognized family type." );
   }
@@ -443,7 +467,7 @@ int cdsolve(double tol, int M, int qn)
   ag0 = new_dvec(p);
 
   gam = *varpen;
-  fixlam = (gam == 0.0); // lasso
+  fixpen = (gam == 0.0); // lasso
   subsel = !isfinite(gam); // subset selection
   if(subsel)
     for(int j=0; j<p; j++) 
@@ -459,19 +483,19 @@ int cdsolve(double tol, int M, int qn)
       "*** regression for %d observations and %d covariates ***\n", 
       n, p);
 
-  double delta = exp( log(*pminratio)/((double) *npen-1) );
+  double delta = exp( log(*minratio)/((double) *nlam-1) );
   double Lold = INFINITY;
   NLLHD = 0.0;
   int s;
 
-  for(s=0; s<*npen; s++){
+  for(s=0; s<*nlam; s++){
 
     if(s>0)
-      mu[s] = mu[s-1]*delta;
+      lam[s] = lam[s-1]*delta;
 
-    par[0] = mu[s]*nd;
-    if(!fixlam & !subsel){ 
-      par[1] = mu[s]/gam;
+    par[0] = lam[s]*nd;
+    if(!fixpen & !subsel){ 
+      par[1] = lam[s]/gam;
       par[0] *= par[1]; }
 
     exits[s] = cdsolve(*thresh,*maxit,*qn);
@@ -481,20 +505,23 @@ int cdsolve(double tol, int M, int qn)
     if(exits[s] | (Lold < NLLHD) | (npass>=*maxit)){ 
       myprintf(mystderr, 
         "Terminating path: Did you choose the wrong response family?\n");
-      *npen = s; break; }
+      *nlam = s; break; }
 
     deviance[s] = 2.0*NLLHD;
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
+
+    if(fam==1)
+      phi = dispersion[s] = sigma2();
+    df[s] = dof(&lam[s]);
+    
     if(s==0)
       *thresh *= fabs(deviance[0]); 
 
-    df[s] = dof(&mu[s]);
-
     if(*verb) 
       myprintf(mystdout, 
-          "segment %d: mu = %.4g, dev = %.4g, npasses = %d\n", 
-          s+1, mu[s], deviance[s], npass);
+          "segment %d: lam = %.4g, dev = %.4g, npasses = %d\n", 
+          s+1, lam[s], deviance[s], npass);
 
     itime = my_r_process_events(itime); 
   }

@@ -35,12 +35,12 @@ shows mean OOS deviance with 1se error bars.
 \value{
   \item{gamlr}{ The full-data fitted \code{gamlr} object.}
   \item{nfold}{ The number of CV folds. }
-  \item{cvm}{ Mean OOS deviance by \code{gamlr\$penalty} }
+  \item{cvm}{ Mean OOS deviance by \code{gamlr\$lambda} }
   \item{cvs}{ The standard errors on \code{cvm}.}
   \item{seg.min}{ The index of minimum \code{cvm}. }
   \item{seg.1se}{ The index of \code{1se} \code{cvm} (see details). }
-  \item{pen.min}{ Penalty at minimum \code{cvm}. }
-  \item{pen.1se}{ Penalty at \code{1se} \code{cvm}. }
+  \item{lambda.min}{ Penalty at minimum \code{cvm}. }
+  \item{lambda.1se}{ Penalty at \code{1se} \code{cvm}. }
  }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}

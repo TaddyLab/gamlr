@@ -34,7 +34,7 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 data(hockey)
 x <- cBind(config,onice)
 y <- as.numeric(goal$who=="HOME")
-fit <- gamlr(x=x, y=y, family="binomial", npen=10,
+fit <- gamlr(x=x, y=y, family="binomial", nlam=10,
             standardize=FALSE, varpen=1e-2, verb=TRUE)
 
 ## BIC selected coefficients

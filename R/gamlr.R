@@ -5,9 +5,9 @@
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
-            varpen=0, npen=100, 
-            pen.start=Inf,  
-            pen.min.ratio=0.01, 
+            varpen=0, nlambda=100, 
+            lambda.start=Inf,  
+            lambda.min.ratio=0.01, 
             weight=NULL, standardize=TRUE, verb=FALSE,
             thresh=1e-6, maxit=1e5, qn=FALSE)
 {
@@ -41,15 +41,15 @@ gamlr <- function(x, y,
   weight <- as.double(weight)
 
   ## check and clean all arguments
-  stopifnot(pen.min.ratio<=1)
-  stopifnot(all(c(npen,pen.min.ratio)>0))
-  stopifnot(all(c(pen.start,varpen)>=0))
+  stopifnot(lambda.min.ratio<=1)
+  stopifnot(all(c(nlambda,lambda.min.ratio)>0))
+  stopifnot(all(c(lambda.start,varpen)>=0))
   stopifnot(all(c(thresh,maxit)>0))
   if(is.infinite(varpen)){
-    npen=min(npen,sum(weight!=0)+1)
-    pen.start=Inf }
-  mu <- double(npen)
-  mu[1] <- pen.start
+    nlambda=min(nlambda,sum(weight!=0)+1)
+    lambda.start=Inf }
+  lambda <- double(nlambda)
+  lambda[1] <- lambda.start
 
   ## drop it like it's hot
   fit <- .C("R_gamlr",
@@ -63,38 +63,45 @@ gamlr <- function(x, y,
             y=y,
             weight=weight,
             standardize=as.integer(standardize>0),
-            npen=as.integer(npen),
-            pminratio=as.double(pen.min.ratio),
+            nlambda=as.integer(nlambda),
+            pminratio=as.double(lambda.min.ratio),
             varpen=as.double(varpen),
             thresh=as.double(thresh),
             maxit=as.integer(maxit),
             qn=as.integer(qn>0),
-            mu=mu,
-            deviance=double(npen),
-            df=double(npen),
-            alpha=as.double(rep(0,npen)),
-            beta=as.double(rep(0,npen*p)),
-            exits=integer(npen), 
+            lambda=lambda,
+            deviance=double(nlambda),
+            df=double(nlambda),
+            dispersion=double(nlambda*(famid==1)),
+            alpha=as.double(rep(0,nlambda)),
+            beta=as.double(rep(0,nlambda*p)),
+            exits=integer(nlambda), 
             verb=as.integer(verb>0),
             PACKAGE="gamlr",
             NAOK=TRUE,
             dup=FALSE)
 
   ## coefficients
-  npen <- fit$npen
-  if(npen == 0) stop("could not converge for any penalty.")
-  alpha <- head(fit$alpha,npen)
-  names(alpha) <- paste0('seg',(1:npen))
-  beta <- Matrix(head(fit$beta,npen*p),
-                    nrow=p, ncol=npen, 
+  nlambda <- fit$nlambda
+  if(nlambda == 0) stop("could not converge for any lambda.")
+  alpha <- head(fit$alpha,nlambda)
+  names(alpha) <- paste0('seg',(1:nlambda))
+  beta <- Matrix(head(fit$beta,nlambda*p),
+                    nrow=p, ncol=nlambda, 
                     dimnames=list(colnames(x),names(alpha)),
                     sparse=TRUE)
   ## path stats
-  pen <- head(fit$mu,npen)
-  dev <- head(fit$deviance,npen)
-  df <- head(fit$df,npen)
-  exits <- head(fit$exits,npen)
-  names(df) <- names(dev) <- names(pen) <- names(alpha)
+  lambda <- head(fit$lambda,nlambda)
+  dev <- head(fit$deviance,nlambda)
+  df <- head(fit$df,nlambda)
+  exits <- head(fit$exits,nlambda)
+  names(df) <- names(dev) <- names(lambda) <- names(alpha)
+
+  ## posterior map sigma2
+  if(family=="gaussian"){
+    disp <- head(fit$dispersion,nlambda)
+    names(disp) <- names(df)
+  } else disp <- 1
 
   ## nonzero saturated poisson deviance
   if(family=="poisson")
@@ -104,7 +111,7 @@ gamlr <- function(x, y,
     fit$weight <- weight+fit$weight
 
   ## build return object and exit
-  out <- list(penalty=pen, 
+  out <- list(lambda=lambda, 
              varpen=fit$varpen,
              weight=fit$weight, 
              nobs=fit$n,
@@ -113,6 +120,7 @@ gamlr <- function(x, y,
              beta=beta, 
              df=df,
              deviance=dev,
+             dispersion=disp,
              iterations=fit$maxit,
              call=match.call()) 
 
@@ -127,7 +135,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
                       col=rgb(0,0,.5,.75), 
                       select=TRUE, df=TRUE, ...)
 {
-  npen <- ncol(x$beta)
+  nlambda <- ncol(x$beta)
   p <- nrow(x$beta)
   nzr <- unique(x$beta@i)+1
   nzr <- nzr[x$weight[nzr]!=0 & is.finite(x$weight[nzr])]
@@ -138,8 +146,8 @@ plot.gamlr <- function(x, against=c("pen","dev"),
 
   against=match.arg(against)
   if(against=="pen"){
-      xv <- log(x$penalty)
-      xvn <- "log penalty"
+      xv <- log(x$lambda)
+      xvn <- "log lambda"
   } else if(against=="dev"){
       xv <- x$dev
       xvn <- "deviance"
@@ -152,13 +160,13 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   if(is.null(argl$xlab)) argl$xlab=xvn
   if(is.null(argl$lty)) argl$lty=1
   if(is.null(argl$bty)) argl$bty="n"
-  do.call(plot, c(list(x=xv, y=rep(0,npen), col="grey70", type="l"), argl))
+  do.call(plot, c(list(x=xv, y=rep(0,nlambda), col="grey70", type="l"), argl))
 
   matplot(xv, t(beta), col=col, add=TRUE, type="l", lty=argl$lty)
 
   if(df){
     dfi <- unique(round(
-      seq(1,npen,length=ceiling(length(axTicks(1))))))
+      seq(1,nlambda,length=ceiling(length(axTicks(1))))))
     axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5) }
 
   if(select){
@@ -208,7 +216,7 @@ summary.gamlr <- function(object, ...){
   print(object)
 
   return(data.frame(
-    pen=object$penalty,
+    lambda=object$lambda,
     par=diff(object$b@p)+1,
     df=object$df,
     r2=1-object$dev/object$dev[1],

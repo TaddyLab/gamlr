@@ -13,12 +13,12 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
   foldsize <- floor(full$nobs/nfold)
 
   argl <- list(...)
-  argl$pen.start <- full$pen[1]
-  argl$npen <- length(full$pen)
-  argl$pen.min.ratio <- full$pen[argl$npen]/argl$pen.start
+  argl$lambda.start <- full$lambda[1]
+  argl$nlambda <- length(full$lambda)
+  argl$lambda.min.r <- full$lam[argl$nlam]/argl$lambda.start
 
-  oos <- matrix(Inf, nrow=nfold, ncol=length(full$pen),
-                dimnames=list(NULL,names(full$pen)))
+  oos <- matrix(Inf, nrow=nfold, ncol=length(full$lambda),
+                dimnames=list(NULL,names(full$lambda)))
 
   if(verb) cat("fold ")
   for(i in 1:nfold){
@@ -39,7 +39,7 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
                       y[-train]*log(y[-train]),
                       0.0) - y[-train]) 
       dev <- dev + 2*satnllhd }
-    oos[i,1:length(fit$pen)] <- dev 
+    oos[i,1:length(fit$lambda)] <- dev 
     if(verb) cat(sprintf("%d,",i))
   }
   
@@ -47,11 +47,11 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
 
   seg.min <- which.min(cvm)
-  pen.min = full$pen[seg.min]
+  lambda.min = full$lambda[seg.min]
 
   cv1se <- (cvm[seg.min]+cvs[seg.min])-cvm
   seg.1se <- min((1:length(cvm))[cv1se>=0])
-  pen.1se = full$pen[seg.1se]
+  lambda.1se = full$lambda[seg.1se]
 
   if(verb) cat("done.\n")
   out <- list(gamlr=full,
@@ -61,8 +61,8 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
           cvs=cvs,
           seg.min=seg.min,
           seg.1se=seg.1se,
-          pen.min=pen.min,
-          pen.1se=pen.1se)
+          lambda.min=lambda.min,
+          lambda.1se=lambda.1se)
   class(out) <- "cv.gamlr"
   invisible(out)
 }
@@ -71,7 +71,7 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
 
 plot.cv.gamlr <- function(x, ...){
   argl = list(...)
-  if(is.null(argl$xlab)) argl$xlab="log penalty"
+  if(is.null(argl$xlab)) argl$xlab="log lambda"
   if(is.null(argl$ylab)) argl$ylab=sprintf("%s deviance",x$family)
   if(is.null(argl$pch)) argl$pch=20
   if(is.null(argl$col)) argl$col=4
@@ -81,7 +81,7 @@ plot.cv.gamlr <- function(x, ...){
 
   if(is.null(argl$ylim)) argl$ylim=range(c(cvlo,cvhi))
 
-  argl$x <- log(x$gamlr$pen)
+  argl$x <- log(x$gamlr$lambda)
   argl$y <- x$cvm
   argl$type <- "n"
 
@@ -90,8 +90,8 @@ plot.cv.gamlr <- function(x, ...){
   argl$type <- NULL
   suppressWarnings(do.call(points, argl))
 
-  abline(v=log(x$pen.min), lty=3, col="grey20")
-  abline(v=log(x$pen.1se), lty=3, col="grey20")
+  abline(v=log(x$lambda.min), lty=3, col="grey20")
+  abline(v=log(x$lambda.1se), lty=3, col="grey20")
 
   dfi <- unique(round(
     seq(1,length(argl$x),length=ceiling(length(axTicks(1))))))
@@ -116,7 +116,7 @@ summary.cv.gamlr <- function(object, ...){
   print(object)
 
   return(data.frame(
-    pen=object$gamlr$penalty,
+    lambda=object$gamlr$lambda,
     par=diff(object$gamlr$b@p)+1,
     oos.r2=1-object$cvm/object$cvm[1]))
 }
