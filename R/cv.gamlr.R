@@ -15,7 +15,7 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
   argl <- list(...)
   argl$lambda.start <- full$lambda[1]
   argl$nlambda <- length(full$lambda)
-  argl$lambda.min.r <- full$lam[argl$nlam]/argl$lambda.start
+  argl$lambda.min.ratio <- full$lam[argl$nlam]/argl$lambda.start
 
   oos <- matrix(Inf, nrow=nfold, ncol=length(full$lambda),
                 dimnames=list(NULL,names(full$lambda)))
