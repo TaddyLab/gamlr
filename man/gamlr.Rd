@@ -89,25 +89,29 @@ to the same domain as \code{y}.}
 \details{ Finds the posterior modes along a regularization path
 		   of \emph{prior expected L1 penalties} using coordinate descent.
 
-  Given L1 penalty \eqn{\lambda}, each path segment minimizes
- -logLHD\eqn{(\beta_1 ... \beta_p) 
-  + (n\lambda/\phi) \sum |\beta_j|}, with \eqn{\phi} the exponential
+  Each path segment minimizes the log-cost penalized objective 
+  -logLHD\eqn{(\beta_1 ... \beta_p) + \sum (s/\phi)log[r + |\beta_j|]},
+  where \eqn{\phi} is the exponential
   family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
-  one otherwise).
-  Via the \code{varpen} argument, 
-  \eqn{\lambda} is either fixed (\code{varpen=0}, i.e. the lasso) 
-  or it is assigned a \eqn{Gamma(s, r)} prior, 
-  with expectation \code{lambda = s/r}
-  and variance \code{varpen = s/r^2}. 
-  The latter \code{varpen>0} case is equivalent to a log penalty \eqn{s*log[r + |\beta|]}, and the path for \code{lambda} is then in terms of \eqn{E[\lambda]}.
+  one otherwise).  
 
-  Finally, for completeness, setting \code{varpen=Inf} yields a stepwise
+  This log penalty arises through joint estimation for coefficients and their
+  unique L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r)} prior with expectation \eqn{E[\omega] = s/(\phi r)}
+  and variance \eqn{var[\omega] = s/(\phi r^2)}.
+  Reparameterizing \eqn{E[\omega] = (n/\phi)\lambda} and
+  \eqn{var[\omega] = (n/\phi)\gamma}, our penalty path is a grid
+  in \code{lambda} = \eqn{\lambda} under variance \code{varpen} = \eqn{\gamma}.
+  For \code{varpen=0} the L1 penalties are all fixed at 
+  \eqn{\omega = (n/\phi)\lambda} (i.e. equivalent to \code{glmnet}'s lasso).
+
+    For completeness, setting \code{varpen=Inf} yields a stepwise
       subset selection algorithm: each step adds (unpenalized)
       the coefficient with highest absolute gradient.  The reported
       \code{lambda} is just \code{exp(-df)}, where \code{df} is 
-      the number of nonzero coefficients.
+      the number of nonzero coefficients 
+      (i.e. not the true degrees of freedom, which is essentially \code{ncol(x)}).
 
-      \code{plot.gamlr} can be used to plot the results: it 
+      \code{plot.gamlr} can be used to graph the results: it 
       shows the regularization paths for \emph{beta} and marks
       the minimum AIC and BIC models.
 }
@@ -119,13 +123,13 @@ to the same domain as \code{y}.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
   -2( logLHD.fitted - logLHD.saturated). }
-  \item{dispersion}{Exponential family dispersion: MAP estimated 
-  \eqn{\sigma^2} for \code{family="gaussian"}, one otherwise) }
   \item{iterations}{Total number of coordinate descent cycles. }
 }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
 }
+\references{Taddy (2013), The Gamma Lasso.}
+
 \examples{
 
 ### a low-D test (highly multi-collinear)

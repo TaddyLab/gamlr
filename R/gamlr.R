@@ -72,7 +72,6 @@ gamlr <- function(x, y,
             lambda=lambda,
             deviance=double(nlambda),
             df=double(nlambda),
-            dispersion=double(nlambda*(famid==1)),
             alpha=as.double(rep(0,nlambda)),
             beta=as.double(rep(0,nlambda*p)),
             exits=integer(nlambda), 
@@ -97,12 +96,6 @@ gamlr <- function(x, y,
   exits <- head(fit$exits,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
-  ## posterior map sigma2
-  if(family=="gaussian"){
-    disp <- head(fit$dispersion,nlambda)
-    names(disp) <- names(df)
-  } else disp <- 1
-
   ## nonzero saturated poisson deviance
   if(family=="poisson")
     dev <- dev + 2*sum(ifelse(y>0,y*log(y),0) - y) 
@@ -120,7 +113,6 @@ gamlr <- function(x, y,
              beta=beta, 
              df=df,
              deviance=dev,
-             dispersion=disp,
              iterations=fit$maxit,
              call=match.call()) 
 

@@ -33,7 +33,6 @@ double trbnd;
 int itertotal, npass;
 
 double gam;
-double phi;
 unsigned int fixpen;
 unsigned int subsel;
 
@@ -112,27 +111,6 @@ void checkdata(int standardize){
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
 }
 
-// gaussian family dispersion
-double sigma2(void){
-  double s,r,a,b;
-  a = NLLHD;
-  b = 0.5*nd + 1.0;
-  for(int j=0; j<p; j++){
-    if(V[j]>0.0){
-      if(!isfinite(V[j])) continue;
-      b += 1.0;
-      if(B[j]!=0.0){
-        if(fixpen) a += par[0]*fabs(B[j])*xs[j]*V[j];
-        else{
-          s = par[0]*V[j]; 
-          r = par[1]*V[j];
-          a += s*log(1.0+fabs(B[j])*xs[j]/r); }
-      }
-    }
-  }
-  return a/b;
-}
-
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
 double dof(double *lam){
@@ -174,14 +152,17 @@ double dof(double *lam){
   }
   
   // log penalty
-  double s,r;
+  double s,r, phi;
+  if(fam==1) phi = NLLHD*2/nd; 
+  else phi = 1.0;
+
   for(j=0; j<p; j++){
     if(V[j]>0.0){
       if(!isfinite(V[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
       s = par[0]*V[j];
       r = par[1]*V[j];
-      df += pgamma(ag0[j], s/phi, 1.0/r, 1, 0); 
+      df += pgamma(ag0[j]/phi, s/phi, 1.0/r, 1, 0); 
     } else df++;
   }
 
@@ -404,8 +385,7 @@ int cdsolve(double tol, int M, int qn)
               double *y_in, double *weight, int *standardize,
               int *nlam, double *minratio, double *varpen,  
               double *thresh, int *maxit, int *qn,  
-              double *lam, double *deviance, 
-              double *df, double *dispersion,
+              double *lam, double *deviance, double *df,
               double *alpha,  double *beta, 
               int *exits, int *verb)
  {
@@ -447,7 +427,6 @@ int cdsolve(double tol, int M, int qn)
       calcH = &bin_curve;
       A = log(ybar/(1-ybar));
       E = drep(exp(A),n);
-      phi = 1.0;
       break;
     case 3:
       calcL = &po_nllhd;
@@ -456,7 +435,6 @@ int cdsolve(double tol, int M, int qn)
       calcH = &po_curve;
       A = log(ybar);
       E = drep(exp(A), n);
-      phi = 1.0;
       break;
     default: error( "unrecognized family type." );
   }
@@ -508,12 +486,9 @@ int cdsolve(double tol, int M, int qn)
       *nlam = s; break; }
 
     deviance[s] = 2.0*NLLHD;
+    df[s] = dof(&lam[s]);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
-
-    if(fam==1)
-      phi = dispersion[s] = sigma2();
-    df[s] = dof(&lam[s]);
     
     if(s==0)
       *thresh *= fabs(deviance[0]); 
