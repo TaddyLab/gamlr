@@ -1,4 +1,4 @@
-/* log penalized regression -- Matt Taddy 2013 */
+/* The Gamma Lasso -- Matt Taddy 2013 */
 
 #include <stdlib.h>
 #include <string.h>
@@ -496,7 +496,7 @@ int cdsolve(double tol, int M, int qn)
 
     if(exits[s] | (Lold < NLLHD) | (npass>=*maxit)){ 
       myprintf(mystderr, 
-        "Terminating path: Did you choose the wrong response family?\n");
+        "Terminating path. Did you choose the wrong response family?\n");
       *nlam = s; break; }
 
     deviance[s] = 2.0*NLLHD;
