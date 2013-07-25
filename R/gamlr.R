@@ -52,7 +52,7 @@ gamlr <- function(x, y,
   lambda[1] <- lambda.start
 
   ## drop it like it's hot
-  fit <- .C("R_gamlr",
+  fit <- .C("gamlr",
             famid=as.integer(famid), 
             n=n,
             p=p,

@@ -373,21 +373,35 @@ int cdsolve(double tol, int M, int qn)
 }
 
 /*
- * Main Function: Rgamlr
+ * Main Function: gamlr
  *
  * path estimation of penalized coefficients
  *
  */
 
- void R_gamlr(int *famid, 
-              int *n_in, int *p_in, int *l_in, 
-              int *xi_in, int *xp_in, double *xv_in, 
-              double *y_in, double *weight, int *standardize,
-              int *nlam, double *minratio, double *varpen,  
-              double *thresh, int *maxit, int *qn,  
-              double *lam, double *deviance, double *df,
-              double *alpha,  double *beta, 
-              int *exits, int *verb)
+ void gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
+            int *n_in, // nobs 
+            int *p_in, // nvar
+            int *l_in, // length of nonzero x entries
+            int *xi_in, // length-l row ids for nonzero x
+            int *xp_in, // length-p+1 pointers to each column start
+            double *xv_in, // nonzero x entry values
+            double *y_in, // length-n y
+            double *weight, // length-p weights
+            int *standardize, // whether to scale penalty by sd(x_j)
+            int *nlam, // length of the path
+            double *minratio, // lam_nlam/lam_1
+            double *varpen,  // gamma in the GL paper
+            double *thresh,  // cd convergence
+            int *maxit, // cd max iterations 
+            int *qn,  // whether to quasi newton
+            double *lam, // output lambda
+            double *deviance, // output deviance
+            double *df, // output df
+            double *alpha,  // output intercepts
+            double *beta, // output coefficients
+            int *exits, // exit status.  0 is normal
+            int *verb) // talk? 
  {
   dirty = 1; // flag to say the function has been called
   // time stamp for periodic R interaction
