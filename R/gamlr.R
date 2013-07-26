@@ -8,8 +8,9 @@ gamlr <- function(x, y,
             varpen=0, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
-            weight=NULL, standardize=TRUE, verb=FALSE,
-            thresh=1e-6, maxit=1e5, qn=FALSE)
+            weight=NULL, standardize=TRUE, 
+            thresh=1e-6, maxit=1e5,
+            verb=FALSE)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
 
@@ -68,7 +69,6 @@ gamlr <- function(x, y,
             varpen=as.double(varpen),
             thresh=as.double(thresh),
             maxit=as.integer(maxit),
-            qn=as.integer(qn>0),
             lambda=lambda,
             deviance=double(nlambda),
             df=double(nlambda),

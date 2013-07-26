@@ -12,8 +12,9 @@ gamlr(x, y,
    varpen=0,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, weight=NULL, 
-   standardize=TRUE, verb=FALSE,
-   thresh=1e-6, maxit=1e5, qn=FALSE)
+   standardize=TRUE, 
+   thresh=1e-6, maxit=1e5,
+   verb=FALSE)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=rgb(0,0,.5,.75), select=TRUE, df=TRUE, ...)
@@ -67,10 +68,7 @@ gamlr(x, y,
     relative to the null model negative log likelihood. }
   \item{maxit}{ Max iterations for a single segment
          coordinate descent routine. }
-  \item{qn}{ Whether to us quasi-newton acceleration. 
-  This is useful for high dimensions with high multicollinearity, 
-  but the overhead is too costly otherwise. }
-  \item{object}{ A gamlr object.}
+   \item{object}{ A gamlr object.}
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}
 \item{col}{ A single plot color (default is 3/4 opaque navy), 

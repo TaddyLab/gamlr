@@ -46,10 +46,6 @@ double *D = NULL;
 double *G = NULL;
 double *ag0 = NULL;
 
-double *QN0 = NULL;
-double *QN1 = NULL;
-double *qnE = NULL;
-
 // function pointers
 double (*myexp)(double) = (*exp);
 double (*calcL)(int, double*, double*) = NULL;
@@ -72,10 +68,6 @@ void gamlr_cleanup(){
   if(G){ free(G); G = NULL; }
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
-
-  if(QN0){ free(QN0); QN0 = NULL; }
-  if(QN1){ free(QN1); QN1 = NULL; }
-  if(qnE){ free(qnE); qnE = NULL; }
 
   dirty = 0;
 }
@@ -205,61 +197,8 @@ double Bmove(int j)
   return dbet;
 }
 
-/* Quasi-Newton update (meta: inlcudes previous qn steps)
-   z0 is altered upon return as your qn solution  */
-void quasi_newton(int dim, double *z0, double *z1, double *z2){
-  double u,v,w;
-  for(int j=0; j<dim; j++){
-    u = z1[j]-z0[j];
-    v = z2[j]-z1[j];
-    if((u!=0) & (u!=v))
-      { w = u/(u-v);
-        z0[j] = (1.0-w)*z1[j] + w*z2[j]; }
-        else z0[j] = z2[j];
-  }
-}
-
-void QNmove(double *P){  
-  int i,j;
-  double qnA, Lqn, Pqn;
-
-  // move beta
-  quasi_newton(p, QN0, QN1, B);
-  if(fam==1){
-    for(i=0; i<n; i++) qnE[i] = A;
-    for(j=0; j<p; j++)
-        for(i=xp[j]; i<xp[j+1]; i++)
-          qnE[xi[i]] += xv[i]*QN0[j]; }
-  else{
-    for(i=0; i<n; i++) qnE[i] = myexp(A);
-    for(j=0; j<p; j++)
-        for(i=xp[j]; i<xp[j+1]; i++)
-          qnE[xi[i]] *= myexp(xv[i]*QN0[j]); }
-
-
-  // update intercept and add to qnE
-  qnA = A + Imove(n, qnE, &ysum);
-
-  // check posterior
-  Lqn = calcL(n, qnE, y);
-  Pqn = Lqn + calcC(QN0);
-      
-  // printf("QN log lhd jump: %g\n", *P-Pqn);
-  // printf("current: %g | ", A); print_dvec(B,p,mystdout);
-  // printf("qn move: %g | ", qnA); print_dvec(QN0,p,mystdout);
-
-  if(Pqn < *P)
-    { 
-      *P = Pqn;
-      NLLHD = Lqn;
-      copy_dvec(B, QN0, p);
-      copy_dvec(E, qnE, n); 
-      A = qnA;
-    }
-}
-
 /* coordinate descent for log penalized regression */
-int cdsolve(double tol, int M, int qn)
+int cdsolve(double tol, int M)
 {
   int t,i,j,dozero,exitstat,dopen; 
   double Pnew,Pold,dbet,Pdiff,Bdiff;
@@ -279,13 +218,6 @@ int cdsolve(double tol, int M, int qn)
 
     Pold = Pnew;
     Bdiff = 0.0;
-
-    // possibly store quasi-newton stuff
-    if(qn & dopen)
-     {  void *tmp = QN0; 
-        QN0 = QN1; 
-        QN1 = tmp; 
-        copy_dvec(QN1, B, p); }
 
     // loop through coefficients
     for(j=0; j<p; j++){
@@ -336,9 +268,6 @@ int cdsolve(double tol, int M, int qn)
 
     // trust region
     if(isfinite(trbnd)) trbnd = fmax(trbnd/2.0, Bdiff/pd);
-
-    // possibly accelerate
-    if(qn & (t>2) & (t%3 == 0) & dopen) QNmove(&Pnew);
 
     // posterior diff
     Pdiff = Pold - Pnew;
@@ -394,7 +323,6 @@ int cdsolve(double tol, int M, int qn)
             double *varpen,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
-            int *qn,  // whether to quasi newton
             double *lam, // output lambda
             double *deviance, // output deviance
             double *df, // output df
@@ -465,11 +393,6 @@ int cdsolve(double tol, int M, int qn)
     for(int j=0; j<p; j++) 
       if(V[j]>0) V[j] = INFINITY;
 
-  if(*qn) 
-    { QN0 = new_dvec(p); 
-      QN1 = new_dvec(p); 
-      qnE = new_dvec(n); }
-
   if(*verb)
     myprintf(mystdout,
       "*** regression for %d observations and %d covariates ***\n", 
@@ -490,7 +413,7 @@ int cdsolve(double tol, int M, int qn)
       par[1] = lam[s]/gam;
       par[0] *= par[1]; }
 
-    exits[s] = cdsolve(*thresh,*maxit,*qn);
+    exits[s] = cdsolve(*thresh,*maxit);
     itertotal += npass;
 
 
