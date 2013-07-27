@@ -154,7 +154,7 @@ double dof(double *lam){
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
       s = par[0]*V[j];
       r = par[1]*V[j];
-      df += pgamma(ag0[j]/phi, s/phi, 1.0/r, 1, 0); 
+      df += pgamma(ag0[j]/phi, s/phi, phi/r, 1, 0); 
     } else df++;
   }
 
