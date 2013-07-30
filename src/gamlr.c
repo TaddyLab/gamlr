@@ -103,6 +103,22 @@ void checkdata(int standardize){
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
 }
 
+/* penalty cost function */
+double calcC(double *b){
+  double cost =  0.0;
+  int j;
+  double o;
+  for(j=0; j<p; j++)
+    if( (V[j] > 0.0) & isfinite(V[j]) ){
+      if(fixpen) o = par[0]*V[j];
+      else o = par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]);
+      cost += o*fabs(b[j])*xs[j];
+      if((!fixpen) & (gam>1e-6)) 
+        cost += V[j]*(par[1]*o-par[0]*log(o));
+    }
+  return cost;
+}
+
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
 double dof(double *lam){
@@ -161,22 +177,6 @@ double dof(double *lam){
   return df;
 }
 
-/* penalty cost function */
-double calcC(double *b){
-  double cost =  0.0;
-  int j;
-  double s,r;
-  for(j=0; j<p; j++)
-      if( (V[j] > 0.0) & isfinite(V[j]) ){
-        if(fixpen) cost += par[0]*fabs(b[j])*xs[j]*V[j];
-        else{
-          s = par[0]*V[j];
-          r = par[1]*V[j]; 
-          cost += s*log(r+fabs(b[j])*xs[j]); }
-      }
-  return cost;
-}
-
 /* x^2 + bx + c root finder 
   choice of root is specific to gl update */
 double glrooter(double b, double c, double sgn)
@@ -207,9 +207,10 @@ double Bmove(int j)
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    if(fixpen){ // lasso
+    if(gam<1e-4){ // L1 updates
       double l1pen,ghb;
-      l1pen = xs[j]*par[0]*V[j];
+      if(fixpen) l1pen = xs[j]*par[0]*V[j];
+      else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
       ghb = (G[j] - H[j]*B[j]);
       if(fabs(ghb) < l1pen) dbet = -B[j];
       else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
@@ -232,7 +233,7 @@ double Bmove(int j)
         pcurve = s/((r+fabs(root))*(r+fabs(root)));
         //printf("b=%g c=%g root=%g mle=%g B=%g pc=%g h=%g\n",
         //    b,c,root,mle,B[j],pcurve,H[j]);
-        if( (H[j] < pcurve) | (newobj>oldobj)) root = 0.0;
+        if( (H[j]<pcurve) | (newobj>oldobj) ) root = 0.0;
       }
       dbet = root - B[j];
     }
@@ -303,11 +304,7 @@ int cdsolve(double tol, int M)
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
     // draw the intercept
-    if(fam!=0){
-      dbet = Imove(n, E, &ysum);
-      Bdiff += dbet;
-      A += dbet;
-    }
+    A += Imove(n, E, &ysum);
 
     // iterate and update objective 
     t++;
@@ -322,7 +319,7 @@ int cdsolve(double tol, int M)
 
     printf("t = %d: diff = %g\n", t, Pdiff);
     printf("param: %g | ", A);
-    print_dvec(B,5, mystdout);
+    print_dvec(B,p, mystdout);
     
     // check for irregular exits
     if((Pnew!=Pnew) | !isfinite(Pnew)){
@@ -332,6 +329,7 @@ int cdsolve(double tol, int M)
     }
     if((Pdiff < 0.0) &  (fabs(Pdiff) > tol)){
       if(!isfinite(trbnd) & (fam!=1)){
+        warning("Moving to trust region bounding. \n");
         trbnd = Bdiff/(pd+1.0); 
         Pdiff = fabs(Pdiff); }
       else{
@@ -368,7 +366,7 @@ int cdsolve(double tol, int M)
             int *standardize, // whether to scale penalty by sd(x_j)
             int *nlam, // length of the path
             double *minratio, // lam_nlam/lam_1
-            double *varpen,  // gamma in the GL paper
+            double *gamma_in,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
             double *lam, // output lambda
@@ -434,7 +432,7 @@ int cdsolve(double tol, int M)
   par = new_dvec(2); 
   ag0 = new_dvec(p);
 
-  gam = *varpen;
+  gam = *gamma_in;
   fixpen = (gam == 0.0); // lasso
   subsel = !isfinite(gam); // subset selection
   if(subsel)
@@ -466,8 +464,7 @@ int cdsolve(double tol, int M)
 
 
     if(exits[s] | (Lold < NLLHD) | (npass>=*maxit)){ 
-      myprintf(mystderr, 
-        "Terminating path. Did you choose the wrong response family?\n");
+      myprintf(mystderr, "Terminating path.\n");
       *nlam = s; break; }
 
     deviance[s] = 2.0*NLLHD;
