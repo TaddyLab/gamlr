@@ -9,7 +9,7 @@ gamlr <- function(x, y,
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             weight=NULL, standardize=TRUE, 
-            thresh=1e-5, maxit=1e5,
+            thresh=1e-6, maxit=1e5,
             verb=FALSE)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
