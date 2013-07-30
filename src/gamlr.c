@@ -172,25 +172,70 @@ double calcC(double *b){
         else{
           s = par[0]*V[j];
           r = par[1]*V[j]; 
-          cost += s*(1.0 - log(s/(r+fabs(b[j])*xs[j]))); }
+          cost += s*log(r+fabs(b[j])*xs[j]); }
       }
   return cost;
 }
 
+/* x^2 + bx + c root finder 
+  choice of root is specific to gl update */
+double glrooter(double b, double c, double sgn)
+{
+  double q = b*b - 4*c;
+  double root;
+  
+  if(q==0)
+    root = -0.5*b; // one real
+  else if(q < 0) root = 0.0; // two complex
+  else{
+    root = -0.5*(b-sgn*sqrt(q));
+    if(sign(root)!=sgn)
+      root = -0.5*(b+sgn*sqrt(q));
+  }
+
+  if(sgn!=sign(root)) root = 0.0;
+  return root;
+}
+
+
 /* The gradient descent move for given direction */
 double Bmove(int j)
 {
-  double dbet, ghb, l1pen;
+  double dbet;
   myassert(H[j] != 0.0); // happens for all zero xj
 
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    if(fixpen) l1pen = xs[j]*par[0]*V[j];
-    else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
-    ghb = (G[j] - H[j]*B[j]);
-    if(fabs(ghb) < l1pen) dbet = -B[j];
-    else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
+    if(fixpen){ // lasso
+      double l1pen,ghb;
+      l1pen = xs[j]*par[0]*V[j];
+      ghb = (G[j] - H[j]*B[j]);
+      if(fabs(ghb) < l1pen) dbet = -B[j];
+      else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
+    }
+    else{
+      // quadratic solver
+      double s,r,mle,sgn,zrd,root,newobj,oldobj,pcurve,b,c;
+      mle = B[j] - G[j]/H[j];
+      sgn = sign(mle);
+      s = par[0]*V[j];
+      r = par[1]*V[j];
+      zrd = sgn*r/xs[j];
+      b = zrd - mle;
+      c = s/H[j] - mle*zrd;
+      root = glrooter(b, c, sgn);
+      if((root!=0.0) & (fabs(root-B[j])>1e-4)){
+        newobj = (root-B[j])*(G[j] + 0.5*(root-B[j])*H[j]); 
+        newobj += s*log(r+xs[j]*fabs(root)); 
+        oldobj = s*log(r+xs[j]*fabs(B[j]));
+        pcurve = s/((r+fabs(root))*(r+fabs(root)));
+        //printf("b=%g c=%g root=%g mle=%g B=%g pc=%g h=%g\n",
+        //    b,c,root,mle,B[j],pcurve,H[j]);
+        if( (H[j] < pcurve) | (newobj>oldobj)) root = 0.0;
+      }
+      dbet = root - B[j];
+    }
   }
   if(fabs(dbet) > trbnd) dbet = sign(dbet)*trbnd;
  
@@ -258,8 +303,11 @@ int cdsolve(double tol, int M)
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
     // draw the intercept
-    if(fam!=0)
-      A += Imove(n, E, &ysum);
+    if(fam!=0){
+      dbet = Imove(n, E, &ysum);
+      Bdiff += dbet;
+      A += dbet;
+    }
 
     // iterate and update objective 
     t++;
@@ -272,9 +320,9 @@ int cdsolve(double tol, int M)
     // posterior diff
     Pdiff = Pold - Pnew;
 
-    //printf("t = %d: log posterior drop = %g\n", t, Pdiff);
-    //printf("param: %g | ", A);
-    //print_dvec(B,p, mystdout);
+    printf("t = %d: diff = %g\n", t, Pdiff);
+    printf("param: %g | ", A);
+    print_dvec(B,5, mystdout);
     
     // check for irregular exits
     if((Pnew!=Pnew) | !isfinite(Pnew)){
