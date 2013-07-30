@@ -100,7 +100,7 @@ to the same domain as \code{y}.}
   unique L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)} prior with expectation \eqn{E[\omega] = s/r}
   and variance \eqn{var[\omega] = \phi s/r^2}.
   Reparameterizing \eqn{E[\omega] = n\lambda} and
-  \eqn{var[\omega] = n \phi\gamma}, our penalty path is a grid
+  \eqn{var[\omega] = \phi\gamma E[\omega]}, our penalty path is a grid
   in \code{lambda} = \eqn{\lambda} under scale \code{gamma} = \eqn{\gamma}.
   For \code{gamma=0} the L1 penalties are all fixed at 
   \eqn{\omega = n\lambda} (i.e. equivalent to \code{glmnet}'s lasso).

@@ -44,7 +44,7 @@ gamlr <- function(x, y,
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
-  stopifnot(all(c(lambda.start,gamma)>=0))
+  stopifnot(all(c(lambda.start)>=0))
   stopifnot(all(c(thresh,maxit)>0))
   if(is.infinite(gamma)){
     nlambda=min(nlambda,sum(weight!=0)+1)

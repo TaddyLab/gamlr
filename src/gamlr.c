@@ -465,7 +465,7 @@ int cdsolve(double tol, int M)
 
     par[0] = lam[s]*nd;
     if(!fixpen & !subsel){ 
-      par[1] = lam[s]/gam;
+      par[1] = 1.0/gam;
       par[0] *= par[1]; }
 
     exits[s] = cdsolve(*thresh,*maxit);
