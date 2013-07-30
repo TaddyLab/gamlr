@@ -483,7 +483,7 @@ int cdsolve(double tol, int M)
     else if(npass>=*maxit){
       exits[s] = 1;
       myprintf(mystderr, "Hit max CD iterations.  "); }
-    else if(df[s] >= pd){
+    else if(df[s] >= nd){
       exits[s] = 1;
       myprintf(mystderr, "Saturated model.  "); }
     if(exits[s]){
