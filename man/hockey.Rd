@@ -35,7 +35,7 @@ data(hockey)
 x <- cBind(config,onice)
 y <- as.numeric(goal$who=="HOME")
 fit <- gamlr(x=x, y=y, family="binomial", nlam=10,
-            standardize=FALSE, varpen=1e-2, verb=TRUE)
+            standardize=FALSE, gamma=1e-2, verb=TRUE)
 
 ## BIC selected coefficients
 sum( (B <- as.matrix(coef(fit))) !=0)

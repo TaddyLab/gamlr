@@ -9,11 +9,11 @@
 \usage{
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
-   varpen=0,
+   gamma=0,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, weight=NULL, 
    standardize=TRUE, 
-   thresh=1e-6, maxit=1e5,
+   thresh=1e-5, maxit=1e5,
    verb=FALSE)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
@@ -37,7 +37,7 @@ gamlr(x, y,
   \item{family}{ Response model type; 
   either "gaussian", "poisson", or "binomial".  
   Note that for "binomial", \code{y} is in \eqn{[0,1]}. }
-  \item{varpen}{ Prior variance of the 
+  \item{gamma}{ Prior scale on the 
       L1 cost parameter \eqn{\lambda}.  
       The default of zero corresponds to the lasso,
       and higher values correspond to a more concave penalty.  
@@ -50,13 +50,16 @@ gamlr(x, y,
     (expected L1 cost) as a ratio of the path start value.  
     Our default is always 0.01; note that this differs from \code{glmnet}
     whose default depends upon the dimension of \code{x}. }
-  \item{weight}{ Parameter weights; for \code{varpen>0} 
-      this is an up-scaling of 
-      \code{varpen} that is specific to each covariate (see details). 
-      For the lasso (\code{varpen=0}), 
-      these are multipliers on the L1 penalty.  The default is 
+  \item{weight}{ Parameter weights.  
+      The default is 
       all 1.0, and a \code{weight} entry of 0 always
-      means that the corresponding coefficient is unpenalized. }
+      means that the corresponding coefficient is unpenalized.
+      Other values have penalty-dependent behavior: for \code{gamma>0} 
+      \code{weight} is an up-scaling of 
+      \code{gamma} that is specific to each covariate (see details), and 
+      for the lasso (\code{gamma=0}), 
+      these are multipliers on the L1 penalty 
+      (e.g., for the adaptive lasso).   }
   \item{standardize}{ Whether to standardize 
     the coefficients to have standard deviation of one.  
     This is equivalent to multiplying the L1 penalty 
@@ -64,7 +67,7 @@ gamlr(x, y,
   \item{verb}{ Whether to print some output for each path segment. }
   \item{thresh}{ Optimization convergence tolerance for each 
     inner coordinate-descent loop.  This is measured against the 
-    drop in negative log posterior after a full parameter set update, 
+    largest coordinate change after a full parameter-set update, 
     relative to the null model negative log likelihood. }
   \item{maxit}{ Max iterations for a single segment
          coordinate descent routine. }
@@ -88,21 +91,21 @@ to the same domain as \code{y}.}
 		   of \emph{prior expected L1 penalties} using coordinate descent.
 
   Each path segment minimizes the log-cost penalized objective 
-  -logLHD\eqn{(\beta_1 ... \beta_p) + \sum (s/\phi)log[r + |\beta_j|]},
+  -\eqn{\phi}logLHD\eqn{(\beta_1 ... \beta_p) + \sum s log[r + |\beta_j|]},
   where \eqn{\phi} is the exponential
   family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
   one otherwise).  
 
   This log penalty arises through joint estimation for coefficients and their
-  unique L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r)} prior with expectation \eqn{E[\omega] = s/(\phi r)}
-  and variance \eqn{var[\omega] = s/(\phi r^2)}.
-  Reparameterizing \eqn{E[\omega] = (n/\phi)\lambda} and
-  \eqn{var[\omega] = (n/\phi)\gamma}, our penalty path is a grid
-  in \code{lambda} = \eqn{\lambda} under variance \code{varpen} = \eqn{\gamma}.
-  For \code{varpen=0} the L1 penalties are all fixed at 
-  \eqn{\omega = (n/\phi)\lambda} (i.e. equivalent to \code{glmnet}'s lasso).
+  unique L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)} prior with expectation \eqn{E[\omega] = s/r}
+  and variance \eqn{var[\omega] = \phi s/r^2}.
+  Reparameterizing \eqn{E[\omega] = n\lambda} and
+  \eqn{var[\omega] = n \phi\gamma}, our penalty path is a grid
+  in \code{lambda} = \eqn{\lambda} under scale \code{gamma} = \eqn{\gamma}.
+  For \code{gamma=0} the L1 penalties are all fixed at 
+  \eqn{\omega = n\lambda} (i.e. equivalent to \code{glmnet}'s lasso).
 
-    For completeness, setting \code{varpen=Inf} yields a stepwise
+    For completeness, setting \code{gamma=Inf} yields a stepwise
       subset selection algorithm: each step adds (unpenalized)
       the coefficient with highest absolute gradient.  The reported
       \code{lambda} is just \code{exp(-df)}, where \code{df} is 
@@ -139,9 +142,9 @@ diag(xvar) <- 1
 x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
-fitlasso <- gamlr(x, y, varpen=0) # lasso
-fitgl <- gamlr(x, y, varpen=1/5) # log penalty
-fitglbv <- gamlr(x, y, varpen=5) # big variance log penalty
+fitlasso <- gamlr(x, y, gamma=0) # lasso
+fitgl <- gamlr(x, y, gamma=1/5) # log penalty
+fitglbv <- gamlr(x, y, gamma=5) # big variance log penalty
 
 par(mfrow=c(1,3))
 ylim = range(c(fitglbv$beta@x))

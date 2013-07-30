@@ -5,11 +5,11 @@
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
-            varpen=0, nlambda=100, 
+            gamma=0, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             weight=NULL, standardize=TRUE, 
-            thresh=1e-6, maxit=1e5,
+            thresh=1e-5, maxit=1e5,
             verb=FALSE)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -44,9 +44,9 @@ gamlr <- function(x, y,
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
-  stopifnot(all(c(lambda.start,varpen)>=0))
+  stopifnot(all(c(lambda.start,gamma)>=0))
   stopifnot(all(c(thresh,maxit)>0))
-  if(is.infinite(varpen)){
+  if(is.infinite(gamma)){
     nlambda=min(nlambda,sum(weight!=0)+1)
     lambda.start=Inf }
   lambda <- double(nlambda)
@@ -66,7 +66,7 @@ gamlr <- function(x, y,
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
             pminratio=as.double(lambda.min.ratio),
-            varpen=as.double(varpen),
+            gamma=as.double(gamma),
             thresh=as.double(thresh),
             maxit=as.integer(maxit),
             lambda=lambda,
@@ -100,12 +100,12 @@ gamlr <- function(x, y,
   if(family=="poisson")
     dev <- dev + 2*sum(ifelse(y>0,y*log(y),0) - y) 
 
-  if(is.infinite(varpen)) 
+  if(is.infinite(gamma)) 
     fit$weight <- weight+fit$weight
 
   ## build return object and exit
   out <- list(lambda=lambda, 
-             varpen=fit$varpen,
+             gamma=fit$gamma,
              weight=fit$weight, 
              nobs=fit$n,
              family=family,
