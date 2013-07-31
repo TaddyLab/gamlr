@@ -35,7 +35,6 @@ int itertotal, npass;
 double gam;
 unsigned int fixpen;
 unsigned int subsel;
-unsigned int dolla;
 
 double ysum,ybar;
 double *xm = NULL;
@@ -114,7 +113,7 @@ double calcC(void){
       if(fixpen) o = par[0]*V[j];
       else o = par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]);
       cost += o*fabs(B[j])*xs[j];
-      if(!fixpen & !dolla) 
+      if(!fixpen & (gam > 1e-5)) 
         cost += V[j]*(par[1]*o-par[0]*log(o));
       //printf("B=%g, o=%g, hyp=%g\n", B[j],o,par[1]*o-par[0]*log(o));
     }
@@ -179,27 +178,6 @@ double dof(double *lam, double L){
   return df;
 }
 
-/* x^2 + bx + c root finder 
-  choice of root is specific to gl update */
-double glrooter(double b, double c, double sgn)
-{
-  double q = b*b - 4*c;
-  double root;
-
-  if(q==0)
-    root = -0.5*b; // one real
-  else if(q < 0) root = 0.0; // two complex
-  else{
-    root = -0.5*(b-sgn*sqrt(q));
-    if(sign(root)!=sgn)
-      root = -0.5*(b+sgn*sqrt(q));
-  }
-
-  if(sgn!=sign(root)) root = 0.0;
-  return root;
-}
-
-
 /* The gradient descent move for given direction */
 double Bmove(int j)
 {
@@ -209,35 +187,12 @@ double Bmove(int j)
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    if(dolla){ // L1 updates
-      double l1pen,ghb;
-      if(fixpen) l1pen = xs[j]*par[0]*V[j];
-      else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
-      ghb = (G[j] - H[j]*B[j]);
-      if(fabs(ghb) < l1pen) dbet = -B[j];
-      else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
-    }
-    else{
-      // quadratic solver
-      double s,r,mle,sgn,zrd,root,newobj,oldobj,pcurve,b,c;
-      mle = B[j] - G[j]/H[j];
-      sgn = sign(mle);
-      s = par[0]*V[j];
-      r = par[1]*V[j];
-      zrd = sgn*r/xs[j];
-      b = zrd - mle;
-      c = s/H[j] - mle*zrd;
-      root = glrooter(b, c, sgn);
-      if((root!=0.0) & (fabs(root-B[j])>1e-4)){
-        newobj = (root-B[j])*(G[j] + 0.5*(root-B[j])*H[j]); 
-        newobj += s*log(r+xs[j]*fabs(root)); 
-        oldobj = s*log(r+xs[j]*fabs(B[j]));
-        pcurve = s/((r+fabs(root))*(r+fabs(root)));
-        //printf("b=%g; c=%g : root=%g mle=%g\n",b,c,root,mle);
-        if( (H[j]<pcurve) | (newobj>oldobj) ) root = 0.0;
-      }
-      dbet = root - B[j];
-    }
+    double l1pen,ghb;
+    if(fixpen) l1pen = xs[j]*par[0]*V[j];
+    else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
+    ghb = (G[j] - H[j]*B[j]);
+    if(fabs(ghb) < l1pen) dbet = -B[j];
+    else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
   }
   if(fabs(dbet) > trbnd) dbet = sign(dbet)*trbnd;
  
@@ -442,7 +397,6 @@ int cdsolve(double tol, int M)
 
   gam = *penscale;
   fixpen = (gam == 0.0); // lasso
-  dolla = gam < 1e-4; // use local linear approx
   subsel = !isfinite(gam); // subset selection
   if(subsel)
     for(int j=0; j<p; j++) 
@@ -465,7 +419,7 @@ int cdsolve(double tol, int M)
 
     par[0] = lam[s]*nd;
     if(!fixpen & !subsel){ 
-      par[1] = 1.0/gam;
+      par[1] = lam[s]/gam;
       par[0] *= par[1]; }
 
     exits[s] = cdsolve(*thresh,*maxit);
