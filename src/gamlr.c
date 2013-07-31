@@ -33,8 +33,7 @@ double trbnd;
 int itertotal, npass;
 
 double gam;
-unsigned int fixpen;
-unsigned int subsel;
+double L1pen;
 
 double ysum,ybar;
 double *xm = NULL;
@@ -47,7 +46,6 @@ double *G = NULL;
 double *ag0 = NULL;
 
 // function pointers
-double (*myexp)(double) = (*exp);
 double (*calcL)(int, double*, double*) = NULL;
 double (*calcG)(int, double*, int*, double*, double*) = NULL;
 double (*calcH)(int, double*, int*, double*, double*) = NULL;
@@ -106,17 +104,9 @@ void checkdata(int standardize){
 /* penalty cost function */
 double calcC(void){
   double cost =  0.0;
-  int j;
-  double o;
-  for(j=0; j<p; j++)
-    if( (V[j] > 0.0) & isfinite(V[j]) ){
-      if(fixpen) o = par[0]*V[j];
-      else o = par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]);
-      cost += o*fabs(B[j])*xs[j];
-      if(!fixpen & (gam > 1e-5)) 
-        cost += V[j]*(par[1]*o-par[0]*log(o));
-      //printf("B=%g, o=%g, hyp=%g\n", B[j],o,par[1]*o-par[0]*log(o));
-    }
+  for(int j=0; j<p; j++)
+    if( (V[j] > 0.0) & isfinite(V[j]) )
+      cost += L1pen*V[j]*fabs(B[j])*xs[j];
   return cost;
 }
 
@@ -126,26 +116,7 @@ double dof(double *lam, double L){
   double df =  1.0;
   int j;
   
-  // subset selection
-  if(subsel){
-    int jnext = 0;
-    double gnext = 0.0;
-    for(j=0; j<p; j++){
-      if(!isfinite(V[j])){
-        G[j] = (*calcG)(xp[j+1]-xp[j], &xv[xp[j]], 
-                        &xi[xp[j]], E, &xy[j]); 
-        ag0[j] = fabs(G[j])/xs[j];
-        if(ag0[j]>gnext){
-          V[jnext] = INFINITY;
-          jnext = j;
-          V[j] = 0.0;
-          gnext = ag0[j]; }
-      }
-      else df++; }
-    lam[0] = exp(-df);
-    return df; }
-
-  // lasso or log pen initialization  
+  // initialization  
   if(!isfinite(lam[0])){
     for(j=0; j<p; j++){
       ag0[j] = fabs(G[j])/xs[j];  
@@ -154,24 +125,21 @@ double dof(double *lam, double L){
     return df; }
 
   // lasso 
-  if(fixpen){
+  if(gam==0.0){
     for(j=0; j<p; j++)
       if( (B[j]!=0.0) | (V[j]==0.0) ) df ++;
     return df;
   }
-  
-  // log penalty
-  double s,r, phi;
+  // gamma lasso
+  double s,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
-
   for(j=0; j<p; j++){
     if(V[j]>0.0){
       if(!isfinite(V[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
-      s = par[0]*V[j];
-      r = par[1]*V[j];
-      df += pgamma(ag0[j], s/phi, phi/r, 1, 0); 
+      s = L1pen/gam;
+      df += pgamma(ag0[j], s/phi+1.0, phi*gam*V[j], 1, 0); 
     } else df++;
   }
 
@@ -187,12 +155,11 @@ double Bmove(int j)
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    double l1pen,ghb;
-    if(fixpen) l1pen = xs[j]*par[0]*V[j];
-    else l1pen = xs[j]*par[0]*V[j]/(par[1]*V[j]+fabs(B[j])*xs[j]); 
+    double pen,ghb;
+    pen = xs[j]*L1pen*V[j];
     ghb = (G[j] - H[j]*B[j]);
-    if(fabs(ghb) < l1pen) dbet = -B[j];
-    else dbet = -(G[j]-sign(ghb)*l1pen)/H[j];
+    if(fabs(ghb) < pen) dbet = -B[j];
+    else dbet = -(G[j]-sign(ghb)*pen)/H[j];
   }
   if(fabs(dbet) > trbnd) dbet = sign(dbet)*trbnd;
  
@@ -250,7 +217,7 @@ int cdsolve(double tol, int M)
         if(fam==1)
           for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] += xv[i]*dbet;
         else
-          for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= myexp(xv[i]*dbet);
+          for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= exp(xv[i]*dbet);
         dbet = fabs(dbet);
         if(dbet>Bdiff) Bdiff = dbet;
       }
@@ -396,11 +363,6 @@ int cdsolve(double tol, int M)
   ag0 = new_dvec(p);
 
   gam = *penscale;
-  fixpen = (gam == 0.0); // lasso
-  subsel = !isfinite(gam); // subset selection
-  if(subsel)
-    for(int j=0; j<p; j++) 
-      if(V[j]>0) V[j] = INFINITY;
 
   if(*verb)
     myprintf(mystdout,
@@ -417,10 +379,7 @@ int cdsolve(double tol, int M)
     if(s>0)
       lam[s] = lam[s-1]*delta;
 
-    par[0] = lam[s]*nd;
-    if(!fixpen & !subsel){ 
-      par[1] = lam[s]/gam;
-      par[0] *= par[1]; }
+    L1pen = lam[s]*nd;
 
     exits[s] = cdsolve(*thresh,*maxit);
     itertotal += npass;
@@ -447,6 +406,10 @@ int cdsolve(double tol, int M)
     Lold = NLLHD;
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
+
+    for(int j=0; j<p; j++) 
+      if( (V[j]>0.0) & isfinite(V[j]) )
+        V[j] = 1.0/(1.0+gam*fabs(B[j]));
 
     if(*verb) 
       myprintf(mystdout, 
