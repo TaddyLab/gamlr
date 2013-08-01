@@ -103,10 +103,11 @@ void checkdata(int standardize){
 
 /* penalty cost function */
 double calcC(void){
-  double cost =  0.0;
+  if(!isfinite(L1pen)) return 0.0;
+  double cost = 0.0;
   for(int j=0; j<p; j++)
-    if( (V[j] > 0.0) & isfinite(V[j]) )
-      cost += L1pen*V[j]*fabs(B[j])*xs[j];
+    if( (V[j] > 0.0) & isfinite(V[j])){
+      cost += L1pen*V[j]*fabs(B[j])*xs[j]; }
   return cost;
 }
 
@@ -184,7 +185,7 @@ int cdsolve(double tol, int M)
   POST=INFINITY;
 
   // CD loop
-  while( ( (Bdiff > tol) | dozero ) & (t < M) ){
+  while( ( (Pdiff > tol) | dozero ) & (t < M) ){
     Bdiff = 0.0;
 
     // loop through coefficients
@@ -238,30 +239,27 @@ int cdsolve(double tol, int M)
     if(isfinite(trbnd)) trbnd = fmax(trbnd/2.0, Bdiff/pd);
 
     /*****  check objective  *******/
-    if( (t%1==0) & (fam!=1) ){
-      Pold = POST;
-      POST = calcL(n, E, y);
-      if(dopen) POST += calcC();
-      Pdiff = Pold - POST;
-    
+    Pold = POST;
+    POST = calcL(n, E, y);
+    if(dopen) POST += calcC();
+    Pdiff = Pold - POST;
       // check for irregular exits
-      if((POST!=POST) | !isfinite(POST)){
-        warning("Stopped due to infinite posterior. \n");
-        exitstat = 1;
-        break;
-      }
-      if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
-        if(!isfinite(trbnd) & (fam!=1)){
-          myprintf(mystderr,"Divergence detected: moving to trust region bounding. \n");
-          trbnd = Bdiff; 
-          Pdiff = fabs(Pdiff); }
+    if((POST!=POST) | !isfinite(POST)){
+      warning("Stopped due to infinite posterior. \n");
+      exitstat = 1;
+      break;
+    }
+    if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
+      if(!isfinite(trbnd) & (fam!=1)){
+        myprintf(mystderr,"Divergence detected: moving to trust region bounding. \n");
+        trbnd = Bdiff; 
+        Pdiff = fabs(Pdiff); }
         else{
           warning("Stopped due to divergent optimization. \n");
           exitstat = 1;
           break; 
         } 
       }
-    }
     /********************/
 
     // printf("t = %d: diff = %g\n", t, Pdiff);
@@ -372,6 +370,7 @@ int cdsolve(double tol, int M)
   double delta = exp( log(*minratio)/((double) *nlam-1) );
   double Lold = INFINITY;
   double NLLHD =  calcL(n, E, y);
+  double D0;
   int s;
 
   for(s=0; s<*nlam; s++){
@@ -386,17 +385,22 @@ int cdsolve(double tol, int M)
 
     NLLHD =  calcL(n, E, y);
     deviance[s] = 2.0*NLLHD;
-    if(s==0) *thresh *= deviance[0];
+    if(s==0){
+      D0 = deviance[0];
+      *thresh *= D0; }
     df[s] = dof(&lam[s], NLLHD);
 
     // exit checks
+    if((fam==1) & (deviance[s]/D0 < 0.05)){
+      exits[s] = 1;
+      myprintf(mystderr, "Near perfect fit.  "); }
     if(Lold < NLLHD){
       exits[s] = 1;
       myprintf(mystderr, "Path divergence.  "); }
-    else if(npass>=*maxit){
+    if(npass>=*maxit){
       exits[s] = 1;
       myprintf(mystderr, "Hit max CD iterations.  "); }
-    else if(df[s] >= nd){
+    if(df[s] >= nd){
       exits[s] = 1;
       myprintf(mystderr, "Saturated model.  "); }
     if(exits[s]){
