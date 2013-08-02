@@ -1,15 +1,15 @@
-/* Model-specific probability and likelihood functions */
+// likelihood functionals
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <Rmath.h>
-#include "rhelp.h"
-#include "lhdmod.h"
-
+#include "lhd.h"
 
 // Linear
 double lin_nllhd(int n, double *e, double *y){
   double l = 0.0;
-  for(int i=0; i<n; i++) l += 0.5*(y[i] - e[i])*(y[i] - e[i]);
+  for(int i=0; i<n; i++)
+    l += 0.5*(y[i] - e[i])*(y[i] - e[i]); 
   return l;
 }
 
@@ -63,9 +63,8 @@ double bin_intercept(int n, double *e, double *ysum){
 double bin_curve(int n, double *x, int *o, double *e, double *d){
   double h = 0.0;
   double ed, edx;
-  int tr = isfinite(*d);
   for(int i=0; i<n; i++){
-    if(tr){
+    if(isfinite(*d)){
       edx = exp(d[0]*fabs(x[i]));
       if(e[o[i]] > 1.0) ed = fmax(1.0, e[o[i]]/edx);
       else ed = fmax(1.0, edx/e[o[i]]); 

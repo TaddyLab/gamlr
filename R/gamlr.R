@@ -8,9 +8,9 @@ gamlr <- function(x, y,
             gamma=0, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
-            weight=NULL, standardize=TRUE, 
+            free=NULL, standardize=TRUE, 
             thresh=1e-6, maxit=1e3,
-            verb=FALSE)
+            verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
 
@@ -36,9 +36,9 @@ gamlr <- function(x, y,
   stopifnot(nrow(x)==n) 
   p <- ncol(x)
 
-  ## precision weights
-  if(is.null(weight)) weight <- rep(1,p)
-  stopifnot(all(weight>=0) & length(weight)==p)
+  ## weight
+  weight <- rep(1,p)
+  weight[free] <- 0
   weight <- as.double(weight)
 
   ## check and clean all arguments
@@ -46,11 +46,13 @@ gamlr <- function(x, y,
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
   stopifnot(all(c(lambda.start)>=0))
   stopifnot(all(c(thresh,maxit)>0))
-  if(is.infinite(gamma)){
-    nlambda=min(nlambda,sum(weight!=0)+1)
-    lambda.start=Inf }
   lambda <- double(nlambda)
   lambda[1] <- lambda.start
+
+  ## extras
+  xtr = list(...)
+  if(!is.null(xtr$fix)) eta <- as.double(xtr$fix)
+  else eta <- as.double(rep(0,n))
 
   ## drop it like it's hot
   fit <- .C("gamlr",
@@ -62,6 +64,7 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
+            eta=eta,
             weight=weight,
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
@@ -93,15 +96,11 @@ gamlr <- function(x, y,
   lambda <- head(fit$lambda,nlambda)
   dev <- head(fit$deviance,nlambda)
   df <- head(fit$df,nlambda)
-  exits <- head(fit$exits,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
   ## nonzero saturated poisson deviance
   if(family=="poisson")
     dev <- dev + 2*sum(ifelse(y>0,y*log(y),0) - y) 
-
-  if(is.infinite(gamma)) 
-    fit$weight <- weight+fit$weight
 
   ## build return object and exit
   out <- list(lambda=lambda, 
@@ -130,7 +129,6 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   nlambda <- ncol(x$beta)
   p <- nrow(x$beta)
   nzr <- unique(x$beta@i)+1
-  nzr <- nzr[x$weight[nzr]!=0 & is.finite(x$weight[nzr])]
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
   if(length(col)==1) col <- rep(col,p)

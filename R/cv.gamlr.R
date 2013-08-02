@@ -70,7 +70,13 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
 ## S3 method functions
 
 plot.cv.gamlr <- function(x, ...){
+
   argl = list(...)
+
+  argl$x <- log(x$gamlr$lambda)
+  argl$y <- x$cvm
+  argl$type <- "n"
+
   if(is.null(argl$xlab)) argl$xlab="log lambda"
   if(is.null(argl$ylab)) argl$ylab=sprintf("%s deviance",x$family)
   if(is.null(argl$pch)) argl$pch=20
@@ -79,11 +85,11 @@ plot.cv.gamlr <- function(x, ...){
   cvlo <- x$cvm-x$cvs
   cvhi <- x$cvm+x$cvs
 
-  if(is.null(argl$ylim)) argl$ylim=range(c(cvlo,cvhi))
+  if(is.null(argl$ylim)) 
+    argl$ylim=range(c(cvlo,cvhi),finite=TRUE)
+  if(is.null(argl$xlim))
+    argl$xlim=range(argl$x[is.finite(argl$y)])
 
-  argl$x <- log(x$gamlr$lambda)
-  argl$y <- x$cvm
-  argl$type <- "n"
 
   suppressWarnings(do.call(plot, argl))
   segments(x0=argl$x, y0=cvlo, y1=cvhi, col="grey70")

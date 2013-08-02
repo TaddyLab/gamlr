@@ -5,9 +5,9 @@
 #include <Rmath.h>
 #include <time.h>
 
-#include "latools.h"
-#include "rhelp.h"
-#include "lhdmod.h"
+#include "vec.h"
+#include "lhd.h"
+#include "gui.h"
 
 /**** global variables ****/
 
@@ -25,12 +25,11 @@ double *V = NULL;
 
 // variables to be created
 int fam;
-double *par = NULL;
 double A;
 double *B = NULL;
 double *E = NULL;
-double trbnd;
-int itertotal, npass;
+double trust;
+unsigned int itertotal,npass;
 
 double gam;
 double L1pen;
@@ -41,7 +40,6 @@ double *xs = NULL;
 double *xy = NULL;
 
 double *H = NULL;
-double *D = NULL;
 double *G = NULL;
 double *ag0 = NULL;
 
@@ -59,10 +57,7 @@ void gamlr_cleanup(){
   if(xs){ free(xs); xs = NULL; }
   if(xy){ free(xy); xy = NULL; }
 
-  if(par){ free(par); par = NULL; }
   if(B){ free(B); B = NULL; }
-  if(E){ free(E); E = NULL; }
-  if(D){ free(D); D = NULL; }
   if(G){ free(G); G = NULL; }
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
@@ -106,8 +101,8 @@ double calcC(void){
   if(!isfinite(L1pen)) return 0.0;
   double cost = 0.0;
   for(int j=0; j<p; j++)
-    if( (V[j] > 0.0) & isfinite(V[j])){
-      cost += L1pen*V[j]*fabs(B[j])*xs[j]; }
+    if( (V[j] > 0.0) & isfinite(V[j]))
+      cost += L1pen*V[j]*fabs(B[j])*xs[j]; 
   return cost;
 }
 
@@ -151,7 +146,7 @@ double dof(double *lam, double L){
 double Bmove(int j)
 {
   double dbet;
-  myassert(H[j] != 0.0); // happens for all zero xj
+  if(H[j]==0) return -B[j];
 
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
@@ -162,7 +157,7 @@ double Bmove(int j)
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
   }
-  if(fabs(dbet) > trbnd) dbet = sign(dbet)*trbnd;
+  if(fabs(dbet) > trust) dbet = sign(dbet)*trust;
  
   return dbet;
 }
@@ -174,12 +169,12 @@ int cdsolve(double tol, int M)
   double dbet,Bdiff;
 
   // initialize
-  dopen = isfinite(par[0]);
+  dopen = isfinite(L1pen);
   exitstat=0;
   dozero=1;
   t=0;
   Bdiff = tol*2.0;
-  if(isfinite(trbnd)) trbnd = 1.0;
+  if(isfinite(trust)) trust = 1.0;
 
   double POST,Pold,Pdiff;
   POST=INFINITY;
@@ -188,7 +183,7 @@ int cdsolve(double tol, int M)
   while( ( (Pdiff > tol) | dozero ) & (t < M) ){
     Bdiff = 0.0;
 
-    // loop through coefficients
+    /****** loop through coefficients ******/
     for(j=0; j<p; j++){
 
       // always skip the zero sd var
@@ -209,7 +204,7 @@ int cdsolve(double tol, int M)
       if((fam!=1) & dozero)
         H[j] = (*calcH)(xp[j+1]-xp[j], 
                       &xv[xp[j]], &xi[xp[j]], 
-                      E, &trbnd); 
+                      E, &trust); 
 
       // calculate the move and update
       dbet = Bmove(j);
@@ -219,47 +214,43 @@ int cdsolve(double tol, int M)
           for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] += xv[i]*dbet;
         else
           for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= exp(xv[i]*dbet);
-        dbet = fabs(dbet);
-        if(dbet>Bdiff) Bdiff = dbet;
+        Bdiff += fabs(dbet);
       }
     }
+
+    // draw the intercept
+    A += Imove(n, E, &ysum);
 
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
-    // draw the intercept
-    dbet = Imove(n, E, &ysum);
-    A += dbet;
-    dbet = fabs(dbet);
-    if(dbet>Bdiff) Bdiff = dbet;
-
     // iterate 
     t++;
     // trust region
-    if(isfinite(trbnd)) trbnd = fmax(trbnd/2.0, Bdiff/pd);
+    if(isfinite(trust)) trust = fmax(trust/2.0, Bdiff/pd);
 
     /*****  check objective  *******/
     Pold = POST;
     POST = calcL(n, E, y);
     if(dopen) POST += calcC();
     Pdiff = Pold - POST;
-      // check for irregular exits
+    // check for irregular exits
     if((POST!=POST) | !isfinite(POST)){
-      warning("Stopped due to infinite posterior. \n");
+      shout("Stopped descent due to infinite posterior. \n");
       exitstat = 1;
       break;
     }
     if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
-      if(!isfinite(trbnd) & (fam!=1)){
-        myprintf(mystderr,"Divergence detected: moving to trust region bounding. \n");
-        trbnd = Bdiff; 
-        Pdiff = fabs(Pdiff); }
-        else{
-          warning("Stopped due to divergent optimization. \n");
-          exitstat = 1;
-          break; 
-        } 
-      }
+      shout("Stopped descent due to divergent optimization. \n");
+      exitstat = 1;
+      break; 
+    }
+    if(t == M-1){
+      shout("Hit max CD iterations.  "); 
+      exitstat = 1;
+      break;
+    }
+
     /********************/
 
     // printf("t = %d: diff = %g\n", t, Pdiff);
@@ -290,6 +281,7 @@ int cdsolve(double tol, int M)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
+            double *eta, // length-n fixed shifts
             double *weight, // length-p weights
             int *standardize, // whether to scale penalty by sd(x_j)
             int *nlam, // length of the path
@@ -317,6 +309,7 @@ int cdsolve(double tol, int M)
   pd = (double) p;
   l = *l_in;
   V = weight;
+  E = eta;
   y = y_in;
   xi = xi_in;
   xp = xp_in;
@@ -324,48 +317,41 @@ int cdsolve(double tol, int M)
 
   checkdata(*standardize);
 
-  trbnd = INFINITY;
+  trust = INFINITY;
   npass = itertotal = 0;
-
+  
   switch( fam )
   {
-    case 1:
-      calcL = &lin_nllhd;
-      calcG = &lin_grad;
-      Imove = &lin_intercept;
-      A = ybar;
-      E = drep(A, n);
-      break;
     case 2:
       calcL = &bin_nllhd;
       calcG = &bin_grad;
       Imove = &bin_intercept;
       calcH = &bin_curve;
-      A = log(ybar/(1-ybar));
-      E = drep(exp(A),n);
+      for(int i=0; i<n; i++) E[i] = exp(E[i]);
       break;
     case 3:
       calcL = &po_nllhd;
       calcG = &po_grad;
       Imove = &po_intercept;
       calcH = &po_curve;
-      A = log(ybar);
-      E = drep(exp(A), n);
+      for(int i=0; i<n; i++) E[i] = exp(E[i]);
       break;
-    default: error( "unrecognized family type." );
+    default: 
+      fam = 1; // if it wasn't already
+      calcL = &lin_nllhd;
+      calcG = &lin_grad;
+      Imove = &lin_intercept;
   }
 
+  A=0.0;
   B = new_dzero(p);
   G = new_dzero(p);
-  par = new_dvec(2); 
   ag0 = new_dvec(p);
 
   gam = *penscale;
 
   if(*verb)
-    myprintf(mystdout,
-      "*** regression for %d observations and %d covariates ***\n", 
-      n, p);
+    speak("*** n=%d observations and p=%d covariates ***\n", n,p);
 
   double delta = exp( log(*minratio)/((double) *nlam-1) );
   double Lold = INFINITY;
@@ -391,20 +377,17 @@ int cdsolve(double tol, int M)
     df[s] = dof(&lam[s], NLLHD);
 
     // exit checks
-    if((fam==1) & (deviance[s]/D0 < 0.05)){
+    if((fam==2) & (deviance[s]/D0 < 0.05)){
       exits[s] = 1;
-      myprintf(mystderr, "Near perfect fit.  "); }
-    if(Lold < NLLHD){
+      shout("Near perfect fit.  "); }
+    if((Lold < NLLHD) & isfinite(gam)){
       exits[s] = 1;
-      myprintf(mystderr, "Path divergence.  "); }
-    if(npass>=*maxit){
-      exits[s] = 1;
-      myprintf(mystderr, "Hit max CD iterations.  "); }
+      shout("Path divergence.  "); }
     if(df[s] >= nd){
       exits[s] = 1;
-      myprintf(mystderr, "Saturated model.  "); }
+      shout("Saturated model.  "); }
     if(exits[s]){
-      myprintf(mystderr, "Terminating path.\n");
+      shout("Terminating path.\n");
       *nlam = s; break; }
     
     Lold = NLLHD;
@@ -412,15 +395,19 @@ int cdsolve(double tol, int M)
     copy_dvec(&beta[s*p],B,p);
 
     for(int j=0; j<p; j++) 
-      if( (V[j]>0.0) & isfinite(V[j]) )
-        V[j] = 1.0/(1.0+gam*fabs(B[j]));
+      if(isfinite(gam)){
+        if( (V[j]>0.0) & isfinite(V[j]) )
+          V[j] = 1.0/(1.0+gam*fabs(B[j]));
+      } else if(B[j]!=0.0){
+        V[j] = 0.0;
+      }
+
 
     if(*verb) 
-      myprintf(mystdout, 
-          "segment %d: lam = %.4g, dev = %.4g, npasses = %d\n", 
+      speak("segment %d: lam = %.4g, dev = %.4g, npasses = %d\n", 
           s+1, lam[s], deviance[s], npass);
 
-    itime = my_r_process_events(itime); 
+    itime = interact(itime); 
   }
 
   *maxit = itertotal;

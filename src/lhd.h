@@ -1,3 +1,5 @@
+// likelihood functionals
+
 #ifndef __LHDMOD_H__
 #define __LHDMOD_H__
 

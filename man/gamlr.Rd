@@ -11,10 +11,10 @@ gamlr(x, y,
    family=c("gaussian","binomial","poisson"),
    gamma=0,
    nlambda=100, lambda.start=Inf,  
-   lambda.min.ratio=0.01, weight=NULL, 
+   lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
    thresh=1e-6, maxit=1e3,
-   verb=FALSE)
+   verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=rgb(0,0,.5,.75), select=TRUE, df=TRUE, ...)
@@ -38,7 +38,7 @@ gamlr(x, y,
   either "gaussian", "poisson", or "binomial".  
   Note that for "binomial", \code{y} is in \eqn{[0,1]}. }
   \item{gamma}{ Prior scale on the 
-      L1 cost parameter \eqn{\lambda}.  
+      L1 cost parameters \eqn{\omega_j}.  
       The default of zero corresponds to the lasso,
       and higher values correspond to a more concave penalty.  
       See details. }
@@ -50,16 +50,7 @@ gamlr(x, y,
     (expected L1 cost) as a ratio of the path start value.  
     Our default is always 0.01; note that this differs from \code{glmnet}
     whose default depends upon the dimension of \code{x}. }
-  \item{weight}{ Parameter weights.  
-      The default is 
-      all 1.0, and a \code{weight} entry of 0 always
-      means that the corresponding coefficient is unpenalized.
-      Other values have penalty-dependent behavior: for \code{gamma>0} 
-      \code{weight} is an up-scaling of 
-      \code{gamma} that is specific to each covariate (see details), and 
-      for the lasso (\code{gamma=0}), 
-      these are multipliers on the L1 penalty 
-      (e.g., for the adaptive lasso).   }
+  \item{free}{ Free variables: indices of the columns of \code{x} which will be unpenalized.}
   \item{standardize}{ Whether to standardize 
     the coefficients to have standard deviation of one.  
     This is equivalent to multiplying the L1 penalty 
@@ -90,27 +81,22 @@ to the same domain as \code{y}.}
 \details{ Finds the posterior modes along a regularization path
 		   of \emph{prior expected L1 penalties} using coordinate descent.
 
-  Each path segment minimizes the log-cost penalized objective 
-  -\eqn{\phi}logLHD\eqn{(\beta_1 ... \beta_p) + \sum s log[r + |\beta_j|]},
-  where \eqn{\phi} is the exponential
-  family dispersion parameter (\eqn{\sigma^2} for \code{family="gaussian"},
-  one otherwise).  
+  Each path segment minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
+  ... \beta_p) + \sum v_j\lambda|\beta_j|]}, where \eqn{\phi} is the
+  exponential family dispersion parameter (\eqn{\sigma^2} for
+  \code{family="gaussian"}, one otherwise).  Here, \eqn{v_j} are weights
+  \eqn{1/(1+\gamma|bj|)}, where \eqn{bj} is the current (previous path
+  segment) estimate of \eqn{\beta_j}.  This is what makes the penalization
+  `concave', however each path segment is simply L1 (lasso) penalized.
 
-  This log penalty arises through joint estimation for coefficients and their
-  unique L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)} prior with expectation \eqn{E[\omega] = s/r}
-  and variance \eqn{var[\omega] = \phi s/r^2}.
-  Reparameterizing \eqn{E[\omega] = n\lambda} and
+  This can be motivated as joint estimation for coefficients and their unique
+  L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)}
+  prior with expectation \eqn{E[\omega] = s/r} and variance \eqn{var[\omega] =
+  \phi s/r^2}. Reparameterizing \eqn{E[\omega] = n\lambda} and
   \eqn{var[\omega] = \phi n\gamma}, our penalty path is a grid
   in \code{lambda} = \eqn{\lambda} under scale \code{gamma} = \eqn{\gamma}.
   For \code{gamma=0} the L1 penalties are all fixed at 
   \eqn{\omega = n\lambda} (i.e. equivalent to \code{glmnet}'s lasso).
-
-    For completeness, setting \code{gamma=Inf} yields a stepwise
-      subset selection algorithm: each step adds (unpenalized)
-      the coefficient with highest absolute gradient.  The reported
-      \code{lambda} is just \code{exp(-df)}, where \code{df} is 
-      the number of nonzero coefficients 
-      (i.e. not the true degrees of freedom, which is essentially \code{ncol(x)}).
 
       \code{plot.gamlr} can be used to graph the results: it 
       shows the regularization paths for \emph{beta} and marks
