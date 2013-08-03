@@ -167,17 +167,16 @@ int cdsolve(double tol, int M)
 {
   int t,i,j,dozero,exitstat,dopen; 
   double dbet,Bdiff;
+  double POST,Pold,Pdiff;
 
   // initialize
   dopen = isfinite(L1pen);
+  POST=INFINITY;
+  Bdiff = Pdiff = INFINITY;
+  if(isfinite(trust)) trust = 1.0;
   exitstat=0;
   dozero=1;
   t=0;
-  Bdiff = tol*2.0;
-  if(isfinite(trust)) trust = 1.0;
-
-  double POST,Pold,Pdiff;
-  POST=INFINITY;
 
   // CD loop
   while( ( (Pdiff > tol) | dozero ) & (t < M) ){
@@ -220,16 +219,17 @@ int cdsolve(double tol, int M)
 
     // draw the intercept
     A += Imove(n, E, &ysum);
-
+    
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
-    // iterate 
+    /****  iterate forward *****/
+
     t++;
     // trust region
     if(isfinite(trust)) trust = fmax(trust/2.0, Bdiff/pd);
 
-    /*****  check objective  *******/
+    //  check objective 
     Pold = POST;
     POST = calcL(n, E, y);
     if(dopen) POST += calcC();
@@ -250,9 +250,6 @@ int cdsolve(double tol, int M)
       exitstat = 1;
       break;
     }
-
-    /********************/
-
     // printf("t = %d: diff = %g\n", t, Pdiff);
     // printf("param: %g | ", A);
     // print_dvec(B,5, mystdout);

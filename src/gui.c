@@ -15,11 +15,11 @@ void speak(const char *str, ...)
   va_list argp;
   va_start(argp, str);
 
-  #ifdef RPRINT
+#ifdef RPRINT
   REvprintf(str, argp);
-  #else
+#else
   vfprintf(stderr, str, argp);
-  #endif
+#endif
 
   va_end(argp);
 }
@@ -29,11 +29,11 @@ void shout(const char *str, ...)
   va_list argp;
   va_start(argp, str);
 
-  #ifdef RPRINT
+#ifdef RPRINT
   REvprintf(str, argp);
-  #else
+#else
   vfprintf(stderr, str, argp);
-  #endif
+#endif
 
   va_end(argp);
 }
