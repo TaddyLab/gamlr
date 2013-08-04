@@ -131,12 +131,16 @@ double dof(double *lam, double L){
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
   for(j=0; j<p; j++){
-    if(V[j]>0.0){
+    if(V[j]==0.0) df++;
+    else if(isfinite(V[j])){
       if(!isfinite(V[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
       s = L1pen/gam;
-      df += pgamma(ag0[j], s/phi+1.0, phi*gam*V[j], 1, 0); 
-    } else df++;
+      df += pgamma(ag0[j], 
+                    s/phi,//+1.0, 
+                    phi*gam,//*V[j], 
+                    1, 0); 
+    }
   }
 
   return df;
@@ -377,7 +381,7 @@ int cdsolve(double tol, int M)
     if((fam==2) & (deviance[s]/D0 < 0.05)){
       exits[s] = 1;
       shout("Near perfect fit.  "); }
-    if((Lold < NLLHD) & isfinite(gam)){
+    if((Lold - NLLHD < -0.05)){
       exits[s] = 1;
       shout("Path divergence.  "); }
     if(df[s] >= nd){
