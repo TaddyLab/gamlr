@@ -129,8 +129,8 @@ x <- matrix(rnorm(p*n), nrow=n)\%*\%chol(xvar)
 y <- 4 + 3*x[,1] + -1*x[,2] + rnorm(n)
 
 fitlasso <- gamlr(x, y, gamma=0) # lasso
-fitgl <- gamlr(x, y, gamma=1/5) # log penalty
-fitglbv <- gamlr(x, y, gamma=5) # big variance log penalty
+fitgl <- gamlr(x, y, gamma=2) # small gamma
+fitglbv <- gamlr(x, y, gamma=10) # big gamma
 
 par(mfrow=c(1,3))
 ylim = range(c(fitglbv$beta@x))
