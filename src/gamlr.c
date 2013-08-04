@@ -321,6 +321,12 @@ int cdsolve(double tol, int M)
   trust = INFINITY;
   npass = itertotal = 0;
   
+  A=0.0;
+  B = new_dzero(p);
+  G = new_dzero(p);
+  ag0 = new_dvec(p);
+  gam = *penscale;
+
   switch( fam )
   {
     case 2:
@@ -328,28 +334,25 @@ int cdsolve(double tol, int M)
       calcG = &bin_grad;
       Imove = &bin_intercept;
       calcH = &bin_curve;
-      for(int i=0; i<n; i++) E[i] = exp(E[i]);
+      A = log(ybar/(1-ybar));
+      for(int i=0; i<n; i++) E[i] *= exp(A);
       break;
     case 3:
       calcL = &po_nllhd;
       calcG = &po_grad;
       Imove = &po_intercept;
       calcH = &po_curve;
-      for(int i=0; i<n; i++) E[i] = exp(E[i]);
+      A = log(ybar);
+      for(int i=0; i<n; i++) E[i] *= exp(A);
       break;
     default: 
       fam = 1; // if it wasn't already
       calcL = &lin_nllhd;
       calcG = &lin_grad;
       Imove = &lin_intercept;
+      A = ybar;
+      for(int i=0; i<n; i++) E[i] += A;
   }
-
-  A=0.0;
-  B = new_dzero(p);
-  G = new_dzero(p);
-  ag0 = new_dvec(p);
-
-  gam = *penscale;
 
   if(*verb)
     speak("*** n=%d observations and p=%d covariates ***\n", n,p);
