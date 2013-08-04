@@ -335,7 +335,7 @@ int cdsolve(double tol, int M)
       Imove = &bin_intercept;
       calcH = &bin_curve;
       A = log(ybar/(1-ybar));
-      for(int i=0; i<n; i++) E[i] *= exp(A);
+      for(int i=0; i<n; i++) E[i] = exp(E[i] + A);
       break;
     case 3:
       calcL = &po_nllhd;
@@ -343,7 +343,7 @@ int cdsolve(double tol, int M)
       Imove = &po_intercept;
       calcH = &po_curve;
       A = log(ybar);
-      for(int i=0; i<n; i++) E[i] *= exp(A);
+      for(int i=0; i<n; i++) E[i] = exp(E[i] + A);
       break;
     default: 
       fam = 1; // if it wasn't already
