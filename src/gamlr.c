@@ -137,8 +137,8 @@ double dof(double *lam, double L){
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
       s = L1pen/gam;
       df += pgamma(ag0[j], 
-                    s/phi,//+1.0, 
-                    phi*gam,//*V[j], 
+                    s/phi+1.0, 
+                    phi*gam*V[j], 
                     1, 0); 
     }
   }
@@ -379,7 +379,7 @@ int cdsolve(double tol, int M)
     deviance[s] = 2.0*NLLHD;
     if(s==0){
       D0 = deviance[0];
-      *thresh *= D0; }
+      *thresh *= fabs(D0); }
     df[s] = dof(&lam[s], NLLHD);
 
     // exit checks
