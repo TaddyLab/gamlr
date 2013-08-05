@@ -137,8 +137,8 @@ double dof(double *lam, double L){
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
       s = L1pen/gam;
       df += pgamma(ag0[j], 
-                    s/phi+1.0, 
-                    phi*gam*V[j], 
+                    s/phi, 
+                    phi*gam, 
                     1, 0); 
     }
   }
@@ -383,11 +383,11 @@ int cdsolve(double tol, int M)
     df[s] = dof(&lam[s], NLLHD);
 
     // exit checks
-    if(Lold < NLLHD){
-      shout("Divergent path warning;  ");
-      shout("L.%d=%g,L.%d=%g.\n",
-            s+1,NLLHD,s,Lold);
-    }
+    // if(Lold < NLLHD){
+    //   shout("Divergent path warning;  ");
+    //   shout("L.%d=%g,L.%d=%g.\n",
+    //         s+1,NLLHD,s,Lold);
+    // }
     if(df[s] >= nd){
       exits[s] = 1;
       shout("Saturated model.  "); }
