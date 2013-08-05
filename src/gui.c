@@ -16,9 +16,9 @@ void speak(const char *str, ...)
   va_start(argp, str);
 
 #ifdef RPRINT
-  REvprintf(str, argp);
+  Rvprintf(str, argp);
 #else
-  vfprintf(stderr, str, argp);
+  vprintf(str, argp);
 #endif
 
   va_end(argp);

@@ -51,8 +51,13 @@ gamlr <- function(x, y,
 
   ## extras
   xtr = list(...)
-  if(!is.null(xtr$fix)) eta <- as.double(xtr$fix)
-  else eta <- as.double(rep(0,n))
+  ## fixed shifts
+  if(!is.null(xtr$fix)) eta <- xtr$fix
+  else{
+    if(family=="gaussian") eta <- rep(0.0,n)
+    else eta <- rep(1.0,n)  
+  }
+  eta <- as.double(eta)
 
   ## drop it like it's hot
   fit <- .C("gamlr",
@@ -216,8 +221,8 @@ summary.gamlr <- function(object, ...){
 print.gamlr <- function(x, ...){
   cat("\n")
   cat(sprintf(
-    "%s gamlr with %d inputs and %d segments.", 
-    x$family, nrow(x$beta), ncol(x$beta)))
+    "gamma = %g %s gamlr with %d inputs and %d segments.", 
+    x$gamma, x$family, nrow(x$beta), ncol(x$beta)))
   cat("\n\n")
 }
 

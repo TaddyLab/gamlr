@@ -334,16 +334,18 @@ int cdsolve(double tol, int M)
       calcG = &bin_grad;
       Imove = &bin_intercept;
       calcH = &bin_curve;
-      A = log(ybar/(1-ybar));
-      for(int i=0; i<n; i++) E[i] = exp(E[i] + A);
+      A = ybar/(1-ybar);
+      for(int i=0; i<n; i++) E[i] *= A;
+      A = log(A);
       break;
     case 3:
       calcL = &po_nllhd;
       calcG = &po_grad;
       Imove = &po_intercept;
       calcH = &po_curve;
-      A = log(ybar);
-      for(int i=0; i<n; i++) E[i] = exp(E[i] + A);
+      A = ybar;
+      for(int i=0; i<n; i++) E[i] *= A;
+      A = log(A);
       break;
     default: 
       fam = 1; // if it wasn't already
@@ -381,12 +383,11 @@ int cdsolve(double tol, int M)
     df[s] = dof(&lam[s], NLLHD);
 
     // exit checks
-    if((fam==2) & (deviance[s]/D0 < 0.05)){
-      exits[s] = 1;
-      shout("Near perfect fit.  "); }
-    if((Lold - NLLHD < -0.05)){
-      exits[s] = 1;
-      shout("Path divergence.  "); }
+    if(Lold < NLLHD){
+      shout("Divergent path warning;  ");
+      shout("L.%d=%g,L.%d=%g.\n",
+            s+1,NLLHD,s,Lold);
+    }
     if(df[s] >= nd){
       exits[s] = 1;
       shout("Saturated model.  "); }
