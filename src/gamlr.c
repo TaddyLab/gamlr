@@ -204,8 +204,8 @@ int cdsolve(double tol, int M)
       if(!dopen & (V[j]>0.0)) continue;
 
       // update curvature
-      if((fam!=1) & dozero)
-        H[j] = (*calcH)(xp[j+1]-xp[j], 
+      if(fam!=1)
+          H[j] = (*calcH)(xp[j+1]-xp[j], 
                       &xv[xp[j]], &xi[xp[j]], 
                       E, &trust); 
 
@@ -254,9 +254,7 @@ int cdsolve(double tol, int M)
       exitstat = 1;
       break;
     }
-    // printf("t = %d: diff = %g\n", t, Pdiff);
-    // printf("param: %g | ", A);
-    // print_dvec(B,5, mystdout);
+    //speak("t = %d: diff = %g\n", t, Pdiff);
 
     // check for active set update
     if(dozero == 1) dozero = 0;

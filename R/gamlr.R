@@ -9,7 +9,7 @@ gamlr <- function(x, y,
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 
-            thresh=1e-6, maxit=1e3,
+            thresh=1e-7, maxit=1e3,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -57,6 +57,7 @@ gamlr <- function(x, y,
     if(family=="gaussian") eta <- rep(0.0,n)
     else eta <- rep(1.0,n)  
   }
+  stopifnot(length(eta)==n)
   eta <- as.double(eta)
 
   ## drop it like it's hot

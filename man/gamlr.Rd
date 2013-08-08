@@ -13,7 +13,7 @@ gamlr(x, y,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
-   thresh=1e-6, maxit=1e3,
+   thresh=1e-7, maxit=1e3,
    verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
@@ -87,7 +87,7 @@ to the same domain as \code{y}.}
   \code{family="gaussian"}, one otherwise).  Here, \eqn{v_j} are weights
   \eqn{1/(1+\gamma|bj|)}, where \eqn{bj} is the current (previous path
   segment) estimate of \eqn{\beta_j}.  This is what makes the penalization
-  `concave', however each path segment is simply L1 (lasso) penalized.
+  `concave'; however each path segment is simply L1 (lasso) penalized.
 
   This can be motivated as joint estimation for coefficients and their unique
   L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)}
