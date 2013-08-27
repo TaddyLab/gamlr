@@ -60,17 +60,11 @@ double bin_intercept(int n, double *e, double *ysum){
   return dbet;
 }
 
-double bin_curve(int n, double *x, int *o, double *e, double *d){
+double bin_curve(int n, double *x, int *o, double *e){
   double h = 0.0;
-  double ed, edx;
-  for(int i=0; i<n; i++){
-    if(isfinite(*d)){
-      edx = exp(d[0]*fabs(x[i]));
-      if(e[o[i]] > 1.0) ed = fmax(1.0, e[o[i]]/edx);
-      else ed = fmax(1.0, edx/e[o[i]]); 
-    } else ed = e[o[i]];
-    h += x[i]*x[i]/(2.0 + ed + 1.0/ed);
-  }
+  for(int i=0; i<n; i++)
+    h += x[i]*x[i]/(2.0 + e[o[i]] + 1.0/e[o[i]]);
+  
   return h;
  }
 
@@ -83,15 +77,14 @@ double po_nllhd(int n, double *e, double *y){
 
 double po_grad(int n, double *x, int *o, double *e, double *xy){
   double g = -xy[0];
-  for(int i=0; i<n; i++) g += x[i]*e[o[i]];
+  for(int i=0; i<n; i++) 
+    g += x[i]*e[o[i]];
   return g;
 }
 
-double po_curve(int n, double *x, int *o, double *e, double *d){
+double po_curve(int n, double *x, int *o, double *e){
   double h = 0.0;
-  if(isfinite(*d)) for(int i=0; i<n; i++) 
-          h += x[i]*x[i]*e[o[i]]*exp(d[0]*fabs(x[i]));
-  else for(int i=0; i<n; i++) 
+  for(int i=0; i<n; i++) 
           h += x[i]*x[i]*e[o[i]];
   return h;
 }

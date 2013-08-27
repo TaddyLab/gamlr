@@ -28,7 +28,6 @@ int fam;
 double A;
 double *B = NULL;
 double *E = NULL;
-double trust;
 unsigned int itertotal,npass;
 
 double gam;
@@ -46,7 +45,7 @@ double *ag0 = NULL;
 // function pointers
 double (*calcL)(int, double*, double*) = NULL;
 double (*calcG)(int, double*, int*, double*, double*) = NULL;
-double (*calcH)(int, double*, int*, double*, double*) = NULL;
+double (*calcH)(int, double*, int*, double*) = NULL;
 double (*Imove)(int, double*, double*) = NULL;
 
 /* global cleanup function */
@@ -94,6 +93,7 @@ void checkdata(int standardize){
 
   // to scale or not to scale
   if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
+
 }
 
 /* penalty cost function */
@@ -161,8 +161,7 @@ double Bmove(int j)
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
   }
-  if(fabs(dbet) > trust) dbet = sign(dbet)*trust;
- 
+
   return dbet;
 }
 
@@ -175,15 +174,15 @@ int cdsolve(double tol, int M)
 
   // initialize
   dopen = isfinite(L1pen);
-  POST=INFINITY;
-  Bdiff = Pdiff = INFINITY;
-  if(isfinite(trust)) trust = 1.0;
-  exitstat=0;
-  dozero=1;
-  t=0;
+  POST = INFINITY;
+  Pdiff = INFINITY;
+  exitstat = 0;
+  dozero = 1;
+  t = 0;
 
   // CD loop
   while( ( (Pdiff > tol) | dozero ) & (t < M) ){
+
     Bdiff = 0.0;
 
     /****** loop through coefficients ******/
@@ -195,43 +194,48 @@ int cdsolve(double tol, int M)
       // skip the in-active set unless 'dozero'
       if(!dozero & (B[j]==0.0) & (V[j]>0.0)) continue;
 
-      // update gradient 
+        // update gradient 
       G[j] = (*calcG)(xp[j+1]-xp[j], 
-                    &xv[xp[j]], &xi[xp[j]], 
-                    E, &xy[j]);
+        &xv[xp[j]], &xi[xp[j]], 
+        E, &xy[j]);
 
-      // for null model skip penalized variables
-      if(!dopen & (V[j]>0.0)) continue;
+        // for null model skip penalized variables
+      if(!dopen & (V[j]>0.0)){ dbet = 0.0; continue; }
 
-      // update curvature
+        // update curvature
       if(fam!=1)
-          H[j] = (*calcH)(xp[j+1]-xp[j], 
-                      &xv[xp[j]], &xi[xp[j]], 
-                      E, &trust); 
+        H[j] = (*calcH)(xp[j+1]-xp[j], 
+          &xv[xp[j]], &xi[xp[j]], E); 
 
-      // calculate the move and update
+        // mean centering adjustment for poisson
+      if(fam==3){
+        double esum = sum_dvec(E,n);
+        H[j] += esum*xm[j]*xm[j] - 2*xm[j]*(G[j]+xy[j]);
+        G[j] += -xm[j]*(esum-ysum);
+      }
+
+        // calculate the move and update
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
         if(fam==1)
           for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] += xv[i]*dbet;
-        else
-          for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= exp(xv[i]*dbet);
-        Bdiff += fabs(dbet);
+            else
+              for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= exp(xv[i]*dbet);
+                Bdiff += fabs(dbet);
       }
-    }
 
-    // draw the intercept
-    A += Imove(n, E, &ysum);
+      // alpha: inner loop draw for poisson
+      if(fam==3) A += Imove(n,E,&ysum);
+    }
+    // alpha: outer loop draw otherwise
+    if(fam!=3) A += Imove(n, E, &ysum);
     
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
-    /****  iterate forward *****/
-
+    // iterate
     t++;
-    // trust region
-    if(isfinite(trust)) trust = fmax(trust/2.0, Bdiff/pd);
 
     //  check objective 
     Pold = POST;
@@ -245,6 +249,7 @@ int cdsolve(double tol, int M)
       break;
     }
     if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
+      speak("pdiff = %g\n",Pdiff);
       shout("Stopped descent due to divergent optimization. \n");
       exitstat = 1;
       break; 
@@ -254,7 +259,7 @@ int cdsolve(double tol, int M)
       exitstat = 1;
       break;
     }
-    //speak("t = %d: diff = %g\n", t, Pdiff);
+    speak("t = %d: diff = %g\n", t, Pdiff);
 
     // check for active set update
     if(dozero == 1) dozero = 0;
@@ -315,8 +320,6 @@ int cdsolve(double tol, int M)
   xv = xv_in;
 
   checkdata(*standardize);
-
-  trust = INFINITY;
   npass = itertotal = 0;
   
   A=0.0;
@@ -380,7 +383,7 @@ int cdsolve(double tol, int M)
       *thresh *= fabs(D0); }
     df[s] = dof(&lam[s], NLLHD);
 
-    // exit checks
+    /**** exit checks ****/
     // if(Lold < NLLHD){
     //   shout("Divergent path warning;  ");
     //   shout("L.%d=%g,L.%d=%g.\n",
@@ -404,7 +407,6 @@ int cdsolve(double tol, int M)
       } else if(B[j]!=0.0){
         V[j] = 0.0;
       }
-
 
     if(*verb) 
       speak("segment %d: lam = %.4g, dev = %.4g, npasses = %d\n", 

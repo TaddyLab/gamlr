@@ -82,21 +82,13 @@ to the same domain as \code{y}.}
 		   of \emph{prior expected L1 penalties} using coordinate descent.
 
   Each path segment minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
-  ... \beta_p) + \sum v_j\lambda|\beta_j|]}, where \eqn{\phi} is the
+  ... \beta_p) + \sum \omega_j\lambda|\beta_j|]}, where \eqn{\phi} is the
   exponential family dispersion parameter (\eqn{\sigma^2} for
-  \code{family="gaussian"}, one otherwise).  Here, \eqn{v_j} are weights
-  \eqn{1/(1+\gamma|bj|)}, where \eqn{bj} is the current (previous path
+  \code{family="gaussian"}, one otherwise).  Here, \eqn{\omega_j} are weights
+  \eqn{1/(1+\gamma|bj|)} where \eqn{bj} is the current (previous path
   segment) estimate of \eqn{\beta_j}.  This is what makes the penalization
-  `concave'; however each path segment is simply L1 (lasso) penalized.
-
-  This can be motivated as joint estimation for coefficients and their unique
-  L1 penalties \eqn{\omega_1 ... \omega_p} under a \eqn{Gamma(s/\phi, r/\phi)}
-  prior with expectation \eqn{E[\omega] = s/r} and variance \eqn{var[\omega] =
-  \phi s/r^2}. Reparameterizing \eqn{E[\omega] = n\lambda} and
-  \eqn{var[\omega] = \phi n\gamma}, our penalty path is a grid
-  in \code{lambda} = \eqn{\lambda} under scale \code{gamma} = \eqn{\gamma}.
-  For \code{gamma=0} the L1 penalties are all fixed at 
-  \eqn{\omega = n\lambda} (i.e. equivalent to \code{glmnet}'s lasso).
+  `concave'; however each path segment is simply L1 (lasso) penalized.  See 
+  Taddy (2013), `The gamma lasso', for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
       shows the regularization paths for \emph{beta} and marks
