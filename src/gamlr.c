@@ -249,7 +249,6 @@ int cdsolve(double tol, int M)
       break;
     }
     if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
-      speak("pdiff = %g\n",Pdiff);
       shout("Stopped descent due to divergent optimization. \n");
       exitstat = 1;
       break; 
@@ -259,7 +258,7 @@ int cdsolve(double tol, int M)
       exitstat = 1;
       break;
     }
-    speak("t = %d: diff = %g\n", t, Pdiff);
+    //speak("t = %d: diff = %g\n", t, Pdiff);
 
     // check for active set update
     if(dozero == 1) dozero = 0;

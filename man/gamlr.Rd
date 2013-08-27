@@ -84,11 +84,11 @@ to the same domain as \code{y}.}
   Each path segment minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
   ... \beta_p) + \sum \omega_j\lambda|\beta_j|]}, where \eqn{\phi} is the
   exponential family dispersion parameter (\eqn{\sigma^2} for
-  \code{family="gaussian"}, one otherwise).  Here, \eqn{\omega_j} are weights
+  \code{family="gaussian"}, one otherwise).  Here, \eqn{\omega_j} are adaptive weights
   \eqn{1/(1+\gamma|bj|)} where \eqn{bj} is the current (previous path
   segment) estimate of \eqn{\beta_j}.  This is what makes the penalization
   `concave'; however each path segment is simply L1 (lasso) penalized.  See 
-  Taddy (2013), `The gamma lasso', for details.
+  Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
       shows the regularization paths for \emph{beta} and marks
@@ -107,7 +107,7 @@ to the same domain as \code{y}.}
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
 }
-\references{Taddy (2013), The Gamma Lasso.}
+\references{Taddy (2013), The Gamma Lasso, http://arxiv.org/abs/1308.5623}
 
 \examples{
 

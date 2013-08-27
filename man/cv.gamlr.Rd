@@ -45,6 +45,8 @@ shows mean OOS deviance with 1se error bars.
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
 }
+\references{Taddy (2013), The Gamma Lasso, http://arxiv.org/abs/1308.5623}
+
 \examples{
 
 n <- 100
