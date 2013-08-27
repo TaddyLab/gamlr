@@ -45,7 +45,6 @@ double *ag0 = NULL;
 // function pointers
 double (*calcL)(int, double*, double*) = NULL;
 double (*calcG)(int, double*, int*, double*, double*) = NULL;
-double (*calcH)(int, double*, int*, double*) = NULL;
 double (*Imove)(int, double*, double*) = NULL;
 
 /* global cleanup function */
@@ -194,27 +193,30 @@ int cdsolve(double tol, int M)
       // skip the in-active set unless 'dozero'
       if(!dozero & (B[j]==0.0) & (V[j]>0.0)) continue;
 
-        // update gradient 
+      // update gradient 
       G[j] = (*calcG)(xp[j+1]-xp[j], 
         &xv[xp[j]], &xi[xp[j]], 
         E, &xy[j]);
 
-        // for null model skip penalized variables
-      if(!dopen & (V[j]>0.0)){ dbet = 0.0; continue; }
-
-        // update curvature
-      if(fam!=1)
-        H[j] = (*calcH)(xp[j+1]-xp[j], 
-          &xv[xp[j]], &xi[xp[j]], E); 
-
-        // mean centering adjustment for poisson
+      // mean centering adjustment for poisson
       if(fam==3){
         double esum = sum_dvec(E,n);
-        H[j] += esum*xm[j]*xm[j] - 2*xm[j]*(G[j]+xy[j]);
+        H[j] = esum*xm[j]*xm[j] - 2*xm[j]*(G[j]+xy[j]);
         G[j] += -xm[j]*(esum-ysum);
       }
+      
+      // for null model skip penalized variables
+      if(!dopen & (V[j]>0.0)){ dbet = 0.0; continue; }
 
-        // calculate the move and update
+      // update curvature
+      if(fam==2)
+        H[j] = bin_curve(xp[j+1]-xp[j], 
+          &xv[xp[j]], &xi[xp[j]], E); 
+      else if(fam==3)
+        H[j] += po_curve(xp[j+1]-xp[j], 
+          &xv[xp[j]], &xi[xp[j]], E); 
+
+      // calculate the move and update
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
@@ -333,7 +335,6 @@ int cdsolve(double tol, int M)
       calcL = &bin_nllhd;
       calcG = &bin_grad;
       Imove = &bin_intercept;
-      calcH = &bin_curve;
       A = ybar/(1-ybar);
       for(int i=0; i<n; i++) E[i] *= A;
       A = log(A);
@@ -342,7 +343,6 @@ int cdsolve(double tol, int M)
       calcL = &po_nllhd;
       calcG = &po_grad;
       Imove = &po_intercept;
-      calcH = &po_curve;
       A = ybar;
       for(int i=0; i<n; i++) E[i] *= A;
       A = log(A);
