@@ -220,18 +220,18 @@ int cdsolve(double tol, int M)
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        if(fam==1)
-          for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] += xv[i]*dbet;
-            else
-              for(i=xp[j]; i<xp[j+1]; i++) E[xi[i]] *= exp(xv[i]*dbet);
-                Bdiff += fabs(dbet);
+        for(i=xp[j]; i<xp[j+1]; i++){ 
+          if(fam==1) E[xi[i]] += xv[i]*dbet;
+          else E[xi[i]] *= exp(xv[i]*dbet);
+        }
+        Bdiff += fabs(dbet);
       }
 
       // alpha: inner loop draw for poisson
       if(fam==3) A += Imove(n,E,&ysum);
     }
     // alpha: outer loop draw otherwise
-    if(fam!=3) A += Imove(n, E, &ysum);
+    if(fam!=3) A += Imove(n,E,&ysum);
     
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
