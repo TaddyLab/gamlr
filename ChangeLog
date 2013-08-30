@@ -1,8 +1,0 @@
-1.1 (09/2013)
-	Focused on only the gamma lasso algorithm, and fixed numerous bugs.
-
-1.0 (07/2013)
-	Total overhaul to move all path operations into c.
-
-0.1 (11/2012)
-	Initial checkin of slow development version.

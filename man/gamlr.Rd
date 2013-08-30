@@ -44,7 +44,7 @@ gamlr(x, y,
       See details. }
   \item{nlambda}{ Number of regularization path segments. }
   \item{lambda.start}{ Initial penalty value.  Default of \code{Inf}
-  implies the suppremum lambda that returns all zero
+  implies the infimum lambda that returns all zero
   coefficients.  This is the largest absolute coefficient gradient at the null model. }
   \item{lambda.min.ratio}{ The smallest penalty weight 
     (expected L1 cost) as a ratio of the path start value.  
