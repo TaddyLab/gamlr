@@ -168,7 +168,7 @@ double Bmove(int j)
 int cdsolve(double tol, int M)
 {
   int t,i,j,dozero,exitstat,dopen; 
-  double dbet,Bdiff;
+  double dbet,Bdiff,esum;
   double POST,Pold,Pdiff;
 
   // initialize
@@ -200,7 +200,7 @@ int cdsolve(double tol, int M)
 
       // mean centering adjustment for poisson
       if(fam==3){
-        double esum = sum_dvec(E,n);
+        esum = sum_dvec(E,n);
         H[j] = esum*xm[j]*xm[j] - 2*xm[j]*(G[j]+xy[j]);
         G[j] += -xm[j]*(esum-ysum);
       }
