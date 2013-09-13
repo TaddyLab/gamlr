@@ -3,18 +3,20 @@
 #ifndef __LHDMOD_H__
 #define __LHDMOD_H__
 
-double lin_nllhd(int n, double *e, double *y);
-double lin_grad(int n, double *x, int *o, double *e, double *xy);
-double lin_intercept(int n, double *e, double *ysum);
+double grad(int n, double *x, int *o, 
+            double a, double *e, double *w, double *z,
+            int N, double xm);
+double curve(int n, double *x, int *o, double xm,  
+          double *w, double wsum, double *wxm);
+double intercept(int n, double *e, double *w, double *z);
 
-double bin_nllhd(int n, double *e, double *y);
-double bin_grad(int n, double *x, int *o, double *e, double *xy);
-double bin_curve(int n, double *x, int *o, double *e);
-double bin_intercept(int n, double *e, double *ysum);
+double lin_nllhd(int n, double a, double *e, double *y);
+double bin_nllhd(int n, double a, double *e, double *y);
+double po_nllhd(int n, double a, double *e, double *y);
 
-double po_nllhd(int n, double *e, double *y);
-double po_grad(int n, double *x, int *o, double *e, double *xy);
-double po_curve(int n, double *x, int *o, double *e);
-double po_intercept(int n, double *e, double *ysum);
+double bin_reweight(int n, double a, double *e, 
+					double *y, double *w, double *z);
+double po_reweight(int n, double a, double *e, 
+					double *y, double *w, double *z);
 
 #endif

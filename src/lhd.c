@@ -4,97 +4,126 @@
 #include <stdio.h>
 #include <Rmath.h>
 #include "lhd.h"
+#include "vec.h"
 
-// Linear
-double lin_nllhd(int n, double *e, double *y){
-  double l = 0.0;
-  for(int i=0; i<n; i++)
-    l += 0.5*(y[i] - e[i])*(y[i] - e[i]); 
-  return l;
-}
+// Weighted least squares functions
+double grad(int n, double *x, int *o, 
+            double a, double *e, double *w, double *z,
+            int N, double xm){
+  double g = 0.0;
+  double wi = 0.5;
 
-double lin_grad(int n, double *x, int *o, double *e, double *xy){
-  double g = -xy[0];
-  for(int i=0; i<n; i++)
-    g += x[i]*e[o[i]];
+  for(int i=0; i<n; i++){
+    if(w) wi = w[o[i]];
+    g += -x[i]*wi*(z[o[i]] - a - e[o[i]]);
+  }
+
+  // for(int i=0; i<N; i++){//center
+  //   if(w) wi = w[i]; 
+  //   g+= wi*xm*(z[i] - a - e[i]); }
+
+  g *= 2.0;
   return g;
 }
 
-double lin_intercept(int n, double *e, double *ysum){  
-  double iG = ysum[0];  
-  double dbet;
-  int i;
-  for(i=0; i<n; i++) iG += -e[i];
-  dbet = iG/((double) n);
-  for(i=0; i<n; i++) e[i] += dbet;
-  return dbet;
-}
-
-// binomial
-double bin_nllhd(int n, double *e, double *y){
-  double l = 0.0;
-  for(int i=0; i<n; i++)
-    l += -y[i]*log(e[i]) + log(1 + e[i]);
-  return l;
-}
-
-double bin_grad(int n, double *x, int *o, double *e, double *xy){
-  double g = -xy[0];
-  for(int i=0; i<n; i++) 
-    g += x[i]*e[o[i]]/(1.0+e[o[i]]);
-  return g;
-}
-
-double bin_intercept(int n, double *e, double *ysum){  
-  int i; 
-  double iG, iH, dbet, q;
-  iG = -ysum[0];
-  iH = 0.0;
-
-  for(i=0; i<n; i++){ 
-    q = e[i]/(1.0 + e[i]);
-    iG += q;
-    iH += q*(1-q); }
-  dbet = -iG/iH;
-  for(i=0; i<n; i++) e[i] *= exp(dbet);
-  return dbet;
-}
-
-double bin_curve(int n, double *x, int *o, double *e){
+double curve(int n, double *x, int *o, double xm,  
+          double *w, double wsum, double *wxm){
   double h = 0.0;
-  for(int i=0; i<n; i++)
-    h += x[i]*x[i]/(2.0 + e[o[i]] + 1.0/e[o[i]]);
+  double wi = 0.5;
+  double wxs = 0.0;
+
+  for(int i=0; i<n; i++){
+    if(w) wi = w[o[i]];
+    wxs += x[i]*wi;
+    h += x[i]*wi*x[i];
+  }
   
-  return h;
- }
+  // center
+  h += xm*xm*wsum - 2.0*wxs*xm;
 
-// Poisson 
-double po_nllhd(int n, double *e, double *y){
+  *wxm = wxs/wsum;
+
+  h *= 2.0;
+  return h;
+}
+
+double intercept(int n, double *e, double *w, double *z){
+  double wsum, rsum, alpha;
+  int i;
+
+  wsum = rsum = 0.0;
+  if(w){
+    for(i=0; i<n; i++){
+      wsum += w[i];
+      rsum += w[i]*(z[i]-e[i]); 
+    }
+  }
+  else{ // shouldn't be called 
+    wsum = (double) n;
+    rsum = sum_dvec(z,n) - sum_dvec(e,n);
+  }
+
+  return rsum/wsum;;
+}
+
+// Negative Log LHD
+
+double lin_nllhd(int n, double a, double *e, double *y){
   double l = 0.0;
-  for(int i=0; i<n; i++) l += e[i] - y[i]*log(e[i]);
+  double r;
+  for(int i=0; i<n; i++){
+    r = (y[i] - a - e[i]);
+    l += 0.5*r*r; 
+  }
   return l;
 }
 
-double po_grad(int n, double *x, int *o, double *e, double *xy){
-  double g = -xy[0];
-  for(int i=0; i<n; i++) 
-    g += x[i]*e[o[i]];
-  return g;
+double bin_nllhd(int n, double a, double *e, double *y){
+  double l = 0.0;
+  double f;
+  for(int i=0; i<n; i++){
+    f = a + e[i];
+    l += -y[i]*f + log(1 + exp(f));
+  }
+  return l;
 }
 
-double po_curve(int n, double *x, int *o, double *e){
-  double h = 0.0;
-  for(int i=0; i<n; i++) 
-          h += x[i]*x[i]*e[o[i]];
-  return h;
+double po_nllhd(int n, double a, double *e, double *y){
+  double l = 0.0;
+  double f;
+  for(int i=0; i<n; i++){
+    f = a + e[i];
+    l += exp(f) - y[i]*(f);
+  }
+  return l;
 }
 
-double po_intercept(int n, double *e, double *ysum){  
-  double es, dbet;
-  es = 0.0;  
-  int i; 
-  for(i=0; i<n; i++) es += e[i];
-  dbet = log(ysum[0]) - log(es);
-  for(i=0; i<n; i++) e[i] *= exp(dbet);
-  return dbet;
+// Re-weightings  
+
+double bin_reweight(int n, double a, double *e, 
+            double *y, double *w, double *z){
+  double q, ee, ws, f;
+  ws = 0.0;
+  for(int i=0; i<n; i++){
+    f = a + e[i];
+    ee = exp(f);
+    q = ee/(1.0+ee);
+    w[i] = q*(1.0-q);
+    z[i] = f + (y[i]-q)/w[i];
+    ws += w[i];
+  }
+  return ws;
+}
+
+double po_reweight(int n, double a, double *e, 
+            double *y, double *w, double *z){
+  double ws, f;
+  ws = 0.0;
+  for(int i=0; i<n; i++){
+    f = a + e[i];
+    w[i] = exp(f);
+    z[i] = f + y[i]/w[i] - 1.0;
+    ws += w[i];
+  }
+  return ws;
 }

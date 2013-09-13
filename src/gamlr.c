@@ -17,92 +17,90 @@ int n, p, l;
 double nd, pd;
 
 // pointers to arguments
-double *y = NULL;
+double *Y = NULL;
 double *xv = NULL;
 int *xi = NULL;
 int *xp = NULL;
 double *V = NULL;
 
 // variables to be created
-int fam;
+unsigned int fam;
 double A;
 double *B = NULL;
 double *E = NULL;
+double *Z = NULL;
+double *W = NULL;
+double *wxbar = NULL;
+
 unsigned int itertotal,npass;
 
 double gam;
 double L1pen;
 
 double ysum,ybar;
-double *xm = NULL;
-double *xs = NULL;
-double *xy = NULL;
+double *xbar = NULL;
+double *xsd = NULL;
 
 double *H = NULL;
 double *G = NULL;
 double *ag0 = NULL;
 
 // function pointers
-double (*calcL)(int, double*, double*) = NULL;
-double (*calcG)(int, double*, int*, double*, double*) = NULL;
-double (*Imove)(int, double*, double*) = NULL;
+double (*nllhd)(int, double, double*, double*) = NULL;
+double (*reweight)(int, double, double*, 
+                double *, double*, double*) = NULL;
 
 /* global cleanup function */
 void gamlr_cleanup(){
   if(!dirty) return;
 
-  if(xm){ free(xm); xm = NULL; }
-  if(xs){ free(xs); xs = NULL; }
-  if(xy){ free(xy); xy = NULL; }
+  if(xbar){ free(xbar); xbar = NULL; }
+  if(xsd){ free(xsd); xsd = NULL; }
 
   if(B){ free(B); B = NULL; }
   if(G){ free(G); G = NULL; }
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
 
+  if(W){
+    free(W); W = NULL;
+    free(Z); Z = NULL;
+    free(wxbar); wxbar = NULL;
+  }
+
   dirty = 0;
 }
 
 void checkdata(int standardize){
   int i,j;
-  ysum = sum_dvec(y,n); 
+
+  // means
+  ysum = sum_dvec(Y,n); 
   ybar = ysum/nd;
-  xm = new_dzero(p);
-  H = new_dzero(p);
-  xs = new_dzero(p);
-  xy = new_dzero(p);
-
-  // centers
+  xbar = new_dzero(p);
   for(j=0; j<p; j++){
-    for(i=xp[j]; i<xp[j+1]; i++) xm[j] += xv[i];
-    xm[j] = xm[j]/nd; }
+    for(i=xp[j]; i<xp[j+1]; i++) 
+      xbar[j] += xv[i];
+    xbar[j] *= 1.0/nd;
+  }
 
-  // momments
-  for(j=0; j<p; j++)
-    for(i=xp[j]; i<xp[j+1]; i++)
-    {  H[j] += xv[i]*xv[i]; xy[j] += xv[i]*y[xi[i]]; }
-      
-  // check for no var
+  // dispersion
+  H = new_dvec(p);
+  xsd = new_dvec(p);
   for(j=0; j<p; j++){
-    xs[j] = sqrt( (H[j]/nd - xm[j]*xm[j]) );
-    if(xs[j]==0.0){
+    H[j] = -nd*xbar[j]*xbar[j];
+    for(i=xp[j]; i<xp[j+1]; i++) 
+      H[j] += xv[i]*xv[i]; 
+    if(H[j]==0.0){
       V[j] = INFINITY; 
-      xs[j] = 1.0; }
-  }   
+      xsd[j] = 1.0; 
+    }
+    else xsd[j] = sqrt(H[j]/nd);
+  }
 
   // to scale or not to scale
-  if(!standardize) for(j=0; j<p; j++) xs[j] = 1.0;
+  if(!standardize) for(j=0; j<p; j++) xsd[j] = 1.0;
 
-}
-
-/* penalty cost function */
-double calcC(void){
-  if(!isfinite(L1pen)) return 0.0;
-  double cost = 0.0;
-  for(int j=0; j<p; j++)
-    if( (V[j] > 0.0) & isfinite(V[j]))
-      cost += L1pen*V[j]*fabs(B[j])*xs[j]; 
-  return cost;
 }
 
 // calculates degrees of freedom, as well as
@@ -114,7 +112,7 @@ double dof(double *lam, double L){
   // initialization  
   if(!isfinite(lam[0])){
     for(j=0; j<p; j++){
-      ag0[j] = fabs(G[j])/xs[j];  
+      ag0[j] = fabs(G[j])/xsd[j];  
       if(V[j] == 0.0) df++; }
     lam[0] = dmax(ag0,p)/nd; 
     return df; }
@@ -133,7 +131,7 @@ double dof(double *lam, double L){
     if(V[j]==0.0) df++;
     else if(isfinite(V[j])){
       if(!isfinite(V[j])) continue;
-      if(B[j]==0.0) ag0[j] = fabs(G[j])/xs[j];
+      if(B[j]==0.0) ag0[j] = fabs(G[j])/xsd[j];
       s = L1pen/gam;
       df += pgamma(ag0[j], 
                     s/phi, 
@@ -154,8 +152,9 @@ double Bmove(int j)
   // unpenalized
   if(V[j]==0.0) dbet = -G[j]/H[j]; 
   else{
+    // penalty is L1pen*V[j]*fabs(B[j])*xsd[j].
     double pen,ghb;
-    pen = xs[j]*L1pen*V[j];
+    pen = xsd[j]*L1pen*V[j];
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
@@ -167,24 +166,34 @@ double Bmove(int j)
 /* coordinate descent for log penalized regression */
 int cdsolve(double tol, int M)
 {
-  int t,i,j,dozero,exitstat,dopen; 
-  double dbet,Bdiff,esum;
-  double POST,Pold,Pdiff;
+  int t,i,j,dozero,dopen; 
+  double dbet,imove,Bdiff,wsum,exitstat;
 
   // initialize
+  wsum = nd;
   dopen = isfinite(L1pen);
-  POST = INFINITY;
-  Pdiff = INFINITY;
+  Bdiff = INFINITY;
   exitstat = 0;
   dozero = 1;
   t = 0;
 
   // CD loop
-  while( ( (Pdiff > tol) | dozero ) & (t < M) ){
+  while( ( (Bdiff > tol) | dozero ) & (t < M) ){
 
     Bdiff = 0.0;
+    imove = 0.0;
+    if(dozero){
+      if(W){
+        wsum = reweight(n, A, E, Y, W, Z);
+        for(j=0; j<p; j++)
+          H[j] = curve(xp[j+1]-xp[j], 
+                &xv[xp[j]], &xi[xp[j]], xbar[j],
+                W, wsum, &wxbar[j]);
+        A = intercept(n, E, W, Z);
+      }
+    }
 
-    /****** loop through coefficients ******/
+    /****** cycle through coefficients ******/
     for(j=0; j<p; j++){
 
       // always skip the zero sd var
@@ -194,44 +203,24 @@ int cdsolve(double tol, int M)
       if(!dozero & (B[j]==0.0) & (V[j]>0.0)) continue;
 
       // update gradient 
-      G[j] = (*calcG)(xp[j+1]-xp[j], 
-        &xv[xp[j]], &xi[xp[j]], 
-        E, &xy[j]);
+      G[j] = grad(xp[j+1]-xp[j], 
+              &xv[xp[j]], &xi[xp[j]], 
+              A, E, W, Z, n, xbar[j]);
 
-      // mean centering adjustment for poisson
-      if(fam==3){
-        esum = sum_dvec(E,n);
-        H[j] = esum*xm[j]*xm[j] - 2*xm[j]*(G[j]+xy[j]);
-        G[j] += -xm[j]*(esum-ysum);
-      }
-      
       // for null model skip penalized variables
       if(!dopen & (V[j]>0.0)){ dbet = 0.0; continue; }
-
-      // update curvature
-      if(fam==2)
-        H[j] = bin_curve(xp[j+1]-xp[j], 
-          &xv[xp[j]], &xi[xp[j]], E); 
-      else if(fam==3)
-        H[j] += po_curve(xp[j+1]-xp[j], 
-          &xv[xp[j]], &xi[xp[j]], E); 
 
       // calculate the move and update
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        for(i=xp[j]; i<xp[j+1]; i++){ 
-          if(fam==1) E[xi[i]] += xv[i]*dbet;
-          else E[xi[i]] *= exp(xv[i]*dbet);
-        }
         Bdiff += fabs(dbet);
+        for(i=xp[j]; i<xp[j+1]; i++)
+          E[xi[i]] += xv[i]*dbet; 
+        A += -wxbar[j]*dbet;
       }
 
-      // alpha: inner loop draw for poisson
-      if(fam==3) A += Imove(n,E,&ysum);
     }
-    // alpha: outer loop draw otherwise
-    if(fam!=3) A += Imove(n,E,&ysum);
     
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
@@ -239,35 +228,22 @@ int cdsolve(double tol, int M)
     // iterate
     t++;
 
-    //  check objective 
-    Pold = POST;
-    POST = calcL(n, E, y);
-    if(dopen) POST += calcC();
-    Pdiff = Pold - POST;
+    //speak("t = %d: diff = %g, a=%g \n", t, Bdiff, A);
+
     // check for irregular exits
-    if((POST!=POST) | !isfinite(POST)){
-      shout("Stopped descent due to infinite posterior. \n");
+    if(t == M){
+      shout("Hit max CD iterations.  \n"); 
       exitstat = 1;
       break;
     }
-    if((Pdiff < 0.0) &  (fabs(Pdiff) > 0.01)){
-      shout("Stopped descent due to divergent optimization. \n");
-      exitstat = 1;
-      break; 
-    }
-    if(t == M-1){
-      shout("Hit max CD iterations.  "); 
-      exitstat = 1;
-      break;
-    }
-    //speak("t = %d: diff = %g\n", t, Pdiff);
 
     // check for active set update
     if(dozero == 1) dozero = 0;
-    else if(Pdiff < tol) dozero = 1; 
+    else if(Bdiff < tol) dozero = 1; 
 
-  } 
-  npass = t;
+  }
+
+  npass = t; 
   return exitstat;
 }
 
@@ -286,11 +262,11 @@ int cdsolve(double tol, int M)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
-            double *eta, // length-n fixed shifts
+            double *eta, // on input, length-n fixed shifts
             double *weight, // length-p weights
             int *standardize, // whether to scale penalty by sd(x_j)
             int *nlam, // length of the path
-            double *minratio, // lam_nlam/lam_1
+            double *delta, // path stepsize
             double *penscale,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
@@ -315,79 +291,81 @@ int cdsolve(double tol, int M)
   l = *l_in;
   V = weight;
   E = eta;
-  y = y_in;
+  Y = y_in;
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
 
   checkdata(*standardize);
   npass = itertotal = 0;
-  
+
   A=0.0;
   B = new_dzero(p);
   G = new_dzero(p);
   ag0 = new_dvec(p);
   gam = *penscale;
 
+  // some local variables
+  double Lold, NLLHD, D0; 
+  int s;
+
+  // family dependent settings
   switch( fam )
   {
     case 2:
-      calcL = &bin_nllhd;
-      calcG = &bin_grad;
-      Imove = &bin_intercept;
-      A = ybar/(1-ybar);
-      for(int i=0; i<n; i++) E[i] *= A;
-      A = log(A);
+      nllhd = &bin_nllhd;
+      reweight = &bin_reweight;
+      A = log(ybar/(1-ybar));
       break;
     case 3:
-      calcL = &po_nllhd;
-      calcG = &po_grad;
-      Imove = &po_intercept;
-      A = ybar;
-      for(int i=0; i<n; i++) E[i] *= A;
-      A = log(A);
+      nllhd = &po_nllhd;
+      reweight = &po_reweight;
+      A = log(ybar);
       break;
     default: 
       fam = 1; // if it wasn't already
-      calcL = &lin_nllhd;
-      calcG = &lin_grad;
-      Imove = &lin_intercept;
-      A = ybar;
-      for(int i=0; i<n; i++) E[i] += A;
+      nllhd = &lin_nllhd;
+      A = (ysum - sum_dvec(eta,n))/nd;
   }
+  if(fam!=1){
+    Z = new_dvec(n);
+    W = new_dvec(n);
+    wxbar = new_dvec(n);
+  }
+  else{ 
+    Z = Y;
+    wxbar = xbar; }
+
+  Lold = INFINITY;
+  NLLHD =  nllhd(n, A, E, Y);
 
   if(*verb)
     speak("*** n=%d observations and p=%d covariates ***\n", n,p);
 
-  double delta = exp( log(*minratio)/((double) *nlam-1) );
-  double Lold = INFINITY;
-  double NLLHD =  calcL(n, E, y);
-  double D0;
-  int s;
-
+  // move along the path
   for(s=0; s<*nlam; s++){
 
+    // deflate the penalty
     if(s>0)
-      lam[s] = lam[s-1]*delta;
-
+      lam[s] = lam[s-1]*(*delta);
     L1pen = lam[s]*nd;
 
+    // run descent
     exits[s] = cdsolve(*thresh,*maxit);
-    itertotal += npass;
 
-    NLLHD =  calcL(n, E, y);
+    // update parameters and objective
+    itertotal += npass;
+    Lold = NLLHD;
+    NLLHD =  nllhd(n, A, E, Y);
     deviance[s] = 2.0*NLLHD;
     if(s==0){
       D0 = deviance[0];
       *thresh *= fabs(D0); }
     df[s] = dof(&lam[s], NLLHD);
+    alpha[s] = A;
+    copy_dvec(&beta[s*p],B,p);
 
-    /**** exit checks ****/
-    // if(Lold < NLLHD){
-    //   shout("Divergent path warning;  ");
-    //   shout("L.%d=%g,L.%d=%g.\n",
-    //         s+1,NLLHD,s,Lold);
-    // }
+    // exit checks
     if(df[s] >= nd){
       exits[s] = 1;
       shout("Saturated model.  "); }
@@ -395,10 +373,7 @@ int cdsolve(double tol, int M)
       shout("Terminating path.\n");
       *nlam = s; break; }
     
-    Lold = NLLHD;
-    alpha[s] = A;
-    copy_dvec(&beta[s*p],B,p);
-
+    // gamma lasso updateing
     for(int j=0; j<p; j++) 
       if(isfinite(gam)){
         if( (V[j]>0.0) & isfinite(V[j]) )
@@ -408,7 +383,7 @@ int cdsolve(double tol, int M)
       }
 
     if(*verb) 
-      speak("segment %d: lam = %.4g, dev = %.4g, npasses = %d\n", 
+      speak("segment %d: lam = %.4g, dev = %.4g, npass = %d\n", 
           s+1, lam[s], deviance[s], npass);
 
     itime = interact(itime); 

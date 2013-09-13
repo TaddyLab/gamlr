@@ -49,14 +49,17 @@ gamlr <- function(x, y,
   lambda <- double(nlambda)
   lambda[1] <- lambda.start
 
+  ## stepsize
+  delta <- exp( log(lambda.min.ratio)/(nlambda-1) )
+
   ## extras
   xtr = list(...)
+
   ## fixed shifts
-  if(!is.null(xtr$fix)) eta <- xtr$fix
-  else{
-    if(family=="gaussian") eta <- rep(0.0,n)
-    else eta <- rep(1.0,n)  
-  }
+  if(!is.null(xtr$fix))
+    eta <- xtr$fix
+  else
+    eta <- rep(0.0,n)
   stopifnot(length(eta)==n)
   eta <- as.double(eta)
 
@@ -74,7 +77,7 @@ gamlr <- function(x, y,
             weight=weight,
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
-            pminratio=as.double(lambda.min.ratio),
+            delta=as.double(delta),
             gamma=as.double(gamma),
             thresh=as.double(thresh),
             maxit=as.integer(maxit),
@@ -118,7 +121,7 @@ gamlr <- function(x, y,
              beta=beta, 
              df=df,
              deviance=dev,
-             iterations=fit$maxit,
+             totalpass=fit$maxit,
              call=match.call()) 
 
   class(out) <- "gamlr"

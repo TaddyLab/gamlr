@@ -79,15 +79,15 @@ to the same domain as \code{y}.}
 \item{...}{ Extra arguments to each method. }
 }
 \details{ Finds the posterior modes along a regularization path
-		   of \emph{prior expected L1 penalties} using coordinate descent.
+		   of \emph{expected L1 penalties} using coordinate descent.
 
   Each path segment minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
-  ... \beta_p) + \sum \omega_j\lambda|\beta_j|]}, where \eqn{\phi} is the
+  ... \beta_p) + \sum \omega_j\lambda|\beta_j|}, where \eqn{\phi} is the
   exponential family dispersion parameter (\eqn{\sigma^2} for
   \code{family="gaussian"}, one otherwise).  Here, \eqn{\omega_j} are adaptive weights
-  \eqn{1/(1+\gamma|bj|)} where \eqn{bj} is the current (previous path
-  segment) estimate of \eqn{\beta_j}.  This is what makes the penalization
-  `concave'; however each path segment is simply L1 (lasso) penalized.  See 
+  \eqn{1/(1+\gamma|bj|)} where \eqn{bj} is the previous path
+  segment estimate of \eqn{\beta_j}.  This is what makes the penalization
+  `concave'; see 
   Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
@@ -102,7 +102,7 @@ to the same domain as \code{y}.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
   -2( logLHD.fitted - logLHD.saturated). }
-  \item{iterations}{Total number of coordinate descent cycles. }
+  \item{totalpass}{Total number of coordinate descent cycles. }
 }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
