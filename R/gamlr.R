@@ -114,7 +114,6 @@ gamlr <- function(x, y,
   ## build return object and exit
   out <- list(lambda=lambda, 
              gamma=fit$gamma,
-             weight=fit$weight, 
              nobs=fit$n,
              family=family,
              alpha=alpha,
@@ -122,6 +121,7 @@ gamlr <- function(x, y,
              df=df,
              deviance=dev,
              totalpass=fit$maxit,
+             free=free,
              call=match.call()) 
 
   class(out) <- "gamlr"
@@ -138,6 +138,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   nlambda <- ncol(x$beta)
   p <- nrow(x$beta)
   nzr <- unique(x$beta@i)+1
+  nzr <- nzr[!(nzr%in%x$free)]
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
   if(length(col)==1) col <- rep(col,p)

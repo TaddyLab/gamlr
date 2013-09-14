@@ -91,8 +91,7 @@ to the same domain as \code{y}.}
   Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
-      shows the regularization paths for \emph{beta} and marks
-      the minimum AIC and BIC models.
+      shows the regularization paths for penalized \emph{beta} and marks the minimum AIC and BIC models.
 }
 \value{
   \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}

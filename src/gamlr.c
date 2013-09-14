@@ -185,6 +185,11 @@ int cdsolve(double tol, int M)
     if(dozero){
       if(W){
         wsum = reweight(n, A, E, Y, W, Z);
+        if(wsum==0.0){ // perfect separation
+          shout("Infinite Likelihood.   ");
+          exitstat = 1;
+          break;
+        }
         for(j=0; j<p; j++)
           H[j] = curve(xp[j+1]-xp[j], 
                 &xv[xp[j]], &xi[xp[j]], xbar[j],
@@ -232,7 +237,7 @@ int cdsolve(double tol, int M)
 
     // check for irregular exits
     if(t == M){
-      shout("Hit max CD iterations.  \n"); 
+      shout("Hit max CD iterations.  "); 
       exitstat = 1;
       break;
     }
@@ -368,7 +373,8 @@ int cdsolve(double tol, int M)
     // exit checks
     if(df[s] >= nd){
       exits[s] = 1;
-      shout("Saturated model.  "); }
+      shout("Saturated model.  "); 
+    }
     if(exits[s]){
       shout("Terminating path.\n");
       *nlam = s; break; }

@@ -18,10 +18,6 @@ double grad(int n, double *x, int *o,
     g += -x[i]*wi*(z[o[i]] - a - e[o[i]]);
   }
 
-  // for(int i=0; i<N; i++){//center
-  //   if(w) wi = w[i]; 
-  //   g+= wi*xm*(z[i] - a - e[i]); }
-
   g *= 2.0;
   return g;
 }
@@ -56,14 +52,14 @@ double intercept(int n, double *e, double *w, double *z){
     for(i=0; i<n; i++){
       wsum += w[i];
       rsum += w[i]*(z[i]-e[i]); 
-    }
+     }
   }
   else{ // shouldn't be called 
     wsum = (double) n;
     rsum = sum_dvec(z,n) - sum_dvec(e,n);
   }
 
-  return rsum/wsum;;
+  return rsum/wsum;
 }
 
 // Negative Log LHD
@@ -109,6 +105,8 @@ double bin_reweight(int n, double a, double *e,
     ee = exp(f);
     q = ee/(1.0+ee);
     w[i] = q*(1.0-q);
+    if(w[i]==0.0){
+      ws = 0.0; break; }
     z[i] = f + (y[i]-q)/w[i];
     ws += w[i];
   }

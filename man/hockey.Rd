@@ -34,16 +34,17 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 data(hockey)
 x <- cBind(config,onice)
 y <- as.numeric(goal$who=="HOME")
-fit <- gamlr(x=x, y=y, family="binomial", nlam=10,
-          standardize=FALSE, gamma=1, verb=TRUE)
 
-## BIC selected coefficients
-sum( (B <- as.matrix(coef(fit))) !=0)
-round(B[order(-abs(B))[1:20],],2)
+## you can set smaller lambda.min.ratio to see denser models
+plot(fit <- gamlr(x=x, y=y, family="binomial",  
+          free=1:ncol(config), standardize=FALSE, 
+          gamma=1, verb=TRUE, lambda.min.ratio=0.1))
 
-## fit plot
-plot(fit, col=c(rep("slategrey",ncol(config)),
-                rep("darkorange",ncol(onice))))
+## BIC selected player coefficients
+B <- coef(fit)[-c(1,1+1:ncol(config)),] 
+length(B <- B[B!=0])
+## print their effect on who-scored odds
+round(exp(B[order(-abs(B))]),3)
 
 ## predict the last goal of the 2013 playoffs
 goal[fit$n,]
