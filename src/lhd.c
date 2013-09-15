@@ -8,14 +8,14 @@
 
 // Weighted least squares functions
 double grad(int n, double *x, int *o, 
-            double a, double *e, double *w, double *z,
+            double a, double *e, double *v, double *z,
             int N, double xm){
   double g = 0.0;
-  double wi = 0.5;
+  double vi = 0.5;
 
   for(int i=0; i<n; i++){
-    if(w) wi = w[o[i]];
-    g += -x[i]*wi*(z[o[i]] - a - e[o[i]]);
+    if(v) vi = v[o[i]];
+    g += -x[i]*vi*(z[o[i]] - a - e[o[i]]);
   }
 
   g *= 2.0;
@@ -23,43 +23,43 @@ double grad(int n, double *x, int *o,
 }
 
 double curve(int n, double *x, int *o, double xm,  
-          double *w, double wsum, double *wxm){
+          double *v, double vsum, double *vxm){
   double h = 0.0;
-  double wi = 0.5;
-  double wxs = 0.0;
+  double vi = 0.5;
+  double vxs = 0.0;
 
   for(int i=0; i<n; i++){
-    if(w) wi = w[o[i]];
-    wxs += x[i]*wi;
-    h += x[i]*wi*x[i];
+    if(v) vi = v[o[i]];
+    vxs += x[i]*vi;
+    h += x[i]*vi*x[i];
   }
   
   // center
-  h += xm*xm*wsum - 2.0*wxs*xm;
+  h += xm*xm*vsum - 2.0*vxs*xm;
 
-  *wxm = wxs/wsum;
+  *vxm = vxs/vsum;
 
   h *= 2.0;
   return h;
 }
 
-double intercept(int n, double *e, double *w, double *z){
-  double wsum, rsum, alpha;
+double intercept(int n, double *e, double *v, double *z){
+  double vsum, rsum;
   int i;
 
-  wsum = rsum = 0.0;
-  if(w){
+  vsum = rsum = 0.0;
+  if(v){
     for(i=0; i<n; i++){
-      wsum += w[i];
-      rsum += w[i]*(z[i]-e[i]); 
+      vsum += v[i];
+      rsum += v[i]*(z[i]-e[i]); 
      }
   }
   else{ // shouldn't be called 
-    wsum = (double) n;
+    vsum = (double) n;
     rsum = sum_dvec(z,n) - sum_dvec(e,n);
   }
 
-  return rsum/wsum;
+  return rsum/vsum;
 }
 
 // Negative Log LHD
@@ -95,33 +95,32 @@ double po_nllhd(int n, double a, double *e, double *y){
 }
 
 // Re-weightings  
-
 double bin_reweight(int n, double a, double *e, 
-            double *y, double *w, double *z){
-  double q, ee, ws, f;
-  ws = 0.0;
+            double *y, double *v, double *z){
+  double q, ee, vs, f;
+  vs = 0.0;
   for(int i=0; i<n; i++){
     f = a + e[i];
     ee = exp(f);
     q = ee/(1.0+ee);
-    w[i] = q*(1.0-q);
-    if(w[i]==0.0){
-      ws = 0.0; break; }
-    z[i] = f + (y[i]-q)/w[i];
-    ws += w[i];
+    v[i] = q*(1.0-q);
+    if(v[i]==0.0){
+      vs = 0.0; break; }
+    z[i] = f + (y[i]-q)/v[i];
+    vs += v[i];
   }
-  return ws;
+  return vs;
 }
 
 double po_reweight(int n, double a, double *e, 
-            double *y, double *w, double *z){
-  double ws, f;
-  ws = 0.0;
+            double *y, double *v, double *z){
+  double vs, f;
+  vs = 0.0;
   for(int i=0; i<n; i++){
     f = a + e[i];
-    w[i] = exp(f);
-    z[i] = f + y[i]/w[i] - 1.0;
-    ws += w[i];
+    v[i] = exp(f);
+    z[i] = f + y[i]/v[i] - 1.0;
+    vs += v[i];
   }
-  return ws;
+  return vs;
 }

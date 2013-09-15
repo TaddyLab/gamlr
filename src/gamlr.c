@@ -21,7 +21,7 @@ double *Y = NULL;
 double *xv = NULL;
 int *xi = NULL;
 int *xp = NULL;
-double *V = NULL;
+double *W = NULL;
 
 // variables to be created
 unsigned int fam;
@@ -29,8 +29,8 @@ double A;
 double *B = NULL;
 double *E = NULL;
 double *Z = NULL;
-double *W = NULL;
-double *wxbar = NULL;
+double *V = NULL;
+double *vxbar = NULL;
 
 unsigned int itertotal,npass;
 
@@ -62,10 +62,10 @@ void gamlr_cleanup(){
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
 
-  if(W){
-    free(W); W = NULL;
+  if(V){
+    free(V); V = NULL;
     free(Z); Z = NULL;
-    free(wxbar); wxbar = NULL;
+    free(vxbar); vxbar = NULL;
   }
 
   dirty = 0;
@@ -92,7 +92,7 @@ void checkdata(int standardize){
     for(i=xp[j]; i<xp[j+1]; i++) 
       H[j] += xv[i]*xv[i]; 
     if(H[j]==0.0){
-      V[j] = INFINITY; 
+      W[j] = INFINITY; 
       xsd[j] = 1.0; 
     }
     else xsd[j] = sqrt(H[j]/nd);
@@ -113,14 +113,14 @@ double dof(double *lam, double L){
   if(!isfinite(lam[0])){
     for(j=0; j<p; j++){
       ag0[j] = fabs(G[j])/xsd[j];  
-      if(V[j] == 0.0) df++; }
+      if(W[j] == 0.0) df++; }
     lam[0] = dmax(ag0,p)/nd; 
     return df; }
 
   // lasso 
   if(gam==0.0){
     for(j=0; j<p; j++)
-      if( (B[j]!=0.0) | (V[j]==0.0) ) df ++;
+      if( (B[j]!=0.0) | (W[j]==0.0) ) df ++;
     return df;
   }
   // gamma lasso
@@ -128,9 +128,9 @@ double dof(double *lam, double L){
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
   for(j=0; j<p; j++){
-    if(V[j]==0.0) df++;
-    else if(isfinite(V[j])){
-      if(!isfinite(V[j])) continue;
+    if(W[j]==0.0) df++;
+    else if(isfinite(W[j])){
+      if(!isfinite(W[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xsd[j];
       s = L1pen/gam;
       df += pgamma(ag0[j], 
@@ -150,11 +150,11 @@ double Bmove(int j)
   if(H[j]==0) return -B[j];
 
   // unpenalized
-  if(V[j]==0.0) dbet = -G[j]/H[j]; 
+  if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is L1pen*V[j]*fabs(B[j])*xsd[j].
+    // penalty is L1pen*W[j]*fabs(B[j])*xsd[j].
     double pen,ghb;
-    pen = xsd[j]*L1pen*V[j];
+    pen = xsd[j]*L1pen*W[j];
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
@@ -167,10 +167,10 @@ double Bmove(int j)
 int cdsolve(double tol, int M)
 {
   int t,i,j,dozero,dopen; 
-  double dbet,imove,Bdiff,wsum,exitstat;
+  double dbet,imove,Bdiff,vsum,exitstat;
 
   // initialize
-  wsum = nd;
+  vsum = nd;
   dopen = isfinite(L1pen);
   Bdiff = INFINITY;
   exitstat = 0;
@@ -183,9 +183,9 @@ int cdsolve(double tol, int M)
     Bdiff = 0.0;
     imove = 0.0;
     if(dozero){
-      if(W){
-        wsum = reweight(n, A, E, Y, W, Z);
-        if(wsum==0.0){ // perfect separation
+      if(V){
+        vsum = reweight(n, A, E, Y, V, Z);
+        if(vsum==0.0){ // perfect separation
           shout("Infinite Likelihood.   ");
           exitstat = 1;
           break;
@@ -193,8 +193,8 @@ int cdsolve(double tol, int M)
         for(j=0; j<p; j++)
           H[j] = curve(xp[j+1]-xp[j], 
                 &xv[xp[j]], &xi[xp[j]], xbar[j],
-                W, wsum, &wxbar[j]);
-        A = intercept(n, E, W, Z);
+                V, vsum, &vxbar[j]);
+        A = intercept(n, E, V, Z);
       }
     }
 
@@ -202,18 +202,18 @@ int cdsolve(double tol, int M)
     for(j=0; j<p; j++){
 
       // always skip the zero sd var
-      if(!isfinite(V[j])) continue;
+      if(!isfinite(W[j])) continue;
 
       // skip the in-active set unless 'dozero'
-      if(!dozero & (B[j]==0.0) & (V[j]>0.0)) continue;
+      if(!dozero & (B[j]==0.0) & (W[j]>0.0)) continue;
 
       // update gradient 
       G[j] = grad(xp[j+1]-xp[j], 
               &xv[xp[j]], &xi[xp[j]], 
-              A, E, W, Z, n, xbar[j]);
+              A, E, V, Z, n, xbar[j]);
 
       // for null model skip penalized variables
-      if(!dopen & (V[j]>0.0)){ dbet = 0.0; continue; }
+      if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
 
       // calculate the move and update
       dbet = Bmove(j);
@@ -222,7 +222,7 @@ int cdsolve(double tol, int M)
         Bdiff += fabs(dbet);
         for(i=xp[j]; i<xp[j+1]; i++)
           E[xi[i]] += xv[i]*dbet; 
-        A += -wxbar[j]*dbet;
+        A += -vxbar[j]*dbet;
       }
 
     }
@@ -294,7 +294,7 @@ int cdsolve(double tol, int M)
   nd = (double) n;
   pd = (double) p;
   l = *l_in;
-  V = weight;
+  W = weight;
   E = eta;
   Y = y_in;
   xi = xi_in;
@@ -334,12 +334,12 @@ int cdsolve(double tol, int M)
   }
   if(fam!=1){
     Z = new_dvec(n);
-    W = new_dvec(n);
-    wxbar = new_dvec(n);
+    V = new_dvec(n);
+    vxbar = new_dvec(n);
   }
   else{ 
     Z = Y;
-    wxbar = xbar; }
+    vxbar = xbar; }
 
   Lold = INFINITY;
   NLLHD =  nllhd(n, A, E, Y);
@@ -382,10 +382,10 @@ int cdsolve(double tol, int M)
     // gamma lasso updateing
     for(int j=0; j<p; j++) 
       if(isfinite(gam)){
-        if( (V[j]>0.0) & isfinite(V[j]) )
-          V[j] = 1.0/(1.0+gam*fabs(B[j]));
+        if( (W[j]>0.0) & isfinite(W[j]) )
+          W[j] = 1.0/(1.0+gam*fabs(B[j]));
       } else if(B[j]!=0.0){
-        V[j] = 0.0;
+        W[j] = 0.0;
       }
 
     if(*verb) 
