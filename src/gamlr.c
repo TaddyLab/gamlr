@@ -365,7 +365,8 @@ int cdsolve(double tol, int M)
     deviance[s] = 2.0*NLLHD;
     if(s==0){
       D0 = deviance[0];
-      *thresh *= fabs(D0); }
+      //*thresh *= fabs(D0); 
+    }
     df[s] = dof(&lam[s], NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
