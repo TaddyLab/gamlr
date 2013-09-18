@@ -13,11 +13,11 @@ gamlr(x, y,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
-   thresh=1e-5, maxit=1e3,
+   thresh=1e-5, maxit=1e4,
    verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
-    col=rgb(0,0,.5,.75), select=TRUE, df=TRUE, ...)
+    col="navy", select=TRUE, df=TRUE, ...)
 \method{coef}{gamlr}(object, select=which.min(BIC(object)), ...)
 \method{predict}{gamlr}(object, newdata,
             select=which.min(BIC(object)),

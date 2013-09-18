@@ -9,7 +9,7 @@ gamlr <- function(x, y,
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 
-            thresh=1e-5, maxit=1e3,
+            thresh=1e-5, maxit=1e4,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -94,7 +94,11 @@ gamlr <- function(x, y,
 
   ## coefficients
   nlambda <- fit$nlambda
-  if(nlambda == 0) stop("could not converge for any lambda.")
+  if(nlambda == 0){
+    warning("could not converge for any lambda.")
+    nlambda <- 1
+    fit$deviance <- NA
+  }
   alpha <- head(fit$alpha,nlambda)
   names(alpha) <- paste0('seg',(1:nlambda))
   beta <- Matrix(head(fit$beta,nlambda*p),
@@ -132,7 +136,7 @@ gamlr <- function(x, y,
 #### S3 method functions
 
 plot.gamlr <- function(x, against=c("pen","dev"), 
-                      col=rgb(0,0,.5,.75), 
+                      col="navy", 
                       select=TRUE, df=TRUE, ...)
 {
   nlambda <- ncol(x$beta)
@@ -153,6 +157,8 @@ plot.gamlr <- function(x, against=c("pen","dev"),
       xvn <- "deviance"
   } else
     stop("unrecognized 'against' argument.")
+
+  if(!is.finite(xv[1])) stop("refusing to plot an unconverged fit")
 
   argl = list(...)
   if(is.null(argl$ylim)) argl$ylim=range(beta)
@@ -176,7 +182,8 @@ plot.gamlr <- function(x, against=c("pen","dev"),
 
 coef.gamlr <- function(object, 
   select=which.min(BIC(object)), ...){
-  if(is.null(select)) select <- 1:ncol(object$beta)
+  if(length(select)==0) select <- 1:ncol(object$beta)
+  select[select>ncol(object$beta)] <- ncol(object$beta)
   return(rBind(intercept=object$alpha[select], 
               object$beta[,select,drop=FALSE]))
 }
