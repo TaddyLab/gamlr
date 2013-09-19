@@ -99,13 +99,13 @@ double bin_reweight(int n, double a, double *e,
             double *y, double *v, double *z){
   double q, ee, vs, f;
   vs = 0.0;
+  if(!isfinite(a)) return 0.0;
   for(int i=0; i<n; i++){
     f = a + e[i];
     ee = exp(f);
     q = ee/(1.0+ee);
     v[i] = q*(1.0-q);
-    if(v[i]==0.0){
-      vs = 0.0; break; }
+    if(v[i]==0.0) return 0.0;
     z[i] = f + (y[i]-q)/v[i];
     vs += v[i];
   }

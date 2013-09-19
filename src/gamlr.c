@@ -44,6 +44,7 @@ double *xsd = NULL;
 double *H = NULL;
 double *G = NULL;
 double *ag0 = NULL;
+double df0;
 
 // function pointers
 double (*nllhd)(int, double, double*, double*) = NULL;
@@ -105,17 +106,23 @@ void checkdata(int standardize){
 
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
-double dof(double *lam, double L){
-  double df =  1.0;
+double dof(int s, double *lam, double L){
   int j;
   
   // initialization  
-  if(!isfinite(lam[0])){
+  if(s==0){
+    df0 = 1.0;
     for(j=0; j<p; j++){
       ag0[j] = fabs(G[j])/xsd[j];  
-      if(W[j] == 0.0) df++; }
-    lam[0] = dmax(ag0,p)/nd; 
-    return df; }
+      if(W[j] == 0.0) df0++; 
+    }
+    if(!isfinite(lam[0])){  
+      lam[0] = dmax(ag0,p)/nd;
+      return df0; 
+    }
+  }
+
+  double df = df0;
 
   // lasso 
   if(gam==0.0){
@@ -124,7 +131,7 @@ double dof(double *lam, double L){
     return df;
   }
   // gamma lasso
-  double s,phi;
+  double shape,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
   for(j=0; j<p; j++){
@@ -132,9 +139,9 @@ double dof(double *lam, double L){
     else if(isfinite(W[j])){
       if(!isfinite(W[j])) continue;
       if(B[j]==0.0) ag0[j] = fabs(G[j])/xsd[j];
-      s = L1pen/gam;
+      shape = L1pen/gam;
       df += pgamma(ag0[j], 
-                    s/phi, 
+                    shape/phi, 
                     phi*gam, 
                     1, 0); 
     }
@@ -188,15 +195,18 @@ int cdsolve(double tol, int M)
         if(vsum==0.0){ // perfect separation
           shout("Infinite Likelihood.   ");
           exitstat = 1;
-          break;
-        }
+          break; }
         for(j=0; j<p; j++)
           H[j] = curve(xp[j+1]-xp[j], 
                 &xv[xp[j]], &xi[xp[j]], xbar[j],
                 V, vsum, &vxbar[j]);
-        A = intercept(n, E, V, Z);
+        dbet = intercept(n, E, V, Z)-A;
+        A += dbet;
+        Bdiff += fabs(dbet);
       }
+      //speak("A[%d]=%g,Bdiff=%g\n",t,A,Bdiff);
     }
+
 
     /****** cycle through coefficients ******/
     for(j=0; j<p; j++){
@@ -226,14 +236,12 @@ int cdsolve(double tol, int M)
       }
 
     }
-    
+
     // break for intercept only linear model
     if( (fam==1) & (Bdiff==0.0) & dozero ) break;
 
     // iterate
     t++;
-
-    //speak("t = %d: diff = %g, a=%g \n", t, Bdiff, A);
 
     // check for irregular exits
     if(t == M){
@@ -311,7 +319,7 @@ int cdsolve(double tol, int M)
   gam = *penscale;
 
   // some local variables
-  double Lold, NLLHD, D0; 
+  double Lold, NLLHD; 
   int s;
 
   // family dependent settings
@@ -363,11 +371,7 @@ int cdsolve(double tol, int M)
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y);
     deviance[s] = 2.0*NLLHD;
-    if(s==0){
-      D0 = deviance[0];
-      //*thresh *= fabs(D0); 
-    }
-    df[s] = dof(&lam[s], NLLHD);
+    df[s] = dof(s, lam, NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
