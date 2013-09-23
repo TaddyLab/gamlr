@@ -191,18 +191,20 @@ int cdsolve(double tol, int M)
     imove = 0.0;
     if(dozero){
       if(V){
-        vsum = reweight(n, A, E, Y, V, Z);
-        if(vsum==0.0){ // perfect separation
-          shout("Infinite Likelihood.   ");
-          exitstat = 1;
-          break; }
-        for(j=0; j<p; j++)
-          H[j] = curve(xp[j+1]-xp[j], 
-                &xv[xp[j]], &xi[xp[j]], xbar[j],
-                V, vsum, &vxbar[j]);
-        dbet = intercept(n, E, V, Z)-A;
-        A += dbet;
-        Bdiff += fabs(dbet);
+        if((t>0) | V[0]==0.0){
+          vsum = reweight(n, A, E, Y, V, Z);
+          if(vsum==0.0){ // perfect separation
+            shout("Infinite Likelihood.   ");
+            exitstat = 1;
+            break; }
+          for(j=0; j<p; j++)
+            H[j] = curve(xp[j+1]-xp[j], 
+                  &xv[xp[j]], &xi[xp[j]], xbar[j],
+                  V, vsum, &vxbar[j]);
+          dbet = intercept(n, E, V, Z)-A;
+          A += dbet;
+          Bdiff += fabs(dbet);
+        }
       }
       //speak("A[%d]=%g,Bdiff=%g\n",t,A,Bdiff);
     }
@@ -342,7 +344,7 @@ int cdsolve(double tol, int M)
   }
   if(fam!=1){
     Z = new_dvec(n);
-    V = new_dvec(n);
+    V = new_dzero(n);
     vxbar = new_dvec(n);
   }
   else{ 

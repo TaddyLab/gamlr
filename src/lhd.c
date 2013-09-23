@@ -120,6 +120,7 @@ double po_reweight(int n, double a, double *e,
     f = a + e[i];
     v[i] = exp(f);
     z[i] = f + y[i]/v[i] - 1.0;
+    if(v[i]==0.0) return 0.0;
     vs += v[i];
   }
   return vs;
