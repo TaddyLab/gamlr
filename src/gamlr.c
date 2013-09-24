@@ -191,7 +191,7 @@ int cdsolve(double tol, int M)
     imove = 0.0;
     if(dozero){
       if(V){
-        if((t>0) | V[0]==0.0){
+        if((t>0) | (V[0]==0.0)){
           vsum = reweight(n, A, E, Y, V, Z);
           if(vsum==0.0){ // perfect separation
             shout("Infinite Likelihood.   ");
