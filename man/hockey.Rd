@@ -33,12 +33,12 @@ Matt Taddy, \email{taddy@chicagobooth.edu}
 \examples{
 data(hockey)
 x <- cBind(config,onice)
-y <- as.numeric(goal$who=="HOME")
+y <- as.numeric(goal$whoscored=="HOME")
 
 ## you can set smaller lambda.min.ratio to see denser models
 plot(fit <- gamlr(x=x, y=y, family="binomial",  
           free=1:ncol(config), standardize=FALSE, 
-          gamma=1, verb=TRUE, lambda.min.ratio=0.1))
+          verb=TRUE, lambda.min.ratio=0.1))
 
 ## BIC selected player coefficients
 B <- coef(fit)[-c(1,1+1:ncol(config)),] 

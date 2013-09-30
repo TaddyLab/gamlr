@@ -5,7 +5,7 @@
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
-            gamma=0, nlambda=100, 
+            gamma=1, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 

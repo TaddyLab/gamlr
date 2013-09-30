@@ -9,7 +9,7 @@
 \usage{
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
-   gamma=0,
+   gamma=1,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
@@ -37,11 +37,10 @@ gamlr(x, y,
   \item{family}{ Response model type; 
   either "gaussian", "poisson", or "binomial".  
   Note that for "binomial", \code{y} is in \eqn{[0,1]}. }
-  \item{gamma}{ Prior scale on the 
-      L1 cost parameters \eqn{\omega_j}.  
-      The default of zero corresponds to the lasso,
+  \item{gamma}{ Penalty concavity tuning parameter; see details. 
+      Zero corresponds to the lasso,
       and higher values correspond to a more concave penalty.  
-      See details. }
+       }
   \item{nlambda}{ Number of regularization path segments. }
   \item{lambda.start}{ Initial penalty value.  Default of \code{Inf}
   implies the infimum lambda that returns all zero
@@ -78,20 +77,17 @@ or "response" for predictions transformed
 to the same domain as \code{y}.}
 \item{...}{ Extra arguments to each method. }
 }
-\details{ Finds the posterior modes along a regularization path
-		   of \emph{expected L1 penalties} using coordinate descent.
+\details{ Finds posterior modes along a regularization path
+		   of \emph{adapted L1 penalties} via coordinate descent.
 
-  Each path segment minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
+  Each path segment \eqn{t} minimizes the objective -\eqn{(\phi/n)}logLHD\eqn{(\beta_1
   ... \beta_p) + \sum \omega_j\lambda|\beta_j|}, where \eqn{\phi} is the
   exponential family dispersion parameter (\eqn{\sigma^2} for
-  \code{family="gaussian"}, one otherwise).  Here, \eqn{\omega_j} are adaptive weights
-  \eqn{1/(1+\gamma|bj|)} where \eqn{bj} is the previous path
-  segment estimate of \eqn{\beta_j}.  This is what makes the penalization
-  `concave'; see 
-  Taddy (2013) for details.
+  \code{family="gaussian"}, one otherwise).  Weights \eqn{\omega_j} are  
+  set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
-      shows the regularization paths for penalized \emph{beta} and marks the minimum AIC and BIC models.
+      shows the regularization paths for penalized \emph{beta} and marks  minimum AIC and BIC models.
 }
 \value{
   \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}
