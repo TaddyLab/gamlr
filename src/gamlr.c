@@ -34,8 +34,7 @@ double *vxbar = NULL;
 
 unsigned int itertotal,npass;
 
-double gam;
-double L1pen;
+double gam,l1pen;
 
 double ysum,ybar;
 double *xbar = NULL;
@@ -109,17 +108,18 @@ void checkdata(int standardize){
 double dof(int s, double *lam, double L){
   int j;
   
+  //calculate absolute grads
+  for(j=0; j<p; j++)
+    if(isfinite(W[j]) & (B[j]==0.0))
+      ag0[j] = fabs(G[j])/xsd[j];
+
   // initialization  
   if(s==0){
     df0 = 1.0;
-    for(j=0; j<p; j++){
-      ag0[j] = fabs(G[j])/xsd[j];  
+    for(j=0; j<p; j++) 
       if(W[j] == 0.0) df0++; 
-    }
-    if(!isfinite(lam[0])){  
+    if(!isfinite(lam[0]))  
       lam[0] = dmax(ag0,p)/nd;
-      return df0; 
-    }
   }
 
   double df = df0;
@@ -137,9 +137,7 @@ double dof(int s, double *lam, double L){
   for(j=0; j<p; j++){
     if(W[j]==0.0) df++;
     else if(isfinite(W[j])){
-      if(!isfinite(W[j])) continue;
-      if(B[j]==0.0) ag0[j] = fabs(G[j])/xsd[j];
-      shape = L1pen/gam;
+      shape = lam[s]*nd/gam;
       df += pgamma(ag0[j], 
                     shape/phi, 
                     phi*gam, 
@@ -159,9 +157,9 @@ double Bmove(int j)
   // unpenalized
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is L1pen*W[j]*fabs(B[j])*xsd[j].
+    // penalty is lam[s]*nd*W[j]*fabs(B[j])*xsd[j].
     double pen,ghb;
-    pen = xsd[j]*L1pen*W[j];
+    pen = xsd[j]*l1pen*W[j];
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
@@ -178,7 +176,7 @@ int cdsolve(double tol, int M)
 
   // initialize
   vsum = nd;
-  dopen = isfinite(L1pen);
+  dopen = isfinite(l1pen);
   Bdiff = INFINITY;
   exitstat = 0;
   dozero = 1;
@@ -231,10 +229,10 @@ int cdsolve(double tol, int M)
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        Bdiff += fabs(dbet);
         for(i=xp[j]; i<xp[j+1]; i++)
           E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
+        Bdiff += fabs(xsd[j]*dbet);
       }
 
     }
@@ -285,7 +283,7 @@ int cdsolve(double tol, int M)
             double *penscale,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
-            double *lam, // output lambda
+            double *lam, // output lam
             double *deviance, // output deviance
             double *df, // output df
             double *alpha,  // output intercepts
@@ -317,11 +315,11 @@ int cdsolve(double tol, int M)
   A=0.0;
   B = new_dzero(p);
   G = new_dzero(p);
-  ag0 = new_dvec(p);
+  ag0 = new_dzero(p);
   gam = *penscale;
 
   // some local variables
-  double Lold, NLLHD; 
+  double Lold, NLLHD, Lsat;
   int s;
 
   // family dependent settings
@@ -331,16 +329,22 @@ int cdsolve(double tol, int M)
       nllhd = &bin_nllhd;
       reweight = &bin_reweight;
       A = log(ybar/(1-ybar));
+      Lsat = 0.0;
       break;
     case 3:
       nllhd = &po_nllhd;
       reweight = &po_reweight;
       A = log(ybar);
+      // nonzero saturated deviance
+      Lsat = ysum;
+      for(int i=0; i<n; i++)
+        if(Y[i]!=0) Lsat += -Y[i]*log(Y[i]);
       break;
     default: 
       fam = 1; // if it wasn't already
       nllhd = &lin_nllhd;
       A = (ysum - sum_dvec(eta,n))/nd;
+      Lsat=0.0;
   }
   if(fam!=1){
     Z = new_dvec(n);
@@ -351,6 +355,7 @@ int cdsolve(double tol, int M)
     Z = Y;
     vxbar = xbar; }
 
+  l1pen = INFINITY;
   Lold = INFINITY;
   NLLHD =  nllhd(n, A, E, Y);
 
@@ -363,7 +368,7 @@ int cdsolve(double tol, int M)
     // deflate the penalty
     if(s>0)
       lam[s] = lam[s-1]*(*delta);
-    L1pen = lam[s]*nd;
+    l1pen = lam[s]*nd;
 
     // run descent
     exits[s] = cdsolve(*thresh,*maxit);
@@ -372,21 +377,15 @@ int cdsolve(double tol, int M)
     itertotal += npass;
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y);
-    deviance[s] = 2.0*NLLHD;
+    deviance[s] = 2.0*(NLLHD - Lsat);
     df[s] = dof(s, lam, NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
-    // exit checks
-    if(df[s] >= nd){
-      exits[s] = 1;
-      shout("Saturated model.  "); 
-    }
-    if(exits[s]){
-      shout("Terminating path.\n");
-      *nlam = s; break; }
+    // set relative tolerance
+    if(s==0) *thresh *= deviance[0];
     
-    // gamma lasso updateing
+    // gamma lasso updating
     for(int j=0; j<p; j++) 
       if(isfinite(gam)){
         if( (W[j]>0.0) & isfinite(W[j]) )
@@ -395,9 +394,23 @@ int cdsolve(double tol, int M)
         W[j] = 0.0;
       }
 
+    // verbalize
     if(*verb) 
       speak("segment %d: lam = %.4g, dev = %.4g, npass = %d\n", 
           s+1, lam[s], deviance[s], npass);
+
+    // exit checks
+    if(deviance[s]<0.0){
+      exits[s] = 1;
+      shout("Negative deviance.  ");
+    }
+    if(df[s] >= nd){
+      exits[s] = 1;
+      shout("Saturated model.  "); 
+    }
+    if(exits[s]){
+      shout("Terminating path.\n");
+      *nlam = s; break; }
 
     itime = interact(itime); 
   }

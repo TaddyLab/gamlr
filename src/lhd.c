@@ -11,21 +11,20 @@ double grad(int n, double *x, int *o,
             double a, double *e, double *v, double *z,
             int N, double xm){
   double g = 0.0;
-  double vi = 0.5;
+  double vi = 1.0;
 
   for(int i=0; i<n; i++){
     if(v) vi = v[o[i]];
     g += -x[i]*vi*(z[o[i]] - a - e[o[i]]);
   }
 
-  g *= 2.0;
   return g;
 }
 
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm){
   double h = 0.0;
-  double vi = 0.5;
+  double vi = 1.0;
   double vxs = 0.0;
 
   for(int i=0; i<n; i++){
@@ -39,7 +38,6 @@ double curve(int n, double *x, int *o, double xm,
 
   *vxm = vxs/vsum;
 
-  h *= 2.0;
   return h;
 }
 

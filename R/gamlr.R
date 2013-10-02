@@ -9,7 +9,7 @@ gamlr <- function(x, y,
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 
-            thresh=1e-5, maxit=1e4,
+            thresh=1e-7, maxit=1e4,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -111,10 +111,6 @@ gamlr <- function(x, y,
   df <- head(fit$df,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
-  ## nonzero saturated poisson deviance
-  if(family=="poisson")
-    dev <- dev + 2*sum(ifelse(y>0,y*log(y),0) - y) 
-
   ## build return object and exit
   out <- list(lambda=lambda, 
              gamma=fit$gamma,
@@ -145,8 +141,10 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   nzr <- nzr[!(nzr%in%x$free)]
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
-  if(length(col)==1) col <- rep(col,p)
-  col <- col[nzr]
+  if(!is.null(col)){
+    if(length(col)==1) col <- rep(col,p)
+    col <- col[nzr] }
+  else col <- 1:6 # matplot default
 
   against=match.arg(against)
   if(against=="pen"){
