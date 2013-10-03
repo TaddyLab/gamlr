@@ -4,8 +4,7 @@
 #define __LHDMOD_H__
 
 double grad(int n, double *x, int *o, 
-            double a, double *e, double *v, double *z,
-            int N, double xm);
+            double a, double *e, double *v, double *z);
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm);
 double intercept(int n, double *e, double *v, double *z);

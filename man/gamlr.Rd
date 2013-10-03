@@ -13,7 +13,7 @@ gamlr(x, y,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
-   thresh=1e-5, maxit=1e4,
+   thresh=1e-7, maxit=1e4,
    verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
@@ -55,10 +55,9 @@ gamlr(x, y,
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
   \item{verb}{ Whether to print some output for each path segment. }
-  \item{thresh}{ Optimization convergence tolerance for each 
+  \item{thresh}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
-    total change in coefficients after a full parameter-set update, 
-    relative to the null model negative log likelihood. }
+    maximum coordinate change times deviance curvature after full parameter-set update. }
   \item{maxit}{ Max iterations for a single segment
          coordinate descent routine. }
    \item{object}{ A gamlr object.}
