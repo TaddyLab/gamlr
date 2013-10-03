@@ -201,7 +201,7 @@ int cdsolve(double tol, int M)
                   V, vsum, &vxbar[j]);
           dbet = intercept(n, E, V, Z)-A;
           A += dbet;
-          Bdiff += fabs(dbet);
+          Bdiff = fabs(dbet);
         }
       }
       //speak("A[%d]=%g,Bdiff=%g\n",t,A,Bdiff);
@@ -232,7 +232,7 @@ int cdsolve(double tol, int M)
         for(i=xp[j]; i<xp[j+1]; i++)
           E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
-        Bdiff += fabs(xsd[j]*dbet);
+        Bdiff = fmax(Bdiff,fabs(xsd[j]*dbet));
       }
 
     }
@@ -382,8 +382,7 @@ int cdsolve(double tol, int M)
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
-    // set relative tolerance
-    if(s==0) *thresh *= deviance[0];
+    //if(s==0) *thresh *= deviance[0]; // relativism
     
     // gamma lasso updating
     for(int j=0; j<p; j++) 
