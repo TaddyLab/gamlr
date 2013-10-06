@@ -35,16 +35,16 @@ data(hockey)
 x <- cBind(config,onice)
 y <- as.numeric(goal$whoscored=="HOME")
 
-## use lower lambda.min.ratio for denser models
+## fit a lambda (gamma=0) model
 plot(fit <- gamlr(x=x, y=y, family="binomial",  
       free=1:ncol(config), standardize=FALSE, 
-      lambda.min.ratio=0.1, thresh=1e-8))
+      thresh=1e-8))
 
 ## BIC selected player coefficients
 B <- coef(fit)[-c(1,1+1:ncol(config)),] 
 length(B <- B[B!=0])
-## print top player effects on who-scored log odds
-round(B[order(-abs(B))],3)
+## print nonzero player effects on who-scored log odds
+round(B[order(-B)],3)
 
 ## predict the last goal of the 2013 playoffs (this time use AIC)
 goal[fit$n,]
