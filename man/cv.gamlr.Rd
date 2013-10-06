@@ -6,7 +6,7 @@
 \title{ Cross Validation for gamlr}
 \description{Cross validation for log penalty selection. }
 \usage{
-cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
+cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, ...)
 \method{plot}{cv.gamlr}(x, ...)
 \method{coef}{cv.gamlr}(object, select=c("1se","min"), ...)
 \method{predict}{cv.gamlr}(object, newdata, select=c("1se","min"), ...)
@@ -15,6 +15,7 @@ cv.gamlr(x, y, nfold=5, verb=FALSE, ...)
   \item{x}{ Covariates; see \code{gamlr}. }
   \item{y}{ Response; see \code{gamlr}. }
   \item{nfold}{ The number of cross validation folds. }
+  \item{foldid}{ An optional length-n vector of fold memberships for each observation.  If specified, this dictates \code{nfold}.}
   \item{verb}{ Whether to print progress through folds. }
   \item{...}{ Arguments to \code{gamlr}. }
   \item{object}{ A gamlr object.}

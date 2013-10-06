@@ -3,14 +3,19 @@
 ###########################################################
 
 ## just an R loop that calls gamlr
-cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
+cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   
   full <- gamlr(x,y,...)
   fam <- family(full)
 
-  nfold <- min(nfold,full$nobs)
-  rando <- sample.int(full$n)
-  foldsize <- floor(full$nobs/nfold)
+  if(is.null(foldid)){
+    nfold <- min(nfold,full$nobs)
+    rando <- sample.int(full$nobs)
+    chunks <- round(seq.int(0,full$nobs,length.out=nfold+1))
+    foldid <- rep.int(1:nfold,times=diff(chunks))[rando]
+  } else  stopifnot(length(foldid)==full$nobs)
+  foldid <- factor(foldid)
+  nfold <- nlevels(foldid)
 
   argl <- list(...)
   argl$lambda.start <- full$lambda[1]
@@ -18,11 +23,11 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
   argl$lambda.min.ratio <- full$lam[argl$nlam]/argl$lambda.start
 
   oos <- matrix(Inf, nrow=nfold, ncol=length(full$lambda),
-                dimnames=list(NULL,names(full$lambda)))
+                dimnames=list(levels(foldid),names(full$lambda)))
 
   if(verb) cat("fold ")
-  for(i in 1:nfold){
-    train <- rando[-(foldsize*(i-1) + 1:foldsize)]
+  for(k in levels(foldid)){
+    train <- which(foldid==k)
     fit <- do.call(gamlr, 
       c(list(x=x[train,],y=y[train]), argl))
     eta <- predict(fit, x[-train,], select=NULL)
@@ -39,8 +44,8 @@ cv.gamlr <- function(x, y, nfold=5, verb=FALSE, ...){
                       y[-train]*log(y[-train]),
                       0.0) - y[-train]) 
       dev <- dev + 2*satnllhd }
-    oos[i,1:length(fit$lambda)] <- dev 
-    if(verb) cat(sprintf("%d,",i))
+    oos[k,1:length(fit$lambda)] <- dev 
+    if(verb) cat(sprintf("%s,",k))
   }
   
   cvm <- apply(oos,2,mean)
