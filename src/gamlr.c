@@ -157,7 +157,7 @@ double Bmove(int j)
   // unpenalized
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is lambda[s]*nd*W[j]*fabs(B[j])*xsd[j].
+    // penalty is lam[s]*nd*W[j]*fabs(B[j])*xsd[j].
     double pen,ghb;
     pen = xsd[j]*l1pen*W[j];
     ghb = (G[j] - H[j]*B[j]);

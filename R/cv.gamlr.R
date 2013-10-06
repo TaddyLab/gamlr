@@ -5,11 +5,9 @@
 ## just an R loop that calls gamlr
 cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   
-  full <- gamlr(x,y, verb=TRUE, ...)
+  full <- gamlr(x,y, ...)
   fam <- family(full)
-  print(full$lambda)
-  plot(full)
-  
+
   if(is.null(foldid)){
     nfold <- min(nfold,full$nobs)
     rando <- sample.int(full$nobs)
@@ -20,18 +18,19 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   nfold <- nlevels(foldid)
 
   argl <- list(...)
-  argl$lambda.start <- full$lambda[1]
-  argl$nlambda <- length(full$lambda)
-  argl$lambda.min.ratio <- full$lam[argl$nlambda]/argl$lambda.start
+  lambda <- as.double(full$lambda)
+  argl$lambda.start <- lambda[1]
+  argl$nlambda <- length(lambda)
+  argl$lambda.min.ratio <- tail(lambda,1)/lambda[1]
 
-  oos <- matrix(Inf, nrow=nfold, ncol=length(full$lambda),
-                dimnames=list(levels(foldid),names(full$lambda)))
+  oos <- matrix(Inf, nrow=nfold, ncol=argl$nlambda,
+                dimnames=list(levels(foldid),names(lambda)))
 
   if(verb) cat("fold ")
   for(k in levels(foldid)){
-    train <- which(foldid==k)
+    train <- which(foldid!=k)
     fit <- do.call(gamlr, 
-      c(list(x=x[train,],y=y[train],verb=TRUE), argl))
+      c(list(x=x[train,],y=y[train]), argl))
     eta <- predict(fit, x[-train,], select=NULL)
 
     dev <- apply(eta,2, 
@@ -54,11 +53,11 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
 
   seg.min <- which.min(cvm)
-  lambda.min = full$lambda[seg.min]
+  lambda.min = lambda[seg.min]
 
   cv1se <- (cvm[seg.min]+cvs[seg.min])-cvm
   seg.1se <- min((1:length(cvm))[cv1se>=0])
-  lambda.1se = full$lambda[seg.1se]
+  lambda.1se = lambda[seg.1se]
 
   if(verb) cat("done.\n")
   out <- list(gamlr=full,

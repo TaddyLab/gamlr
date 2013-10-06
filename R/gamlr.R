@@ -81,7 +81,7 @@ gamlr <- function(x, y,
             gamma=as.double(gamma),
             thresh=as.double(thresh),
             maxit=as.integer(maxit),
-            lambda=lambda,
+            lambda=as.double(lambda),
             deviance=double(nlambda),
             df=double(nlambda),
             alpha=as.double(rep(0,nlambda)),
@@ -108,13 +108,13 @@ gamlr <- function(x, y,
                     sparse=TRUE)
 
   ## path stats
-  ##lambda <- head(fit$lambda,nlambda)
+  lambda <- head(fit$lambda,nlambda)
   dev <- head(fit$deviance,nlambda)
   df <- head(fit$df,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
   ## build return object and exit
-  out <- list(lambda=lambda, 
+  out <- list(lambda=fit$lambda, 
              gamma=fit$gamma,
              nobs=fit$n,
              family=family,
