@@ -99,14 +99,16 @@ gamlr <- function(x, y,
     nlambda <- 1
     fit$deviance <- NA
   }
+
   alpha <- head(fit$alpha,nlambda)
   names(alpha) <- paste0('seg',(1:nlambda))
   beta <- Matrix(head(fit$beta,nlambda*p),
                     nrow=p, ncol=nlambda, 
                     dimnames=list(colnames(x),names(alpha)),
                     sparse=TRUE)
+
   ## path stats
-  lambda <- head(fit$lambda,nlambda)
+  ##lambda <- head(fit$lambda,nlambda)
   dev <- head(fit$deviance,nlambda)
   df <- head(fit$df,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)

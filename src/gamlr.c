@@ -157,7 +157,7 @@ double Bmove(int j)
   // unpenalized
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is lam[s]*nd*W[j]*fabs(B[j])*xsd[j].
+    // penalty is lambda[s]*nd*W[j]*fabs(B[j])*xsd[j].
     double pen,ghb;
     pen = xsd[j]*l1pen*W[j];
     ghb = (G[j] - H[j]*B[j]);
@@ -283,7 +283,7 @@ int cdsolve(double tol, int M)
             double *penscale,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
-            double *lam, // output lam
+            double *lambda, // output lambda
             double *deviance, // output deviance
             double *df, // output df
             double *alpha,  // output intercepts
@@ -367,8 +367,8 @@ int cdsolve(double tol, int M)
 
     // deflate the penalty
     if(s>0)
-      lam[s] = lam[s-1]*(*delta);
-    l1pen = lam[s]*nd;
+      lambda[s] = lambda[s-1]*(*delta);
+    l1pen = lambda[s]*nd;
 
     // run descent
     exits[s] = cdsolve(*thresh,*maxit);
@@ -378,7 +378,7 @@ int cdsolve(double tol, int M)
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y);
     deviance[s] = 2.0*(NLLHD - Lsat);
-    df[s] = dof(s, lam, NLLHD);
+    df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
@@ -395,8 +395,8 @@ int cdsolve(double tol, int M)
 
     // verbalize
     if(*verb) 
-      speak("segment %d: lam = %.4g, dev = %.4g, npass = %d\n", 
-          s+1, lam[s], deviance[s], npass);
+      speak("segment %d: lambda = %.4g, dev = %.4g, npass = %d\n", 
+          s+1, lambda[s], deviance[s], npass);
 
     // exit checks
     if(deviance[s]<0.0){

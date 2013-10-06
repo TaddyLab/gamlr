@@ -23,6 +23,7 @@ gamlr(x, y,
             select=which.min(BIC(object)),
             type = c("link", "response"), ...)
 \method{logLik}{gamlr}(object, ...)
+\method{family}{gamlr}(object, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 

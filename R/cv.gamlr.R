@@ -5,9 +5,11 @@
 ## just an R loop that calls gamlr
 cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   
-  full <- gamlr(x,y,...)
+  full <- gamlr(x,y, verb=TRUE, ...)
   fam <- family(full)
-
+  print(full$lambda)
+  plot(full)
+  
   if(is.null(foldid)){
     nfold <- min(nfold,full$nobs)
     rando <- sample.int(full$nobs)
@@ -20,7 +22,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   argl <- list(...)
   argl$lambda.start <- full$lambda[1]
   argl$nlambda <- length(full$lambda)
-  argl$lambda.min.ratio <- full$lam[argl$nlam]/argl$lambda.start
+  argl$lambda.min.ratio <- full$lam[argl$nlambda]/argl$lambda.start
 
   oos <- matrix(Inf, nrow=nfold, ncol=length(full$lambda),
                 dimnames=list(levels(foldid),names(full$lambda)))
@@ -29,7 +31,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   for(k in levels(foldid)){
     train <- which(foldid==k)
     fit <- do.call(gamlr, 
-      c(list(x=x[train,],y=y[train]), argl))
+      c(list(x=x[train,],y=y[train],verb=TRUE), argl))
     eta <- predict(fit, x[-train,], select=NULL)
 
     dev <- apply(eta,2, 
