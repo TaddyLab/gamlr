@@ -10,7 +10,6 @@ S3method(predict,gamlr)
 S3method(summary,gamlr)
 S3method(print,gamlr)
 S3method(logLik,gamlr)
-S3method(family,gamlr)
 
 S3method(plot,cv.gamlr)
 S3method(coef,cv.gamlr)

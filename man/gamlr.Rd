@@ -9,7 +9,7 @@
 \usage{
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
-   gamma=1,
+   gamma=0,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
@@ -18,12 +18,10 @@ gamlr(x, y,
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col="navy", select=TRUE, df=TRUE, ...)
-\method{coef}{gamlr}(object, select=which.min(BIC(object)), ...)
+\method{coef}{gamlr}(object, select=NULL, k=log(object$nobs), ...)
 \method{predict}{gamlr}(object, newdata,
-            select=which.min(BIC(object)),
             type = c("link", "response"), ...)
 \method{logLik}{gamlr}(object, ...)
-\method{family}{gamlr}(object, ...)
 }
 \arguments{
   \item{x}{ A dense \code{matrix} 
@@ -39,7 +37,7 @@ gamlr(x, y,
   either "gaussian", "poisson", or "binomial".  
   Note that for "binomial", \code{y} is in \eqn{[0,1]}. }
   \item{gamma}{ Penalty concavity tuning parameter; see details. 
-      Zero corresponds to the lasso,
+      Zero (default) yields the lasso,
       and higher values correspond to a more concave penalty.  
        }
   \item{nlambda}{ Number of regularization path segments. }
@@ -64,18 +62,22 @@ gamlr(x, y,
    \item{object}{ A gamlr object.}
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}
-\item{col}{ A single plot color (default is 3/4 opaque navy), 
-  or vector of length \code{ncol(x)} colors for each coefficient
-    regularization path. }
-\item{select}{ Index of the path segment 
-  for which you want coefficients or prediction, or in \code{plot} 
-  whether to add lines marking AIC and BIC selected models.}
-\item{df}{ Whether to add to the plot degrees of freedom along the top axis.}
+\item{select}{ In \code{coef} (and \code{predict}, which calls \code{coef}), the index of path segments
+  for which you want coefficients or prediction.  If null, the segments are selected via \code{AIC} with \code{k} as specified.  If \code{select=0} all segments are returned.
+
+  In \code{plot},
+  \code{select} is just a flag for whether to add lines marking AIC and BIC selected models.}
+\item{k}{ If \code{select=NULL} in \code{coef} or \code{predict}, the \code{AIC} complexity penalty.  \code{k} defaults to the BIC's log(n). }
 \item{newdata}{ New \code{x} data for prediction.}
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
 to the same domain as \code{y}.}
-\item{...}{ Extra arguments to each method. }
+\item{col}{ A single plot color (default is 3/4 opaque navy), 
+  or vector of length \code{ncol(x)} colors for each coefficient
+    regularization path. \code{NULL} uses the \code{matplot} default. }
+\item{df}{ Whether to add to the plot degrees of freedom along the top axis.}
+\item{...}{ Extra arguments to each method.  Most importantly, from 
+\code{predict.gamlr} these are arguments to \code{coef.gamlr}. }
 }
 \details{ Finds posterior modes along a regularization path
 		   of \emph{adapted L1 penalties} via coordinate descent.
@@ -98,6 +100,7 @@ to the same domain as \code{y}.}
   \item{deviance}{Fitted deviance: 
   -2( logLHD.fitted - logLHD.saturated). }
   \item{totalpass}{Total number of coordinate descent cycles. }
+  \item{family}{The exponential family model.}
 }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}

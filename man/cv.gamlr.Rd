@@ -60,7 +60,8 @@ beta <- matrix( (-1)^(1:p)*exp(-(1:p)/10) )
 mu = x\%*\%beta
 y <- mu + rnorm(n,sd=sd(mu[,1])/2)
 
-cvfit <- cv.gamlr(x, y, verb=TRUE)
+## fit with gamma=1 concavity
+cvfit <- cv.gamlr(x, y, gamma=1, verb=TRUE)
 
 coef(cvfit)[1:3,] # 1se default
 coef(cvfit, select="min")[1:3,] # min OOS deviance

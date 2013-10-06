@@ -5,7 +5,7 @@
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
-            gamma=1, nlambda=100, 
+            gamma=0, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 
@@ -180,16 +180,19 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     abline(v=xv[which.min(AIC(x))], lty=3, col="grey20") }
 }
 
-coef.gamlr <- function(object, 
-  select=which.min(BIC(object)), ...){
-  if(length(select)==0) select <- 1:ncol(object$beta)
+coef.gamlr <- function(object, select=NULL, k=log(object$nobs), ...)
+{
+  if(length(select)==0)
+    select <- which.min(AIC(object,k=k))
+  else if(select==0)
+   select <- 1:ncol(object$beta)
+
   select[select>ncol(object$beta)] <- ncol(object$beta)
   return(rBind(intercept=object$alpha[select], 
               object$beta[,select,drop=FALSE]))
 }
 
 predict.gamlr <- function(object, newdata,
-                    select=which.min(BIC(object)),
                     type = c("link", "response"), ...)
 {
   if(inherits(newdata,"data.frame")) 
@@ -202,13 +205,12 @@ predict.gamlr <- function(object, newdata,
                     dims=dim(newdata),
                     dimnames=dimnames(newdata))
 
-  if(is.null(select)) select <- 1:ncol(object$beta)
-  
-  eta <- matrix(object$alpha[select],
+  B <- coef(object, ...)
+  eta <- matrix(B[1,],
             nrow=nrow(newdata),
-            ncol=length(object$alpha[select]),
+            ncol=ncol(B),
             byrow=TRUE)
-  eta <- eta + newdata%*%object$beta[,select]
+  eta <- eta + newdata%*%B[-1,,drop=FALSE]
                               
   type=match.arg(type)
   if(object$family=="binomial" & type=="response")
@@ -246,7 +248,6 @@ logLik.gamlr <- function(object, ...){
   ll
 }
 
-family.gamlr <- function(object, ...) object$family
 
 
 
