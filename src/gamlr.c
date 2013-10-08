@@ -67,7 +67,7 @@ void gamlr_cleanup(){
     free(Z); Z = NULL;
     free(vxbar); vxbar = NULL;
   }
-
+  
   dirty = 0;
 }
 
