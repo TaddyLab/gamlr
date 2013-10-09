@@ -114,7 +114,7 @@ gamlr <- function(x, y,
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
   ## build return object and exit
-  out <- list(lambda=fit$lambda, 
+  out <- list(lambda=lambda, 
              gamma=fit$gamma,
              nobs=fit$n,
              family=family,
