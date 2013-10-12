@@ -86,7 +86,7 @@ double po_nllhd(int n, double a, double *e, double *y){
   double f;
   for(int i=0; i<n; i++){
     f = a + e[i];
-    l += exp(f) - y[i]*(f);
+    l += exp(f) - y[i]*f;
   }
   return l;
 }
