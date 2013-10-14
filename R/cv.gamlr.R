@@ -63,6 +63,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   out <- list(gamlr=full,
           family=fam,
           nfold=nfold,
+          foldid=foldid,
           cvm=cvm,
           cvs=cvs,
           seg.min=seg.min,

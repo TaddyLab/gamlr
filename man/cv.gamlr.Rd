@@ -36,6 +36,7 @@ shows mean OOS deviance with 1se error bars.
 \value{
   \item{gamlr}{ The full-data fitted \code{gamlr} object.}
   \item{nfold}{ The number of CV folds. }
+  \item{foldid}{ The length-n vector of fold memberships. }
   \item{cvm}{ Mean OOS deviance by \code{gamlr\$lambda} }
   \item{cvs}{ The standard errors on \code{cvm}.}
   \item{seg.min}{ The index of minimum \code{cvm}. }
