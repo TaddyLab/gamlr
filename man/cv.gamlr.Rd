@@ -26,7 +26,7 @@ cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, ...)
   and  \code{select="1se"} is that whose average OOS deviance is
   no more than 1 standard error away from the minimum.}
 }
-\details{ Fits a \code{gamlr} log penalized regression to the full dataset, and then performs \code{nfold} 
+\details{ Fits a \code{gamlr} regression to the full dataset, and then performs \code{nfold} 
 cross validation to evaluate out-of-sample (OOS)
 performance  for different penalty weights.
 
