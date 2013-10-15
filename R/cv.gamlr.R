@@ -97,7 +97,6 @@ plot.cv.gamlr <- function(x, ...){
   if(is.null(argl$xlim))
     argl$xlim=range(argl$x[is.finite(argl$y)])
 
-
   suppressWarnings(do.call(plot, argl))
   segments(x0=argl$x, y0=cvlo, y1=cvhi, col="grey70")
   argl$type <- NULL

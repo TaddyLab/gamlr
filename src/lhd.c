@@ -102,10 +102,7 @@ double bin_reweight(int n, double a, double *e,
     ee = exp(f);
     q = ee/(1.0+ee);
     v[i] = 1.0/(2.0 + 1.0/ee + ee);
-    if(v[i]==0.0){
-      printf("i=%d, f=%g, q=%g\n",i,f,q);
-      return 0.0;
-    }
+    if(v[i]==0.0) return 0.0;
     z[i] = f + (y[i]-q)/v[i];
     vs += v[i];
   }
