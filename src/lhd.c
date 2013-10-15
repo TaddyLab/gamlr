@@ -8,13 +8,15 @@
 
 // Weighted least squares functions
 double grad(int n, double *x, int *o, 
+            double vxsum, double vxz,
             double a, double *e, double *v, double *z){
   double g = 0.0;
   double vi = 1.0;
 
+  g = -vxz + a*vxsum;
   for(int i=0; i<n; i++){
     if(v) vi = v[o[i]];
-    g += -x[i]*vi*(z[o[i]] - a - e[o[i]]);
+    g += vi*x[i]*e[o[i]];
   }
 
   return g;
@@ -40,21 +42,16 @@ double curve(int n, double *x, int *o, double xm,
   return h;
 }
 
-double intercept(int n, double *e, double *v, double *z){
-  double vsum, rsum;
+double intercept(int n, double *e, double *v, double *z, double vsum){
   int i;
 
-  vsum = rsum = 0.0;
+  double rsum = 0.0;
   if(v){
-    for(i=0; i<n; i++){
-      vsum += v[i];
+    for(i=0; i<n; i++)
       rsum += v[i]*(z[i]-e[i]); 
-     }
   }
   else{ // shouldn't be called 
-    vsum = (double) n;
-    rsum = sum_dvec(z,n) - sum_dvec(e,n);
-  }
+    rsum = sum_dvec(z,n) - sum_dvec(e,n); }
 
   return rsum/vsum;
 }

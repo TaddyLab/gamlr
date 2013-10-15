@@ -85,7 +85,9 @@ plot.cv.gamlr <- function(x, ...){
   argl$type <- "n"
 
   if(is.null(argl$xlab)) argl$xlab="log lambda"
-  if(is.null(argl$ylab)) argl$ylab=sprintf("%s deviance",x$family)
+  if(is.null(argl$ylab)){
+    if(x$family=="gaussian") argl$ylab="mean squared error"
+    else argl$ylab=sprintf("%s deviance",x$family) }
   if(is.null(argl$pch)) argl$pch=20
   if(is.null(argl$col)) argl$col=4
 

@@ -31,6 +31,8 @@ double *E = NULL;
 double *Z = NULL;
 double *V = NULL;
 double *vxbar = NULL;
+double *vxz = NULL;
+double vsum;
 
 unsigned int itertotal,npass;
 
@@ -67,6 +69,7 @@ void gamlr_cleanup(){
     free(Z); Z = NULL;
     free(vxbar); vxbar = NULL;
   }
+  if(vxz){ free(vxz); vxz = NULL; }
   
   dirty = 0;
 }
@@ -172,10 +175,9 @@ double Bmove(int j)
 int cdsolve(double tol, int M)
 {
   int t,i,j,dozero,dopen; 
-  double dbet,imove,Bdiff,vsum,exitstat;
+  double dbet,imove,Bdiff,exitstat;
 
   // initialize
-  vsum = nd;
   dopen = isfinite(l1pen);
   Bdiff = INFINITY;
   exitstat = 0;
@@ -195,11 +197,15 @@ int cdsolve(double tol, int M)
             shout("Infinite Likelihood.   ");
             exitstat = 1;
             break; }
-          for(j=0; j<p; j++)
+          for(j=0; j<p; j++){
             H[j] = curve(xp[j+1]-xp[j], 
                   &xv[xp[j]], &xi[xp[j]], xbar[j],
                   V, vsum, &vxbar[j]);
-          dbet = intercept(n, E, V, Z)-A;
+            vxz[j] = 0.0;
+            for(i=xp[j]; i<xp[j+1]; i++)
+              vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
+          }
+          dbet = intercept(n, E, V, Z, vsum)-A;
           A += dbet;
           Bdiff = fabs(vsum*dbet*dbet);
         }
@@ -220,6 +226,7 @@ int cdsolve(double tol, int M)
       // update gradient 
       G[j] = grad(xp[j+1]-xp[j], 
               &xv[xp[j]], &xi[xp[j]], 
+              vxbar[j]*vsum, vxz[j],
               A, E, V, Z);
 
       // for null model skip penalized variables
@@ -349,11 +356,18 @@ int cdsolve(double tol, int M)
   if(fam!=1){
     Z = new_dvec(n);
     V = new_dzero(n);
-    vxbar = new_dvec(n);
+    vxbar = new_dvec(p);
+    vxz = new_dvec(p);
   }
   else{ 
     Z = Y;
-    vxbar = xbar; }
+    vxbar = xbar; 
+    vxz = new_dzero(p);
+    vsum = nd;
+    for(int j=0; j<p; j++)
+      for(int i=xp[j]; i<xp[j+1]; i++)
+          vxz[j] += xv[i]*Y[xi[i]]; 
+  }
 
   l1pen = INFINITY;
   Lold = INFINITY;

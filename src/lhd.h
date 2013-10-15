@@ -4,10 +4,11 @@
 #define __LHDMOD_H__
 
 double grad(int n, double *x, int *o, 
+			double vxsum, double vxz,
             double a, double *e, double *v, double *z);
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm);
-double intercept(int n, double *e, double *v, double *z);
+double intercept(int n, double *e, double *v, double *z, double vsum);
 
 double lin_nllhd(int n, double a, double *e, double *y);
 double bin_nllhd(int n, double a, double *e, double *y);
