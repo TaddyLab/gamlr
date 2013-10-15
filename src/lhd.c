@@ -9,7 +9,7 @@
 // Weighted least squares functions
 double grad(int n, double *x, int *o, 
             double vxsum, double vxz,
-            double a, double *e, double *v, double *z){
+            double a, double *e, double *v){
   double g = 0.0;
   double vi = 1.0;
 

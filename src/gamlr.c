@@ -13,7 +13,7 @@
 
 // argument variables
 unsigned int dirty = 0;
-int n, p, l;
+int n, p, N;
 double nd, pd;
 
 // pointers to arguments
@@ -32,6 +32,8 @@ double *Z = NULL;
 double *V = NULL;
 double *vxbar = NULL;
 double *vxz = NULL;
+double *vxxv = NULL;
+int *vxxp = NULL;
 double vsum;
 
 unsigned int itertotal,npass;
@@ -70,6 +72,8 @@ void gamlr_cleanup(){
     free(vxbar); vxbar = NULL;
   }
   if(vxz){ free(vxz); vxz = NULL; }
+  if(vxxv){ free(vxxv); vxxv = NULL; }
+  if(vxxp){ free(vxxp); vxxp = NULL; }
   
   dirty = 0;
 }
@@ -104,6 +108,30 @@ void checkdata(int standardize){
   // to scale or not to scale
   if(!standardize) for(j=0; j<p; j++) xsd[j] = 1.0;
 
+}
+
+/* calculation of inner products */
+void innerprods(void){
+  int i,j,k,l;
+  // xy
+  for(j=0; j<p; j++)
+      for(i=xp[j]; i<xp[j+1]; i++)
+          vxz[j] += xv[i]*Y[xi[i]]; 
+
+  // xx in a sparse upper triangular form
+  vxxv = new_dzero((p*(p-1))/2);
+  vxxp = new_ivec(p);
+  pointers
+  vxxp[0] = 0;
+  for(j=1; j<p; j++) vxxp[j] = vxxp[j-1] + j-1; 
+  // values 
+  for(j=1; j<p; j++)
+    if(W[j]==0.0)
+      for(i=xp[j]; i<xp[j+1]; i++)
+        for(k=0; k<j; k++)
+          for(l=xp[k]; l<xp[k+1]; l++)
+            if(xi[i]==xi[l]) 
+              vxxv[vxxp[j]+k] += xv[i]*xv[l];
 }
 
 // calculates degrees of freedom, as well as
@@ -227,7 +255,7 @@ int cdsolve(double tol, int M)
       G[j] = grad(xp[j+1]-xp[j], 
               &xv[xp[j]], &xi[xp[j]], 
               vxbar[j]*vsum, vxz[j],
-              A, E, V, Z);
+              A, E, V);
 
       // for null model skip penalized variables
       if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
@@ -241,7 +269,6 @@ int cdsolve(double tol, int M)
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
       }
-
     }
 
     // break for intercept only linear model
@@ -277,7 +304,7 @@ int cdsolve(double tol, int M)
  void gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
             int *n_in, // nobs 
             int *p_in, // nvar
-            int *l_in, // length of nonzero x entries
+            int *N_in, // length of nonzero x entries
             int *xi_in, // length-l row ids for nonzero x
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
@@ -308,7 +335,7 @@ int cdsolve(double tol, int M)
   p = *p_in;
   nd = (double) n;
   pd = (double) p;
-  l = *l_in;
+  N = *N_in;
   W = weight;
   E = eta;
   Y = y_in;
@@ -364,9 +391,7 @@ int cdsolve(double tol, int M)
     vxbar = xbar; 
     vxz = new_dzero(p);
     vsum = nd;
-    for(int j=0; j<p; j++)
-      for(int i=xp[j]; i<xp[j+1]; i++)
-          vxz[j] += xv[i]*Y[xi[i]]; 
+    innerprods();
   }
 
   l1pen = INFINITY;
