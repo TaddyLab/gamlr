@@ -203,7 +203,7 @@ int cdsolve(double tol, int M)
         if((t>0) | (V[0]==0.0)){
           vsum = reweight(n, A, E, Y, V, Z);
           if(vsum==0.0){ // perfect separation
-            shout("Infinite Likelihood.   ");
+            shout("Warning: infinite likelihood.   ");
             exitstat = 1;
             break; }
           for(j=0; j<p; j++){
@@ -268,7 +268,7 @@ int cdsolve(double tol, int M)
 
     // check for irregular exits
     if(t == M){
-      shout("Hit max CD iterations.  "); 
+      shout("Warning: hit max CD iterations.  "); 
       exitstat = 1;
       break;
     }
@@ -451,11 +451,11 @@ int cdsolve(double tol, int M)
     // exit checks
     if(deviance[s]<0.0){
       exits[s] = 1;
-      shout("Negative deviance.  ");
+      shout("Warning: negative deviance.  ");
     }
     if(df[s] >= nd){
       exits[s] = 1;
-      shout("Saturated model.  "); 
+      shout("Warning: saturated model.  "); 
     }
     if(exits[s]){
       shout("Terminating path.\n");
