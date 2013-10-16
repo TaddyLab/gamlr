@@ -55,13 +55,31 @@ gamlr <- function(x, y,
   ## extras
   xtr = list(...)
 
-  ## fixed shifts
-  if(!is.null(xtr$fix))
-    eta <- xtr$fix
-  else
-    eta <- rep(0.0,n)
+  ## fixed shifts (mainly for poisson and dmr)
+  eta <- rep(0.0,n)
+  if(!is.null(xtr$fix)){
+    if(family=="gaussian") y = y-xtr$fix
+    else eta <- xtr$fix   
+  } 
   stopifnot(length(eta)==n)
   eta <- as.double(eta)
+
+  doxx <- FALSE#(family=="gaussian") & length(x@i)>(0.5*n*p)
+  if(!is.null(xtr$doxx)){ doxx <- xtr$doxx }
+  if(doxx){
+    xx <- tcrossprod(x)
+    if(xx@uplo=="L") xx <- t(xx)
+    xxd <- as.double(diag(xx))
+    xx <- as(xx,"dgCMatrix")
+    xxi <- xx@i
+    xxp <- xx@p
+    xxv <- as.double(xx@x)
+  } else{
+    xxd <- as.double(rep(0,p))
+    xxi <- integer(0)
+    xxp <- integer(0)
+    xxv <- double(0)
+  }
 
   ## drop it like it's hot
   fit <- .C("gamlr",
@@ -73,6 +91,11 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
+            prexx=as.integer(doxx),
+            xxi=xxi,
+            xxp=xxp,
+            xxv=xxv,
+            xxd=xxd,
             eta=eta,
             weight=weight,
             standardize=as.integer(standardize>0),

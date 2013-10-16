@@ -23,6 +23,11 @@ int *xi = NULL;
 int *xp = NULL;
 double *W = NULL;
 
+double *xxv = NULL;
+int *xxi = NULL;
+int *xxp = NULL;
+int doxx;
+
 // variables to be created
 unsigned int fam;
 double A;
@@ -33,10 +38,6 @@ double *V = NULL;
 double *vxbar = NULL;
 double *vxz = NULL;
 double vsum;
-
-double *xxv;
-int *xxu;
-int *xxp;
 
 unsigned int itertotal,npass;
 
@@ -65,7 +66,6 @@ void gamlr_cleanup(){
 
   if(B){ free(B); B = NULL; }
   if(G){ free(G); G = NULL; }
-  if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
 
   if(V){
@@ -74,10 +74,6 @@ void gamlr_cleanup(){
     free(vxbar); vxbar = NULL;
   }
   if(vxz){ free(vxz); vxz = NULL; }
-
-  if(xxv){ free(xxv); xxv = NULL; }
-  if(xxu){ free(xxu); xxu = NULL; }
-  if(xxp){ free(xxp); xxp = NULL; }
 
   dirty = 0;
 }
@@ -96,12 +92,13 @@ void checkdata(int standardize){
   }
 
   // dispersion
-  H = new_dvec(p);
   xsd = new_dvec(p);
   for(j=0; j<p; j++){
-    H[j] = -nd*xbar[j]*xbar[j];
-    for(i=xp[j]; i<xp[j+1]; i++) 
-      H[j] += xv[i]*xv[i]; 
+    H[j] += -nd*xbar[j]*xbar[j];
+    if(!doxx){ 
+      for(i=xp[j]; i<xp[j+1]; i++) 
+        H[j] += xv[i]*xv[i]; 
+    }
     if(H[j]==0.0){
       W[j] = INFINITY; 
       xsd[j] = 1.0; 
@@ -232,18 +229,17 @@ int cdsolve(double tol, int M)
       if(!dozero & (B[j]==0.0) & (W[j]>0.0)) continue;
 
       // update gradient
-      if(xxu){
+      if(doxx){
         G[j] = -vxz[j] + A*vxbar[j]*vsum;
-        G[j] += H[j]*B[j];
-        for(int k=0; k<j; k++)
-          G[j] += xxv[xxp[j]+k]*B[k];
-        for(int k=j+1; k<p; k++)
-          G[j] += xxv[xxp[k]+j]*B[k];
-      } else{ 
-          G[j] = grad(xp[j+1]-xp[j], 
+        for(int k=xxp[j]; k<xxp[j+1]; k++)
+          G[j] += xxv[k]*B[xxi[k]];
+      } 
+      else {  
+        G[j] = grad(xp[j+1]-xp[j], 
               &xv[xp[j]], &xi[xp[j]], 
               vxbar[j]*vsum, vxz[j],
-              A, E, V); }
+              A, E, V); 
+      }
 
       // for null model skip penalized variables
       if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
@@ -252,13 +248,11 @@ int cdsolve(double tol, int M)
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        for(i=xp[j]; i<xp[j+1]; i++)
-          E[xi[i]] += xv[i]*dbet; 
+        if(!doxx)
+          for(i=xp[j]; i<xp[j+1]; i++)
+            E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
-        if(xxu)
-          if(!xxu[j]) 
-            innerprods(j,p,xi,xp,xv,xxu,xxp,xxv);
       }
     }
 
@@ -281,6 +275,15 @@ int cdsolve(double tol, int M)
 
   }
 
+  // calc preds if they were skipped
+  if(doxx){
+    zero_dvec(E,n);
+    for(j=0; j<p; j++)
+      if(B[j]!=0)
+        for(i=xp[j];i<xp[j+1];i++)
+          E[xi[i]] += xv[i]*B[j];
+  }
+
   npass = t; 
   return exitstat;
 }
@@ -300,7 +303,12 @@ int cdsolve(double tol, int M)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
-            double *eta, // on input, length-n fixed shifts
+            int *prexx, // indicator for pre-calc xx
+            int *xxi_in,
+            int *xxp_in,
+            double *xxv_in,
+            double *xxd,
+            double *eta, // length-n fixed shifts (assumed zero for gaussian)
             double *weight, // length-p weights
             int *standardize, // whether to scale penalty by sd(x_j)
             int *nlam, // length of the path
@@ -333,6 +341,12 @@ int cdsolve(double tol, int M)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
+
+  doxx = *prexx;
+  xxi = xxi_in;
+  xxp = xxp_in;
+  xxv = xxv_in;
+  H = xxd;
 
   checkdata(*standardize);
   npass = itertotal = 0;
@@ -386,21 +400,6 @@ int cdsolve(double tol, int M)
       for(int i=xp[j]; i<xp[j+1]; i++)
           vxz[j] += xv[i]*Y[xi[i]]; 
   }
-
-  // possible store inner products
-  int doxx = 0;
-  if(doxx){
-      xxv = new_dzero((p*(p-1))/2);
-      xxp = new_ivec(p);
-      xxu = new_izero(p);
-      xxp[0] = 0;
-      for(int j=1; j<p; j++) 
-        xxp[j] = xxp[j-1] + j-1; 
-      for(int j=0; j<p; j++)
-        for(int i=xp[j]; i<xp[j+1]; i++)
-          vxz[j] -= xv[i]*E[xi[i]]; 
-  }
-
 
   l1pen = INFINITY;
   Lold = INFINITY;

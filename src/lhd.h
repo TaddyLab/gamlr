@@ -6,9 +6,6 @@
 double grad(int n, double *x, int *o, 
 			double vxsum, double vxz,
             double a, double *e, double *v);
-void innerprods(int j, int p, 
-                int *xi, int *xp, double *xv, 
-                int *xxu, int *xxp, double *xxv);
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm);
 double intercept(int n, double *e, double *v, double *z, double vsum);
