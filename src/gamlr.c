@@ -94,11 +94,15 @@ void checkdata(int standardize){
   // dispersion
   xsd = new_dvec(p);
   for(j=0; j<p; j++){
-    H[j] += -nd*xbar[j]*xbar[j];
-    if(!doxx){ 
-      for(i=xp[j]; i<xp[j+1]; i++) 
-        H[j] += xv[i]*xv[i]; 
+    if(doxx){
+      printf("doxx h[%d]=%g\n",j,H[j]);
     }
+    else{
+      for(i=xp[j]; i<xp[j+1]; i++) 
+        H[j] += xv[i]*xv[i];
+    } 
+    
+    H[j] += -nd*xbar[j]*xbar[j];
     if(H[j]==0.0){
       W[j] = INFINITY; 
       xsd[j] = 1.0; 
