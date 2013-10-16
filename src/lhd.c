@@ -22,6 +22,28 @@ double grad(int n, double *x, int *o,
   return g;
 }
 
+void innerprods(int j, int p,  
+                int *xi, int *xp, double *xv, 
+                int *xxu, int *xxp, double *xxv)
+{
+  int k,i,l;
+  for(k=0; k<j; k++)
+    if(!xxu[k])
+      for(i=xp[j]; i<xp[j+1]; i++)
+        for(l=xp[k]; l<xp[k+1]; l++)
+          if(xi[i]==xi[l]) 
+            xxv[xxp[j]+k] += xv[i]*xv[l];
+
+  for(k=j+1; k<p; k++)
+    if(!xxu[k])
+      for(i=xp[j]; i<xp[j+1]; i++)
+        for(l=xp[k]; l<xp[k+1]; l++)
+          if(xi[i]==xi[l]) 
+            xxv[xxp[k]+j] += xv[i]*xv[l];
+
+  xxu[j] = 1;
+}
+
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm){
   double h = 0.0;
