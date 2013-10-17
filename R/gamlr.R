@@ -19,7 +19,7 @@ gamlr <- function(x, y,
   famid = switch(family, 
     "gaussian"=1, "binomial"=2, "poisson"=3)
 
-  ## data formatting
+  ## data formatting (more follows after doxx)
   y <- drop(y)
   stopifnot(is.null(dim(y)))
   if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
@@ -30,6 +30,28 @@ gamlr <- function(x, y,
   if(inherits(x,"simple_triplet_matrix"))
     x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
               dims=dim(x),dimnames=dimnames(x))
+
+  ## extras
+  xtr = list(...)
+
+  ## fixed shifts (mainly for poisson/dmr)
+  eta <- rep(0.0,n)
+  if(!is.null(xtr$fix)){
+    if(family=="gaussian") y = y-xtr$fix
+    else eta <- xtr$fix   } 
+  stopifnot(length(eta)==n)
+  eta <- as.double(eta)
+
+  ## precalc of x'x
+  doxx <- FALSE
+  if(!is.null(xtr$doxx)){ doxx <- xtr$doxx }
+  if(doxx){
+    xx <- as(tcrossprod(t(x)),"dspMatrix")
+    if(xx@uplo=="L") xx <- t(xx)
+    xxv <- as.double(xx@x)
+  } else{ xxv <- double(0) }
+
+  ## final x formatting
   x=as(x,"dgCMatrix") 
   if(is.null(colnames(x))) 
     colnames(x) <- 1:ncol(x)
@@ -37,7 +59,9 @@ gamlr <- function(x, y,
   p <- ncol(x)
 
   ## weight
-  weight <- rep(1,p)
+  if(!is.null(xtr$weight)){
+    weight <- xtr$weight
+  } else{ weight <- rep(1,p) }
   weight[free] <- 0
   weight <- as.double(weight)
 
@@ -52,35 +76,6 @@ gamlr <- function(x, y,
   ## stepsize
   delta <- exp( log(lambda.min.ratio)/(nlambda-1) )
 
-  ## extras
-  xtr = list(...)
-
-  ## fixed shifts (mainly for poisson and dmr)
-  eta <- rep(0.0,n)
-  if(!is.null(xtr$fix)){
-    if(family=="gaussian") y = y-xtr$fix
-    else eta <- xtr$fix   
-  } 
-  stopifnot(length(eta)==n)
-  eta <- as.double(eta)
-
-  doxx <- FALSE#(family=="gaussian") & length(x@i)>(0.5*n*p)
-  if(!is.null(xtr$doxx)){ doxx <- xtr$doxx }
-  if(doxx){
-    xx <- tcrossprod(x)
-    if(xx@uplo=="L") xx <- t(xx)
-    xxd <- as.double(diag(xx))
-    xx <- as(xx,"dgCMatrix")
-    xxi <- xx@i
-    xxp <- xx@p
-    xxv <- as.double(xx@x)
-  } else{
-    xxd <- as.double(rep(0,p))
-    xxi <- integer(0)
-    xxp <- integer(0)
-    xxv <- double(0)
-  }
-
   ## drop it like it's hot
   fit <- .C("gamlr",
             famid=as.integer(famid), 
@@ -92,10 +87,7 @@ gamlr <- function(x, y,
             xv=as.double(x@x),
             y=y,
             prexx=as.integer(doxx),
-            xxi=xxi,
-            xxp=xxp,
             xxv=xxv,
-            xxd=xxd,
             eta=eta,
             weight=weight,
             standardize=as.integer(standardize>0),

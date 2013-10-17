@@ -24,8 +24,6 @@ int *xp = NULL;
 double *W = NULL;
 
 double *xxv = NULL;
-int *xxi = NULL;
-int *xxp = NULL;
 int doxx;
 
 // variables to be created
@@ -66,6 +64,7 @@ void gamlr_cleanup(){
 
   if(B){ free(B); B = NULL; }
   if(G){ free(G); G = NULL; }
+  if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
 
   if(V){
@@ -94,15 +93,13 @@ void checkdata(int standardize){
   // dispersion
   xsd = new_dvec(p);
   for(j=0; j<p; j++){
-    if(doxx){
-      printf("doxx h[%d]=%g\n",j,H[j]);
-    }
-    else{
+    H[j] = -nd*xbar[j]*xbar[j];
+    if(doxx)
+      H[j] += xxv[j*(j+1)/2 + j];
+    else
       for(i=xp[j]; i<xp[j+1]; i++) 
-        H[j] += xv[i]*xv[i];
-    } 
-    
-    H[j] += -nd*xbar[j]*xbar[j];
+        H[j] += xv[i]*xv[i]; 
+
     if(H[j]==0.0){
       W[j] = INFINITY; 
       xsd[j] = 1.0; 
@@ -183,7 +180,7 @@ double Bmove(int j)
 /* coordinate descent for log penalized regression */
 int cdsolve(double tol, int M)
 {
-  int t,i,j,dozero,dopen; 
+  int t,i,j,k,dozero,dopen; 
   double dbet,imove,Bdiff,exitstat;
 
   // initialize
@@ -234,16 +231,20 @@ int cdsolve(double tol, int M)
 
       // update gradient
       if(doxx){
+        if(V){ shout("Error: only doxx if linear.\n"); return 1; }
         G[j] = -vxz[j] + A*vxbar[j]*vsum;
-        for(int k=xxp[j]; k<xxp[j+1]; k++)
-          G[j] += xxv[k]*B[xxi[k]];
+        int jind = j*(j+1)/2;
+        for(k=0; k<j; k++)
+          G[j] += xxv[jind+k]*B[k];
+        for(k=j; k<p; k++)
+          G[j] += xxv[k*(k+1)/2 + j]*B[k];
       } 
-      else {  
+      else{  
         G[j] = grad(xp[j+1]-xp[j], 
               &xv[xp[j]], &xi[xp[j]], 
               vxbar[j]*vsum, vxz[j],
-              A, E, V); 
-      }
+              A, E, V); }
+
 
       // for null model skip penalized variables
       if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
@@ -308,10 +309,7 @@ int cdsolve(double tol, int M)
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
             int *prexx, // indicator for pre-calc xx
-            int *xxi_in,
-            int *xxp_in,
-            double *xxv_in,
-            double *xxd,
+            double *xxv_in, // dense columns of upper tri for xx
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
             double *weight, // length-p weights
             int *standardize, // whether to scale penalty by sd(x_j)
@@ -347,19 +345,19 @@ int cdsolve(double tol, int M)
   xv = xv_in;
 
   doxx = *prexx;
-  xxi = xxi_in;
-  xxp = xxp_in;
   xxv = xxv_in;
-  H = xxd;
+  H = new_dvec(p);
 
   checkdata(*standardize);
-  npass = itertotal = 0;
 
   A=0.0;
   B = new_dzero(p);
   G = new_dzero(p);
   ag0 = new_dzero(p);
   gam = *penscale;
+
+  npass = itertotal = 0;
+
 
   // some local variables
   double Lold, NLLHD, Lsat;
