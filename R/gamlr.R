@@ -9,7 +9,7 @@ gamlr <- function(x, y,
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, standardize=TRUE, 
-            thresh=1e-7, maxit=1e4,
+            tol=1e-7, maxit=1e4,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -34,6 +34,9 @@ gamlr <- function(x, y,
   ## extras
   xtr = list(...)
 
+  ## alias from glmnet terminology
+  if(!is.null(xtr$thresh)) tol = xtr$thresh
+
   ## fixed shifts (mainly for poisson/dmr)
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
@@ -46,7 +49,8 @@ gamlr <- function(x, y,
   doxx <- FALSE
   if(!is.null(xtr$doxx)){ doxx <- xtr$doxx }
   if(doxx){
-    xx <- as(tcrossprod(t(x)),"dspMatrix")
+    xx <- as(tcrossprod(t(x)),"matrix")
+    xx <- as(xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
     xxv <- as.double(xx@x)
   } else{ xxv <- double(0) }
@@ -69,7 +73,7 @@ gamlr <- function(x, y,
   stopifnot(lambda.min.ratio<=1)
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
   stopifnot(all(c(lambda.start)>=0))
-  stopifnot(all(c(thresh,maxit)>0))
+  stopifnot(all(c(tol,maxit)>0))
   lambda <- double(nlambda)
   lambda[1] <- lambda.start
 
@@ -94,7 +98,7 @@ gamlr <- function(x, y,
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
             gamma=as.double(gamma),
-            thresh=as.double(thresh),
+            tol=as.double(tol),
             maxit=as.integer(maxit),
             lambda=as.double(lambda),
             deviance=double(nlambda),

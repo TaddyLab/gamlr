@@ -216,7 +216,6 @@ int cdsolve(double tol, int M)
           Bdiff = fabs(vsum*dbet*dbet);
         }
       }
-      //speak("A[%d]=%g,Bdiff=%g\n",t,A,Bdiff);
     }
 
 
@@ -231,7 +230,10 @@ int cdsolve(double tol, int M)
 
       // update gradient
       if(doxx){
-        if(V){ shout("Error: only doxx if linear.\n"); return 1; }
+        if(V){ 
+          shout("Error: only doxx for gaussians.\n"); 
+          return 1; 
+        }
         G[j] = -vxz[j] + A*vxbar[j]*vsum;
         int jind = j*(j+1)/2;
         for(k=0; k<j; k++)
@@ -258,6 +260,7 @@ int cdsolve(double tol, int M)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
+        //speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
       }
     }
 

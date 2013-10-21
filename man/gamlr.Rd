@@ -13,7 +13,7 @@ gamlr(x, y,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
    standardize=TRUE, 
-   thresh=1e-7, maxit=1e4,
+   tol=1e-7, maxit=1e4,
    verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
@@ -54,7 +54,7 @@ gamlr(x, y,
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
   \item{verb}{ Whether to print some output for each path segment. }
-  \item{thresh}{ Optimization convergence tolerance relative to the null model deviance for each 
+  \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
     maximum coordinate change times deviance curvature after full parameter-set update. }
   \item{maxit}{ Max iterations for a single segment
@@ -89,7 +89,7 @@ to the same domain as \code{y}.}
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
-      shows the regularization paths for penalized \emph{beta} and marks  minimum AIC and BIC models.
+      shows the regularization paths for penalized \eqn{\beta} and marks  minimum AIC and BIC models.
 }
 \value{
   \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}
