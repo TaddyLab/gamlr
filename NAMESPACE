@@ -1,5 +1,4 @@
 useDynLib(gamlr)
-
 import(Matrix)
 
 export(gamlr,cv.gamlr)
