@@ -459,7 +459,7 @@ int cdsolve(double tol, int M)
       shout("Warning: saturated model.  "); 
     }
     if(exits[s]){
-      shout("Terminating path.\n");
+      shout("Finishing path early.\n");
       *nlam = s; break; }
 
     itime = interact(itime); 
