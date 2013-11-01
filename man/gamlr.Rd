@@ -12,7 +12,7 @@ gamlr(x, y,
    gamma=0,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
-   standardize=TRUE, 
+   standardize=TRUE, doxx=FALSE,
    tol=1e-7, maxit=1e4,
    verb=FALSE, ...)
 
@@ -53,6 +53,8 @@ gamlr(x, y,
     the coefficients to have standard deviation of one.  
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
+  \item{doxx}{ For \code{family="gaussian"} only, whether to pre-calculate \eqn{x'x} 
+      and use gradient caluculations based on this inner product.  This can lead to massive speed-ups for big-n datasets.}
   \item{verb}{ Whether to print some output for each path segment. }
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
@@ -72,7 +74,7 @@ gamlr(x, y,
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
 to the same domain as \code{y}.}
-\item{col}{ A single plot color (default is 3/4 opaque navy), 
+\item{col}{ A single plot color, 
   or vector of length \code{ncol(x)} colors for each coefficient
     regularization path. \code{NULL} uses the \code{matplot} default. }
 \item{df}{ Whether to add to the plot degrees of freedom along the top axis.}
@@ -89,7 +91,7 @@ to the same domain as \code{y}.}
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
       \code{plot.gamlr} can be used to graph the results: it 
-      shows the regularization paths for penalized \eqn{\beta} and marks  minimum AIC and BIC models.
+      shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis, and marks  minimum AIC and BIC models.  
 }
 \value{
   \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}

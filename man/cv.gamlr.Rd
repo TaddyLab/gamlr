@@ -4,7 +4,7 @@
 \alias{coef.cv.gamlr}
 \alias{predict.cv.gamlr}
 \title{ Cross Validation for gamlr}
-\description{Cross validation for log penalty selection. }
+\description{Cross validation for gamma lasso penalty selection. }
 \usage{
 cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, ...)
 \method{plot}{cv.gamlr}(x, ...)

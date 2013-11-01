@@ -8,7 +8,8 @@ gamlr <- function(x, y,
             gamma=0, nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
-            free=NULL, standardize=TRUE, 
+            free=NULL, 
+            standardize=TRUE,doxx=FALSE,  
             tol=1e-7, maxit=1e4,
             verb=FALSE, ...)
 {
@@ -46,8 +47,6 @@ gamlr <- function(x, y,
   eta <- as.double(eta)
 
   ## precalc of x'x
-  doxx <- FALSE
-  if(!is.null(xtr$doxx)){ doxx <- xtr$doxx }
   if(doxx){
     xx <- as(tcrossprod(t(x)),"matrix")
     xx <- as(xx,"dspMatrix")
