@@ -2,9 +2,7 @@
 
 #include <stdarg.h>
 #ifdef RPRINT
-#include <R_ext/Print.h>
-#include <R_ext/Utils.h>
-#include <Rinterface.h>
+#include <R.h>
 #endif
 #include "gui.h"
 
