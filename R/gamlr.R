@@ -47,12 +47,16 @@ gamlr <- function(x, y,
   eta <- as.double(eta)
 
   ## precalc of x'x
-  if(doxx){
+  if(inherits(doxx,"dspMatrix")){
+    xxv <- as.double(doxx@x) # only for pros
+  }
+  else if(doxx){
     xx <- as(tcrossprod(t(x)),"matrix")
     xx <- as(xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
     xxv <- as.double(xx@x)
-  } else{ xxv <- double(0) }
+  } 
+  else{ xxv <- double(0) }
 
   ## final x formatting
   x=as(x,"dgCMatrix") 
@@ -142,7 +146,7 @@ gamlr <- function(x, y,
              deviance=dev,
              totalpass=fit$maxit,
              free=free,
-             call=match.call()) 
+             call=sys.call(1)) 
 
   class(out) <- "gamlr"
   invisible(out)
