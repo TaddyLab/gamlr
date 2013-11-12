@@ -5,12 +5,15 @@
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
             family=c("gaussian","binomial","poisson"),
-            gamma=0, nlambda=100, 
+            gamma=0, 
+            nlambda=100, 
             lambda.start=Inf,  
             lambda.min.ratio=0.01, 
             free=NULL, 
-            standardize=TRUE,doxx=FALSE,  
-            tol=1e-7, maxit=1e4,
+            standardize=TRUE, 
+            doxx=FALSE,  
+            tol=1e-7, 
+            maxit=1e4,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -68,7 +71,7 @@ gamlr <- function(x, y,
   ## variable weights
   if(!is.null(xtr$varweight)){
     varweight <- xtr$varweight
-    stopifnot(all(varweight>0))
+    stopifnot(all(varweight>=0))
     stopifnot(length(varweight)==p)
   } else{ varweight <- rep(1,p) }
   varweight[free] <- 0
