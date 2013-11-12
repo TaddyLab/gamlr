@@ -30,6 +30,7 @@ gamlr <- function(x, y,
   y <- as.double(y)
   n <- length(y)
 
+  if(inherits(x,"numeric")) x <- matrix(x)
   if(inherits(x,"data.frame")) x <- as.matrix(x)
   if(inherits(x,"simple_triplet_matrix"))
     x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
