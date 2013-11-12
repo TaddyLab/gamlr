@@ -65,12 +65,25 @@ gamlr <- function(x, y,
   stopifnot(nrow(x)==n) 
   p <- ncol(x)
 
-  ## weight
-  if(!is.null(xtr$weight)){
-    weight <- xtr$weight
-  } else{ weight <- rep(1,p) }
-  weight[free] <- 0
-  weight <- as.double(weight)
+  ## variable weights
+  if(!is.null(xtr$varweight)){
+    varweight <- xtr$varweight
+    stopifnot(all(varweight>0))
+    stopifnot(length(varweight)==p)
+  } else{ varweight <- rep(1,p) }
+  varweight[free] <- 0
+  varweight <- as.double(varweight)
+
+  ## observation weights
+  if(!is.null(xtr$obsweight)){
+    obsweight <- xtr$obsweight
+    stopifnot(all(obsweight>0))
+    stopifnot(length(obsweight)==n)
+  } else{ 
+    if(family=="gaussian") 
+      obsweight = as.double(0)
+    else obsweight <- as.double(rep(0,n))
+  }
 
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)
@@ -96,7 +109,8 @@ gamlr <- function(x, y,
             prexx=as.integer(doxx),
             xxv=xxv,
             eta=eta,
-            weight=weight,
+            varweight=varweight,
+            obsweight=obsweight,
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
             delta=as.double(delta),

@@ -15,7 +15,7 @@ double grad(int n, double *x, int *o,
 
   g = -vxz + a*vxsum;
   for(int i=0; i<n; i++){
-    if(v) vi = v[o[i]];
+    if(v[0]!=0) vi = v[o[i]];
     g += vi*x[i]*e[o[i]];
   }
 

@@ -67,11 +67,8 @@ void gamlr_cleanup(){
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
 
-  if(V){
-    free(V); V = NULL;
-    free(Z); Z = NULL;
-    free(vxbar); vxbar = NULL;
-  }
+  if(fam!=1){ free(Z); Z = NULL; }
+  if(V[0]!=0){ free(vxbar); vxbar = NULL; }
   if(vxz){ free(vxz); vxz = NULL; }
 
   dirty = 0;
@@ -177,6 +174,17 @@ double Bmove(int j)
   return dbet;
 }
 
+void vstats(void){
+  for(int j=0; j<p; j++){
+    H[j] = curve(xp[j+1]-xp[j], 
+        &xv[xp[j]], &xi[xp[j]], xbar[j],
+        V, vsum, &vxbar[j]);
+    vxz[j] = 0.0;
+    for(int i=xp[j]; i<xp[j+1]; i++)
+      vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
+  }
+}
+
 /* coordinate descent for log penalized regression */
 int cdsolve(double tol, int M)
 {
@@ -196,28 +204,20 @@ int cdsolve(double tol, int M)
     Bdiff = 0.0;
     imove = 0.0;
     if(dozero){
-      if(V){
+      if(fam!=1){
         if((t>0) | (V[0]==0.0)){
           vsum = reweight(n, A, E, Y, V, Z);
           if(vsum==0.0){ // perfect separation
-            shout("Warning: infinite likelihood.   ");
+            shout("Warning: infinite likelihood.  ");
             exitstat = 1;
             break; }
-          for(j=0; j<p; j++){
-            H[j] = curve(xp[j+1]-xp[j], 
-                  &xv[xp[j]], &xi[xp[j]], xbar[j],
-                  V, vsum, &vxbar[j]);
-            vxz[j] = 0.0;
-            for(i=xp[j]; i<xp[j+1]; i++)
-              vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
-          }
+          vstats();
           dbet = intercept(n, E, V, Z, vsum)-A;
           A += dbet;
           Bdiff = fabs(vsum*dbet*dbet);
         }
       }
     }
-
 
     /****** cycle through coefficients ******/
     for(j=0; j<p; j++){
@@ -230,10 +230,9 @@ int cdsolve(double tol, int M)
 
       // update gradient
       if(doxx){
-        if(V){ 
+        if(fam!=1){ 
           shout("Error: only doxx for gaussians.\n"); 
-          return 1; 
-        }
+          return 1; }
         G[j] = -vxz[j] + A*vxbar[j]*vsum;
         int jind = j*(j+1)/2;
         for(k=0; k<j; k++)
@@ -246,7 +245,6 @@ int cdsolve(double tol, int M)
               &xv[xp[j]], &xi[xp[j]], 
               vxbar[j]*vsum, vxz[j],
               A, E, V); }
-
 
       // for null model skip penalized variables
       if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
@@ -314,7 +312,8 @@ int cdsolve(double tol, int M)
             int *prexx, // indicator for pre-calc xx
             double *xxv_in, // dense columns of upper tri for xx
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
-            double *weight, // length-p weights
+            double *varweight, // length-p weights
+            double *obsweight, // length-n weights
             int *standardize, // whether to scale penalty by sd(x_j)
             int *nlam, // length of the path
             double *delta, // path stepsize
@@ -340,7 +339,9 @@ int cdsolve(double tol, int M)
   nd = (double) n;
   pd = (double) p;
   N = *N_in;
-  W = weight;
+  W = varweight;
+  V = obsweight;
+
   E = eta;
   Y = y_in;
   xi = xi_in;
@@ -392,18 +393,23 @@ int cdsolve(double tol, int M)
   }
   if(fam!=1){
     Z = new_dvec(n);
-    V = new_dzero(n);
     vxbar = new_dvec(p);
     vxz = new_dvec(p);
   }
   else{ 
     Z = Y;
-    vxbar = xbar; 
     vxz = new_dzero(p);
-    vsum = nd;
-    for(int j=0; j<p; j++)
-      for(int i=xp[j]; i<xp[j+1]; i++)
-          vxz[j] += xv[i]*Y[xi[i]]; 
+    if(V[0]!=0){
+      vxbar = new_dvec(p);
+      vstats();
+    }
+    else{
+      vxbar = xbar; 
+      vsum = nd;
+      for(int j=0; j<p; j++)
+        for(int i=xp[j]; i<xp[j+1]; i++)
+            vxz[j] += xv[i]*Z[xi[i]]; 
+    }
   }
 
   l1pen = INFINITY;
