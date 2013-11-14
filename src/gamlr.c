@@ -185,10 +185,28 @@ void vstats(void){
   }
 }
 
+void dograd(int j){
+  int k;
+  if(doxx){
+    G[j] = -vxz[j] + A*vxbar[j]*vsum;
+    int jind = j*(j+1)/2;
+    for(k=0; k<j; k++)
+      G[j] += xxv[jind+k]*B[k];
+    for(k=j; k<p; k++)
+      G[j] += xxv[k*(k+1)/2 + j]*B[k];
+  } 
+  else{  
+    G[j] = grad(xp[j+1]-xp[j], 
+      &xv[xp[j]], &xi[xp[j]], 
+      vxbar[j]*vsum, vxz[j],
+      A, E, V); 
+  }
+}
+
 /* coordinate descent for log penalized regression */
 int cdsolve(double tol, int M)
 {
-  int t,i,j,k,dozero,dopen; 
+  int t,i,j,dozero,dopen; 
   double dbet,imove,Bdiff,exitstat;
 
   // initialize
@@ -229,22 +247,7 @@ int cdsolve(double tol, int M)
       if(!dozero & (B[j]==0.0) & (W[j]>0.0)) continue;
 
       // update gradient
-      if(doxx){
-        if(fam!=1){ 
-          shout("Error: only doxx for gaussians.\n"); 
-          return 1; }
-        G[j] = -vxz[j] + A*vxbar[j]*vsum;
-        int jind = j*(j+1)/2;
-        for(k=0; k<j; k++)
-          G[j] += xxv[jind+k]*B[k];
-        for(k=j; k<p; k++)
-          G[j] += xxv[k*(k+1)/2 + j]*B[k];
-      } 
-      else{  
-        G[j] = grad(xp[j+1]-xp[j], 
-              &xv[xp[j]], &xi[xp[j]], 
-              vxbar[j]*vsum, vxz[j],
-              A, E, V); }
+      dograd(j);
 
       // for null model skip penalized variables
       if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
@@ -399,9 +402,12 @@ int cdsolve(double tol, int M)
   else{ 
     Z = Y;
     vxz = new_dzero(p);
+    vsum = sum_dvec(V,n);
     if(V[0]!=0){
       vxbar = new_dvec(p);
       vstats();
+      A = intercept(n, E, V, Z, vsum);
+      for(int j=0; j<p; j++) dograd(j);
     }
     else{
       vxbar = xbar; 
