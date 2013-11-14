@@ -51,7 +51,7 @@ double *ag0 = NULL;
 double df0;
 
 // function pointers
-double (*nllhd)(int, double, double*, double*) = NULL;
+double (*nllhd)(int, double, double*, double*, double*) = NULL;
 double (*reweight)(int, double, double*, 
                 double *, double*, double*) = NULL;
 
@@ -89,23 +89,26 @@ void checkdata(int standardize){
 
   // dispersion
   xsd = new_dvec(p);
-  for(j=0; j<p; j++){
-    H[j] = -nd*xbar[j]*xbar[j];
-    if(doxx)
-      H[j] += xxv[j*(j+1)/2 + j];
-    else
-      for(i=xp[j]; i<xp[j+1]; i++) 
-        H[j] += xv[i]*xv[i]; 
-
-    if(H[j]==0.0){
-      W[j] = INFINITY; 
-      xsd[j] = 1.0; 
+  if(standardize |((fam==1 & (V[0]==0)))){
+    for(j=0; j<p; j++){
+      H[j] = -nd*xbar[j]*xbar[j];
+      if(doxx & (V[0]==0))
+        H[j] += xxv[j*(j+1)/2 + j];
+      else
+        for(i=xp[j]; i<xp[j+1]; i++) 
+          H[j] += xv[i]*xv[i]; 
     }
-    else xsd[j] = sqrt(H[j]/nd);
   }
 
-  // to scale or not to scale
-  if(!standardize) for(j=0; j<p; j++) xsd[j] = 1.0;
+  if(standardize)
+    for(j=0; j<p; j++){
+      if(H[j]==0.0){
+        W[j] = INFINITY; 
+        xsd[j] = 1.0; 
+      }
+      else xsd[j] = sqrt(H[j]/nd);
+    }  
+  else for(j=0; j<p; j++) xsd[j] = 1.0;
 
 }
 
@@ -390,7 +393,7 @@ int cdsolve(double tol, int M)
       break;
     default: 
       fam = 1; // if it wasn't already
-      nllhd = &lin_nllhd;
+      nllhd = &sse;
       A = (ysum - sum_dvec(eta,n))/nd;
       Lsat=0.0;
   }
@@ -420,7 +423,7 @@ int cdsolve(double tol, int M)
 
   l1pen = INFINITY;
   Lold = INFINITY;
-  NLLHD =  nllhd(n, A, E, Y);
+  NLLHD =  nllhd(n, A, E, Y, V);
 
   if(*verb)
     speak("*** n=%d observations and p=%d covariates ***\n", n,p);
@@ -439,7 +442,7 @@ int cdsolve(double tol, int M)
     // update parameters and objective
     itertotal += npass;
     Lold = NLLHD;
-    NLLHD =  nllhd(n, A, E, Y);
+    NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - Lsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;

@@ -50,9 +50,21 @@ gamlr <- function(x, y,
   stopifnot(length(eta)==n)
   eta <- as.double(eta)
 
+  ## observation weights
+  if(!is.null(xtr$obsweight)){
+    obsweight <- xtr$obsweight
+    stopifnot(all(obsweight>0))
+    stopifnot(length(obsweight)==n)
+  } else{ 
+    if(family=="gaussian") 
+      obsweight = as.double(0)
+    else obsweight <- as.double(rep(0,n))
+  }
+
   ## precalc of x'x
   if(inherits(doxx,"dspMatrix")){
     xxv <- as.double(doxx@x) # only for pros
+    doxx <- TRUE
   }
   else if(doxx){
     xx <- as(tcrossprod(t(x)),"matrix")
@@ -77,17 +89,6 @@ gamlr <- function(x, y,
   } else{ varweight <- rep(1,p) }
   varweight[free] <- 0
   varweight <- as.double(varweight)
-
-  ## observation weights
-  if(!is.null(xtr$obsweight)){
-    obsweight <- xtr$obsweight
-    stopifnot(all(obsweight>0))
-    stopifnot(length(obsweight)==n)
-  } else{ 
-    if(family=="gaussian") 
-      obsweight = as.double(0)
-    else obsweight <- as.double(rep(0,n))
-  }
 
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)

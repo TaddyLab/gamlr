@@ -26,13 +26,11 @@ double grad(int n, double *x, int *o,
 double curve(int n, double *x, int *o, double xm,  
           double *v, double vsum, double *vxm){
   double h = 0.0;
-  double vi = 1.0;
   double vxs = 0.0;
 
   for(int i=0; i<n; i++){
-    if(v) vi = v[o[i]];
-    vxs += x[i]*vi;
-    h += x[i]*vi*x[i];
+    vxs += x[i]*v[o[i]];
+    h += x[i]*v[o[i]]*x[i];
   }
   
   // center
@@ -47,29 +45,26 @@ double intercept(int n, double *e, double *v, double *z, double vsum){
   int i;
 
   double rsum = 0.0;
-  if(v){
-    for(i=0; i<n; i++)
+  for(i=0; i<n; i++)
       rsum += v[i]*(z[i]-e[i]); 
-  }
-  else{ // shouldn't be called 
-    rsum = sum_dvec(z,n) - sum_dvec(e,n); }
-
   return rsum/vsum;
 }
 
 // Negative Log LHD
-
-double lin_nllhd(int n, double a, double *e, double *y){
+double sse(int n, double a, double *e, double *y, double *v){
   double l = 0.0;
   double r;
+  double vi = 1.0;
+
   for(int i=0; i<n; i++){
+    if(v[0]!=0) vi = v[i];
     r = (y[i] - a - e[i]);
-    l += 0.5*r*r; 
+    l += 0.5*r*r*vi; 
   }
   return l;
 }
 
-double bin_nllhd(int n, double a, double *e, double *y){
+double bin_nllhd(int n, double a, double *e, double *y, double *v){
   double l = 0.0;
   double f;
   for(int i=0; i<n; i++){
@@ -79,7 +74,7 @@ double bin_nllhd(int n, double a, double *e, double *y){
   return l;
 }
 
-double po_nllhd(int n, double a, double *e, double *y){
+double po_nllhd(int n, double a, double *e, double *y, double *v){
   double l = 0.0;
   double f;
   for(int i=0; i<n; i++){
