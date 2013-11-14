@@ -11,7 +11,7 @@ gamlr <- function(x, y,
             lambda.min.ratio=0.01, 
             free=NULL, 
             standardize=TRUE, 
-            doxx=FALSE,  
+            doxx=n>0.5*(p^2),  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -35,6 +35,7 @@ gamlr <- function(x, y,
   if(inherits(x,"simple_triplet_matrix"))
     x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
               dims=dim(x),dimnames=dimnames(x))
+  p <- ncol(x)
 
   ## extras
   xtr = list(...)
@@ -42,7 +43,7 @@ gamlr <- function(x, y,
   ## alias from glmnet terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
 
-  ## fixed shifts (mainly for poisson/dmr)
+  ## fixed shifts for poisson
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
     if(family=="gaussian") y = y-xtr$fix
@@ -55,31 +56,25 @@ gamlr <- function(x, y,
     obsweight <- xtr$obsweight
     stopifnot(all(obsweight>0))
     stopifnot(length(obsweight)==n)
-  } else{ 
-    if(family=="gaussian") 
-      obsweight = as.double(0)
-    else obsweight <- as.double(rep(0,n))
-  }
+  } else obsweight <- as.double(rep(1,n))
 
   ## precalc of x'x
-  if(inherits(doxx,"dspMatrix")){
-    xxv <- as.double(doxx@x) # only for pros
-    doxx <- TRUE
-  }
-  else if(doxx){
-    xx <- as(tcrossprod(t(x)),"matrix")
-    xx <- as(xx,"dspMatrix")
+  doxx = doxx & (family=="gaussian")
+  if(doxx){
+    if(is.null(xtr$xx))
+      xtr$xx <- as(
+        tcrossprod(t(x*sqrt(obsweight))),
+        "matrix")
+    xx <- as(xtr$xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
-    xxv <- as.double(xx@x)
-  } 
-  else{ xxv <- double(0) }
+    xx <- as.double(xx@x)
+  } else xx <- double(0) 
 
   ## final x formatting
   x=as(x,"dgCMatrix") 
   if(is.null(colnames(x))) 
-    colnames(x) <- 1:ncol(x)
+    colnames(x) <- 1:p
   stopifnot(nrow(x)==n) 
-  p <- ncol(x)
 
   ## variable weights
   if(!is.null(xtr$varweight)){
@@ -111,8 +106,8 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
-            prexx=as.integer(doxx),
-            xxv=xxv,
+            doxx=as.integer(doxx),
+            xx=xx,
             eta=eta,
             varweight=varweight,
             obsweight=obsweight,

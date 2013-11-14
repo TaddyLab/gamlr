@@ -12,7 +12,7 @@ gamlr(x, y,
    gamma=0,
    nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, 
-   standardize=TRUE, doxx=FALSE,
+   standardize=TRUE, doxx=n>0.5*(p^2),
    tol=1e-7, maxit=1e4,
    verb=FALSE, ...)
 
