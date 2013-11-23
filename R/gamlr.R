@@ -217,7 +217,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     abline(v=xv[which.min(AIC(x))], lty=3, col="grey20") }
 }
 
-coef.gamlr <- function(object, select=NULL, k=log(object$nobs), ...)
+coef.gamlr <- function(object, select=NULL, k=2, ...)
 {
   if(length(select)==0)
     select <- which.min(AIC(object,k=k))

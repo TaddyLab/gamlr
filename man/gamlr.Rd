@@ -18,7 +18,7 @@ gamlr(x, y,
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col="navy", select=TRUE, df=TRUE, ...)
-\method{coef}{gamlr}(object, select=NULL, k=log(object$nobs), ...)
+\method{coef}{gamlr}(object, select=NULL, k=2, ...)
 \method{predict}{gamlr}(object, newdata,
             type = c("link", "response"), ...)
 \method{logLik}{gamlr}(object, ...)
@@ -69,7 +69,7 @@ gamlr(x, y,
 
   In \code{plot},
   \code{select} is just a flag for whether to add lines marking AIC and BIC selected models.}
-\item{k}{ If \code{select=NULL} in \code{coef} or \code{predict}, the \code{AIC} complexity penalty.  \code{k} defaults to the BIC's log(n). }
+\item{k}{ If \code{select=NULL} in \code{coef} or \code{predict}, the \code{AIC} complexity penalty.  \code{k} defaults to the AIC's 2; use \code{k=log(n)} for BIC. }
 \item{newdata}{ New \code{x} data for prediction.}
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
