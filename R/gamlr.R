@@ -174,9 +174,9 @@ plot.gamlr <- function(x, against=c("pen","dev"),
                       select=TRUE, df=TRUE, ...)
 {
   nlambda <- ncol(x$beta)
+  x$beta <- x$beta[-x$free,]
   p <- nrow(x$beta)
   nzr <- unique(x$beta@i)+1
-  nzr <- nzr[!(nzr%in%x$free)]
   if(length(nzr)==0) return("nothing to plot")
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
