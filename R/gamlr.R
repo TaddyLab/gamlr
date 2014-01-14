@@ -214,13 +214,14 @@ plot.gamlr <- function(x, against=c("pen","dev"),
 
   if(select){
     abline(v=xv[which.min(BIC(x))], lty=3, col="grey20")
-    abline(v=xv[which.min(AIC(x))], lty=3, col="grey20") }
+    abline(v=xv[which.min(AICc(x))], lty=3, col="grey20")
+  }
 }
 
 coef.gamlr <- function(object, select=NULL, k=2, ...)
 {
   if(length(select)==0)
-    select <- which.min(AIC(object,k=k))
+    select <- which.min(AICc(object,k=k))
   else if(select==0)
    select <- 1:ncol(object$beta)
 
@@ -283,6 +284,16 @@ logLik.gamlr <- function(object, ...){
   attr(ll,"df") = object$df
   class(ll) <- "logLik"
   ll
+}
+
+## corrected AIC calculation
+AICc <- function(object, k=2){
+  ll <- logLik(object)
+  d <- attributes(ll)$df
+  n <- attributes(ll)$nobs
+  ic <- -2*ll+ k*d*n/(n-d-1)
+  attributes(ic) <- NULL
+  ic
 }
 
 

@@ -41,7 +41,7 @@ plot(fit <- gamlr(x=x, y=y, family="binomial",
       thresh=1e-8))
 
 ## BIC selected player coefficients
-B <- coef(fit, k=log(nrow(x)))[-c(1,1+1:ncol(config)),] 
+B <- coef(fit, s=which.min(BIC(fit)))[colnames(onice),] 
 length(B <- B[B!=0])
 ## print nonzero player effects on who-scored log odds
 round(B[order(-B)],3)

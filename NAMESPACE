@@ -1,7 +1,7 @@
 useDynLib(gamlr)
 import(Matrix)
 
-export(gamlr,cv.gamlr)
+export(gamlr,cv.gamlr,AICc)
 
 S3method(plot,gamlr)
 S3method(coef,gamlr)
