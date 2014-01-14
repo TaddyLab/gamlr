@@ -174,8 +174,9 @@ plot.gamlr <- function(x, against=c("pen","dev"),
                       select=TRUE, df=TRUE, ...)
 {
   nlambda <- ncol(x$beta)
-  x$beta <- x$beta[-x$free,]
-  p <- nrow(x$beta)
+  if(!is.null(x$free)) 
+    x$beta <- x$beta[-x$free,]
+  p <- nrow(x$beta) 
   nzr <- unique(x$beta@i)+1
   if(length(nzr)==0) return("nothing to plot")
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
@@ -284,16 +285,6 @@ logLik.gamlr <- function(object, ...){
   attr(ll,"df") = object$df
   class(ll) <- "logLik"
   ll
-}
-
-## corrected AIC calculation
-AICc <- function(object, k=2){
-  ll <- logLik(object)
-  d <- attributes(ll)$df
-  n <- attributes(ll)$nobs
-  ic <- -2*ll+ k*d*n/(n-d-1)
-  attributes(ic) <- NULL
-  ic
 }
 
 
