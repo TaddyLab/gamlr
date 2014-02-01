@@ -4,16 +4,16 @@
 
 ## Wrapper function; most happens in c
 gamlr <- function(x, y, 
-            family=c("gaussian","binomial","poisson"),
-            gamma=0, 
-            nlambda=100, 
-            lambda.start=Inf,  
-            lambda.min.ratio=0.01, 
-            free=NULL, 
-            standardize=TRUE, 
-            doxx=n>0.5*(p^2),  
-            tol=1e-7, 
-            maxit=1e4,
+            family=c("gaussian","binomial","poisson")
+            gamma=0
+            nlambda=100
+            lambda.start=Inf
+            lambda.min.ratio=0.01
+            free=NULL
+            standardize=TRUE
+            doxx=n>0.5*(p^2)  ##how are these assigned b4 n,p
+            tol=1e-7
+            maxit=1e4
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
@@ -27,6 +27,7 @@ gamlr <- function(x, y,
   y <- drop(y)
   stopifnot(is.null(dim(y)))
   if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
+  ##NA: so the above is how to deal with binomial implementations
   y <- as.double(y)
   n <- length(y)
 
@@ -34,7 +35,7 @@ gamlr <- function(x, y,
   if(inherits(x,"data.frame")) x <- as.matrix(x)
   if(inherits(x,"simple_triplet_matrix"))
     x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
-              dims=dim(x),dimnames=dimnames(x))
+              dims=dim(x),dimnames=dimnames(x)) ##WTF is a simple_triplet_matrix??
   p <- ncol(x)
 
   ## extras
@@ -44,7 +45,7 @@ gamlr <- function(x, y,
   if(!is.null(xtr$thresh)) tol = xtr$thresh
 
   ## fixed shifts for poisson
-  eta <- rep(0.0,n)
+  eta <- rep(0.0,n)         ##why?
   if(!is.null(xtr$fix)){
     if(family=="gaussian") y = y-xtr$fix
     else eta <- xtr$fix   } 
