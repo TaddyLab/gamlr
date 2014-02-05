@@ -37,6 +37,8 @@ gamlr <- function(x, y,
               dims=dim(x),dimnames=dimnames(x))
   p <- ncol(x)
 
+  if(length(free)==0) free <- NULL
+  
   ## extras
   xtr = list(...)
 

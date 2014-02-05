@@ -1,6 +1,6 @@
 Package: gamlr  
 Title:  Gamma Lasso Regression  
-Version: 1.11-2  
+Version: 1.11-3  
 Date: 2014  
 Author: Matt Taddy <taddy@chicagobooth.edu>  
 Maintainer: Matt Taddy <taddy@chicagobooth.edu>  
