@@ -158,11 +158,11 @@ verb=False):
   
   #alternative method?
 _libgamlr = numpy.ctypeslib.load_library('./gamlr.so','.')
-_libgamlr.gamlr.argtypes = (POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),
+_libgamlr.gamlr.argtypes = [POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),
                             POINTER(c_double),POINTER(c_double),POINTER(c_int),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),
                             POINTER(c_int),POINTER(c_int),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_int),
                             POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),
-                            POINTER(c_int),POINTER(c_int))
+                            POINTER(c_int),POINTER(c_int)]
 print("hello! I finished")    
   #
   #fit = _libgamlr.gamlr(
