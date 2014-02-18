@@ -12,14 +12,14 @@ DONE: github.com/nelsonauner/ctypes
 DONE: I included error checking, but some options (precalc of XX) is left out
 
 4. Simple python wrapper for gamlr.c
-TODO:
-- Error: cannot find Rmath.h (even though I copied it from Rcpp)..this shouldn't be necessary?
-- Goal: Maintain original C code
-- Numerous examples for passing double * and int * to c function
+	- TODO:
+	- Error: cannot find Rmath.h (even though I copied it from Rcpp)..this shouldn't be necessary?
+	- Goal: Maintain original C code
+	- Numerous examples for passing double * and int * to c function
 
 
 5. Error-checking in python wrapper	
-- Run same example in R & Python and check result
+	- Run same example in R & Python and check result
 
 6. Additional features missing in original wrapper	
-- Precalculation of XX
+	- Precalculation of XX
