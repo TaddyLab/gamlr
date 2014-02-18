@@ -6,6 +6,7 @@
 import numpy 
 import SparseMatrix as sm
 import numpy.ctypeslib as npct
+from ctypes import *
 
 ##Here, I walk through the basic demo of gamlr.R to put to gamlr.C
 
@@ -62,6 +63,7 @@ verb=False):
   #family=match.arg(family)
   #famid = switch(family, 
   #  "gaussian"=1, "binomial"=2, "poisson"=3)
+  famid = 1 #We'll have to work this out later
   # # data formatting (more follows after doxx)
   # y <- drop(y)
   # stopifnot(is.null(dim(y)))
@@ -117,7 +119,7 @@ verb=False):
   ###########
   #x=as(x,"dgCMatrix") 
   x = sm.makeSM(x)
-  #Not sure how to handle this. We need x@i and x@p
+  #This turns x into a class SM, with x.ex (matrix) x.i (=x@i) and x.p (=x@p from R)
   #if(is.null(colnames(x))) 
   #  colnames(x) <- 1:p
   #stopifnot(nrow(x)==n) 
@@ -155,14 +157,21 @@ verb=False):
 #  _libgamlr = ctypes.CDLL('./gamlr.so')
   
   #alternative method?
-  _libgamlr = numpy.ctypeslib.load_library('./gamlr.so','.')
-  
-  fit = _libgamlr.gamlr(
-    ctypes.c_int(famid),
-    n=c_int(n)
-    p=c_int(p)
-    l = c_int(len(x.i)
-    xi = x.i
+_libgamlr = numpy.ctypeslib.load_library('./gamlr.so','.')
+_libgamlr.gamlr.argtypes = (POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),POINTER(c_int),
+                            POINTER(c_double),POINTER(c_double),POINTER(c_int),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),
+                            POINTER(c_int),POINTER(c_int),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_int),
+                            POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),POINTER(c_double),
+                            POINTER(c_int),POINTER(c_int))
+print("hello! I finished")    
+  #
+  #fit = _libgamlr.gamlr(
+  #  byref(c_int(famid)),
+  #  byref(c_int(n)),
+  #  byref(c_int(p)),
+  #  byref(len(x.i))
+  #  byref(c_int(x.i))
+  #  byref(c_int(x.v))
 
 #We're going to have to do a lot of work to make sure that all of the moving parts come through ok. 
   ## drop it like it's hot
@@ -176,7 +185,7 @@ verb=False):
   #           xv=as.double(x@x),
   #           y=y,
   #           doxx=as.integer(doxx),
-  #           xx=xx,
+  #           xx=xx,12
   #           eta=eta,
   #           varweight=varweight,
   #           obsweight=obsweight,
@@ -186,7 +195,7 @@ verb=False):
   #           gamma=as.double(gamma),
   #           tol=as.double(tol),
   #           maxit=as.integer(maxit),
-  #           lambda=as.double(lambda),
+  #           lambda=as.double(lam2bda),
   #           deviance=double(nlambda),
   #           df=double(nlambda),
   #           alpha=as.double(rep(0,nlambda)),

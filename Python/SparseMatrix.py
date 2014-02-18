@@ -3,6 +3,7 @@ class makeSM(object):
 	def __init__(self,x):
 			#Check that we were given a numpy array
 			assert(isinstance(x,numpy.ndarray))
+			#self._as_parameter_ = x sigh..this doesn't work
 			self.ex = x
 			self.x = []
 			self.i = []
