@@ -98,6 +98,15 @@ gamlr <- function(x, y,
   ## stepsize
   delta <- exp( log(lambda.min.ratio)/(nlambda-1) )
 
+  ## adaptation
+  stopifnot(all(gamma>=0))
+  if(length(gamma)==1){ 
+    gamvec <- rep(gamma,p)
+  } else{ 
+    gamvec <- gamma }
+  stopifnot(length(gamvec)==p)
+  gamvec[free] <- 0
+
   ## drop it like it's hot
   fit <- .C("gamlr",
             famid=as.integer(famid), 
@@ -116,7 +125,7 @@ gamlr <- function(x, y,
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
-            gamma=as.double(gamma),
+            gamma=gamvec,
             tol=as.double(tol),
             maxit=as.integer(maxit),
             lambda=as.double(lambda),
@@ -153,7 +162,7 @@ gamlr <- function(x, y,
 
   ## build return object and exit
   out <- list(lambda=lambda, 
-             gamma=fit$gamma,
+             gamma=gamma,
              nobs=fit$n,
              family=family,
              alpha=alpha,
