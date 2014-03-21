@@ -225,7 +225,6 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     axis(3,at=xv[dfi], labels=round(x$df[dfi],1),tick=FALSE, line=-.5) }
 
   if(select){
-    abline(v=xv[which.min(BIC(x))], lty=3, col="grey20")
     abline(v=xv[which.min(AICc(x))], lty=3, col="grey20")
   }
 }
@@ -279,7 +278,7 @@ summary.gamlr <- function(object, ...){
     par=diff(object$b@p)+1,
     df=object$df,
     r2=1-object$dev/object$dev[1],
-    bic=BIC(object)))
+    aicc=AICc(object)))
 }
 
 print.gamlr <- function(x, ...){
