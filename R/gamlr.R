@@ -291,7 +291,9 @@ print.gamlr <- function(x, ...){
 }
 
 logLik.gamlr <- function(object, ...){
-  ll <- -0.5*object$dev
+  if(object$family=="gaussian"){
+    ll <- -0.5*object$nobs*log(object$dev/object$nobs)
+  } else{ ll <- -0.5*object$dev }
   attr(ll,"nobs") = object$nobs
   attr(ll,"df") = object$df
   class(ll) <- "logLik"

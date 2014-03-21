@@ -343,7 +343,7 @@ int cdsolve(double tol, int M)
   npass = itertotal = 0;
 
   // some local variables
-  double Lold, NLLHD, Lsat;
+  double Lold, NLLHD, NLsat;
   int s;
 
   // family dependent settings
@@ -353,21 +353,21 @@ int cdsolve(double tol, int M)
       nllhd = &bin_nllhd;
       reweight = &bin_reweight;
       A = log(ybar/(1-ybar));
-      Lsat = 0.0;
+      NLsat = 0.0;
       break;
     case 3:
       nllhd = &po_nllhd;
       reweight = &po_reweight;
       A = log(ybar);
-      // nonzero saturated deviance
-      Lsat = ysum;
+      // nonzero saturated negative log likelihood
+      NLsat = ysum;
       for(int i=0; i<n; i++)
-        if(Y[i]!=0) Lsat += -Y[i]*log(Y[i]);
+        if(Y[i]!=0) NLsat += -Y[i]*log(Y[i]);
       break;
     default: 
       fam = 1; // if it wasn't already
       nllhd = &sse;
-      Lsat=0.0;
+      NLsat=0.0;
       A = intercept(n, E, V, Z, vsum);
       for(int j=0; j<p; j++) dograd(j);
   }
@@ -394,7 +394,7 @@ int cdsolve(double tol, int M)
     itertotal += npass;
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y, V);
-    deviance[s] = 2.0*(NLLHD - Lsat);
+    deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
