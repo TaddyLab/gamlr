@@ -86,7 +86,7 @@ double dof(int s, double *lam, double L){
   //calculate absolute grads
   for(j=0; j<p; j++)
     if(isfinite(W[j]) & (B[j]==0.0))
-      ag0[j] = fabs(G[j])/xsd[j];
+      ag0[j] = fabs(G[j])/(xsd[j]*W[j]);
 
   // initialization  
   if(s==0){
