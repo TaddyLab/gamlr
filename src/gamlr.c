@@ -403,12 +403,13 @@ int cdsolve(double tol, int M)
     
     // gamma lasso updating
     for(int j=0; j<p; j++) 
-      if(gam[j]>0.0)
+      if(gam[j]>0.0){
         if(isfinite(gam[j])){
           if( (W[j]>0.0) & isfinite(W[j]) )
             omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); } 
         else if(B[j]!=0.0) omega[j] = 0.0; 
-
+      }
+      
     // verbalize
     if(*verb) 
       speak("segment %d: lambda = %.4g, dev = %.4g, npass = %d\n", 
