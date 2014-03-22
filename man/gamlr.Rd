@@ -90,8 +90,12 @@ to the same domain as \code{y}.}
   \code{family="gaussian"}, one otherwise).  Weights \eqn{\omega_j} are  
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
-      \code{plot.gamlr} can be used to graph the results: it 
-      shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis, and marks  minimum AICc and BIC models.  
+ \code{plot.gamlr} can be used to graph the results: it 
+ shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis and minimum AICc selection marked.  
+
+ \code{logLik.gamlr} returns log likelihood along the regularization path.  It is based on the \code{deviance}, and is correct only up to static constants; 
+ e.g., for a Poisson it is off by \eqn{\sum_i y_i(\log y_i-1)} (the saturated log likelihood) and for a Gaussian it is off by likelihood constants \eqn{(n/2)(1+\log2\pi)}.
+
 }
 \value{
   \item{lambda}{The path of fitted \emph{prior expected} L1 penalties.}
@@ -100,7 +104,7 @@ to the same domain as \code{y}.}
   \item{beta}{Regression coefficients.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
-  -2( logLHD.fitted - logLHD.saturated). }
+  \eqn{(-2/\phi)}( logLHD.fitted - logLHD.saturated ). }
   \item{totalpass}{Total number of coordinate descent cycles. }
   \item{family}{The exponential family model.}
 }
@@ -132,4 +136,4 @@ plot(fitgl, ylim=ylim, col="maroon")
 plot(fitglbv, ylim=ylim, col="darkorange")
 
  }
-\seealso{cv.gamlr, hockey}
+\seealso{cv.gamlr, AICc, hockey}
