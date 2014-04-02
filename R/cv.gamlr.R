@@ -8,12 +8,12 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   full <- gamlr(x,y, ...)
   fam <- full$family
 
+  nobs <- full$nobs
   if(is.null(foldid)){
-    nfold <- min(nfold,full$nobs)
-    rando <- sample.int(full$nobs)
-    chunks <- round(seq.int(0,full$nobs,length.out=nfold+1))
-    foldid <- rep.int(1:nfold,times=diff(chunks))[rando]
-  } else  stopifnot(length(foldid)==full$nobs)
+    nfold <- min(nfold,nobs)
+    foldsize <- ceiling(nobs/nfold)
+    foldid <- rep.int(1:nfold,times=foldsize)[sample.int(nobs)]
+  } else  stopifnot(length(foldid)==nobs)
   foldid <- factor(foldid)
   nfold <- nlevels(foldid)
 

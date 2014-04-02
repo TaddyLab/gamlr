@@ -181,7 +181,7 @@ gamlr <- function(x, y,
 #### S3 method functions
 
 plot.gamlr <- function(x, against=c("pen","dev"), 
-                      col="navy", 
+                      col=NULL, 
                       select=TRUE, df=TRUE, ...)
 {
   nlambda <- ncol(x$beta)

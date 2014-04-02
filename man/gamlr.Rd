@@ -17,7 +17,7 @@ gamlr(x, y,
    verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
-    col="navy", select=TRUE, df=TRUE, ...)
+    col=NULL, select=TRUE, df=TRUE, ...)
 \method{coef}{gamlr}(object, select=NULL, k=2, ...)
 \method{predict}{gamlr}(object, newdata,
             type = c("link", "response"), ...)
@@ -76,7 +76,7 @@ or "response" for predictions transformed
 to the same domain as \code{y}.}
 \item{col}{ A single plot color, 
   or vector of length \code{ncol(x)} colors for each coefficient
-    regularization path. \code{NULL} uses the \code{matplot} default. }
+    regularization path. \code{NULL} uses the \code{matplot} default \code{1:6}. }
 \item{df}{ Whether to add to the plot degrees of freedom along the top axis.}
 \item{...}{ Extra arguments to each method.  Most importantly, from 
 \code{predict.gamlr} these are arguments to \code{coef.gamlr}. }
