@@ -24,6 +24,7 @@ gamlr <- function(x, y,
     "gaussian"=1, "binomial"=2, "poisson"=3)
 
   ## data formatting (more follows after doxx)
+  if(is.data.frame(y)) y <- as.matrix(y)
   y <- drop(y)
   stopifnot(is.null(dim(y)))
   if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
