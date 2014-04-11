@@ -330,7 +330,7 @@ int cdsolve(double tol, int M)
   xsd = drep(1.0,p);
   if(*standardize){
     for(int j=0; j<p; j++){
-      if(H[j]==0.0) W[j] = INFINITY;
+      if(fabs(H[j])<1e-10){ H[j]=0.0; W[j] = INFINITY; }
       else xsd[j] = sqrt(H[j]/vsum);
     }
   }
