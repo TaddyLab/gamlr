@@ -37,8 +37,7 @@ y <- as.numeric(goal$whoscored=="HOME")
 
 ## fit a lambda (gamma=0) model
 plot(fit <- gamlr(x=x, y=y, family="binomial",  
-      free=1:ncol(config), standardize=FALSE, 
-      thresh=1e-8))
+      free=1:ncol(config), standardize=FALSE))
 
 ## BIC selected player coefficients
 B <- coef(fit, s=which.min(BIC(fit)))[colnames(onice),] 
@@ -46,8 +45,8 @@ length(B <- B[B!=0])
 ## print nonzero player effects on who-scored log odds
 round(B[order(-B)],3)
 
-## predict the last goal of the 2013 playoffs (this time use AIC)
+## predict the last goal of the 2013 playoffs (this time use AICc)
 goal[fit$n,]
-predict(fit,x[fit$n,,drop=FALSE],type="response",k=2)
+predict(fit,x[fit$n,,drop=FALSE],type="response")
 }
 \seealso{gamlr}
