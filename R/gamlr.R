@@ -39,6 +39,13 @@ gamlr <- function(x, y,
   p <- ncol(x)
 
   if(length(free)==0) free <- NULL
+  if(!is.null(free)){
+    if(inherits(free,"character")){
+      free <- na.omit(match(free,colnames(x)))
+      if(length(free)==0) free <- NULL
+      print(free)}
+    if(any(free < 1) | any(free>p)) stop("bad free argument.") 
+  }
   
   ## extras
   xtr = list(...)
