@@ -7,6 +7,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   
   full <- gamlr(x,y, ...)
   fam <- full$family
+  y <- checky(y,fam)
 
   nobs <- full$nobs
   if(is.null(foldid)){

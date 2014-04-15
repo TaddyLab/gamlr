@@ -24,11 +24,7 @@ gamlr <- function(x, y,
     "gaussian"=1, "binomial"=2, "poisson"=3)
 
   ## data formatting (more follows after doxx)
-  if(is.data.frame(y)) y <- as.matrix(y)
-  y <- drop(y)
-  stopifnot(is.null(dim(y)))
-  if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
-  y <- as.double(y)
+  y <- checky(y,family)
   n <- length(y)
 
   if(inherits(x,"numeric")) x <- matrix(x)
@@ -184,7 +180,16 @@ gamlr <- function(x, y,
   class(out) <- "gamlr"
   invisible(out)
 }
- 
+
+## just response argument checking
+checky <- function(y, family){ 
+  if(is.data.frame(y)) y <- as.matrix(y)
+  y <- drop(y)
+  stopifnot(is.null(dim(y)))
+  if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
+  return(as.double(y))
+}
+
 
 #### S3 method functions
 
