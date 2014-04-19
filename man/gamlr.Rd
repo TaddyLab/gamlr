@@ -131,7 +131,7 @@ fitglbv <- gamlr(x, y, gamma=10, lambda.min.ratio=1e-3) # big gamma
 
 par(mfrow=c(1,3))
 ylim = range(c(fitglbv$beta@x))
-plot(fitlasso, ylim=ylim)
+plot(fitlasso, ylim=ylim, col="navy")
 plot(fitgl, ylim=ylim, col="maroon")
 plot(fitglbv, ylim=ylim, col="darkorange")
 

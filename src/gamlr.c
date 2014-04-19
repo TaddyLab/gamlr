@@ -50,7 +50,6 @@ double *xsd = NULL;
 double *H = NULL;
 double *G = NULL;
 double *ag0 = NULL;
-double df0;
 
 // function pointers
 double (*nllhd)(int, double, double*, double*, double*) = NULL;
@@ -90,14 +89,11 @@ double dof(int s, double *lam, double L){
 
   // initialization  
   if(s==0){
-    df0 = 1.0;
-    for(j=0; j<p; j++) 
-      if(W[j] == 0.0) df0++; 
     if(!isfinite(lam[0]))  
       lam[0] = dmax(ag0,p)/nd;
   }
 
-  double df = df0;
+  double df = 1.0;
 
   // penalized bit
   double shape,phi;
