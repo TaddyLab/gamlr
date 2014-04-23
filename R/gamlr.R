@@ -81,6 +81,7 @@ gamlr <- function(x, y,
   if(is.null(colnames(x))) 
     colnames(x) <- 1:p
   stopifnot(nrow(x)==n) 
+  stopifnot(all(is.finite(x@x)))
 
   ## variable weights
   if(!is.null(xtr$varweight)){
@@ -187,6 +188,7 @@ checky <- function(y, family){
   y <- drop(y)
   stopifnot(is.null(dim(y)))
   if(is.factor(y)&family=="binomial") y <- as.numeric(y)-1
+  stopifnot(all(is.finite(y)))
   return(as.double(y))
 }
 
