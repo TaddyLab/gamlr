@@ -11,7 +11,7 @@ gamlr <- function(x, y,
             lambda.min.ratio=0.01, 
             free=NULL, 
             standardize=TRUE, 
-            doxx=n>0.5*(p^2),  
+            doxx=p<500,  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -65,7 +65,7 @@ gamlr <- function(x, y,
   } else obsweight <- as.double(rep(1,n))
 
   ## precalc of x'x
-  doxx = doxx & (family=="gaussian")
+  doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
   if(doxx){
     if(is.null(xtr$xx))
       xtr$xx <- as(
