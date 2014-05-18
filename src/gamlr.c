@@ -216,7 +216,7 @@ int cdsolve(double tol, int M)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
-        //speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
+       // speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
       }
     }
 
@@ -390,6 +390,7 @@ int cdsolve(double tol, int M)
     itertotal += npass;
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y, V);
+    //speak("NLLHD %g, NLsat %g\n",NLLHD,NLsat);
     deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
