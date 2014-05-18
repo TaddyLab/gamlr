@@ -128,7 +128,6 @@ double Bmove(int j)
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
   }
-
   return dbet;
 }
 
@@ -183,7 +182,7 @@ int cdsolve(double tol, int M)
       if(fam!=1){
           vsum = reweight(n, A, E, Y, V, Z);
           if(vsum==0.0){ // perfect separation
-            shout("Warning: infinite likelihood.  ");
+            shout("Warning: near infinite likelihood.  ");
             exitstat = 1;
             break; }
           docurve();
@@ -216,7 +215,6 @@ int cdsolve(double tol, int M)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
-        //if(dbet>1e6) speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
       }
     }
 
@@ -390,7 +388,6 @@ int cdsolve(double tol, int M)
     itertotal += npass;
     Lold = NLLHD;
     NLLHD =  nllhd(n, A, E, Y, V);
-    //speak("NLLHD %g, NLsat %g\n",NLLHD,NLsat);
     deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
