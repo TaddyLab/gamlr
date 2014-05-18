@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <Rmath.h>
+//#include <Rmath.h>
 #include <time.h>
 
 #include "vec.h"
