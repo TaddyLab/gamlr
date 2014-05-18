@@ -70,7 +70,6 @@ double bin_nllhd(int n, double a, double *e, double *y, double *v){
   for(int i=0; i<n; i++){
     f = a + e[i];
     l += -y[i]*f + log(1 + exp(f));
-    //printf("l %g, y %g, f %g\n",l,y[i],f);
   }
   return l;
 }

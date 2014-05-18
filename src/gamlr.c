@@ -216,7 +216,7 @@ int cdsolve(double tol, int M)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxbar[j]*dbet;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
-       // speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
+        //if(dbet>1e6) speak("%d %d dbet=%g, Bdiff=%g\n",t,j,dbet,Bdiff);
       }
     }
 
