@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <Rmath.h>
+#include "Rmath.h"
 #include "lhd.h"
 #include "vec.h"
 
