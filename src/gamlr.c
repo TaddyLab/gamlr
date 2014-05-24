@@ -2,9 +2,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "Rmath.h"
+#include <Rmath.h>
 #include <time.h>
-#define MATHLIB_STANDALONE 
+
 #include "vec.h"
 #include "lhd.h"
 #include "gui.h"
