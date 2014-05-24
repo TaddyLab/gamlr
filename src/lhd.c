@@ -2,7 +2,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "Rmath.h"
+#ifndef
+#define MATHLIB_STANDALONE
+#endif
+//#include "Rmath.h"
 #include "lhd.h"
 #include "vec.h"
 

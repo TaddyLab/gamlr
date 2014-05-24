@@ -2,7 +2,7 @@
 
 #include <stdarg.h>
 #ifdef RPRINT
-#include <R.h>
+//#include "R.h"
 #endif
 #include "gui.h"
 
