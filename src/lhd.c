@@ -94,9 +94,13 @@ double bin_reweight(int n, double a, double *e,
     ee = exp(f);
     q = ee/(1.0+ee);
     v[i] = 1.0/(2.0 + 1.0/ee + ee);
-    if(v[i]<1e-14) return 0.0;
-    z[i] = f + (y[i]-q)/v[i];
-    vs += v[i];
+    if(v[i]<1e-10){ // perfect separation
+      v[i] = 0.0;
+      z[i] = y[i]; 
+    }else{
+      z[i] = f + (y[i]-q)/v[i];
+      vs += v[i];
+    }
   }
   return vs;
 }
@@ -108,9 +112,13 @@ double po_reweight(int n, double a, double *e,
   for(int i=0; i<n; i++){
     f = a + e[i];
     v[i] = exp(f);
-    z[i] = f + y[i]/v[i] - 1.0;
-    if(v[i]==0.0) return 0.0;
-    vs += v[i];
+   if(v[i]<1e-10){ // perfect fit
+      v[i] = 0.0;
+      z[i] = y[i]; 
+    }else{
+      vs += v[i];
+      z[i] = f + y[i]/v[i] - 1.0;
+    }
   }
   return vs;
 }

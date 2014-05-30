@@ -23,27 +23,18 @@ gamlr <- function(x, y,
   famid = switch(family, 
     "gaussian"=1, "binomial"=2, "poisson"=3)
 
-  ## data formatting (more follows after doxx)
+  ## response formatting 
   y <- checky(y,family)
   n <- length(y)
 
+  ## basic input formatting (more below)
   if(inherits(x,"numeric")) x <- matrix(x)
   if(inherits(x,"data.frame")) x <- as.matrix(x)
   if(inherits(x,"simple_triplet_matrix"))
     x <- sparseMatrix(i=x$i,j=x$j,x=x$v,
               dims=dim(x),dimnames=dimnames(x))
-  p <- ncol(x)
 
-  if(length(free)==0) free <- NULL
-  if(!is.null(free)){
-    if(inherits(free,"character")){
-      free <- na.omit(match(free,colnames(x)))
-      if(length(free)==0) free <- NULL
-      print(free)}
-    if(any(free < 1) | any(free>p)) stop("bad free argument.") 
-  }
-  
-  ## extras
+  ## extra arguments (undoc)
   xtr = list(...)
 
   ## alias from glmnet terminology
@@ -64,10 +55,11 @@ gamlr <- function(x, y,
     stopifnot(length(obsweight)==n)
   } else obsweight <- as.double(rep(1,n))
 
-  ## precalc of x'x
+  ## sometimes do precalc of x'x
   doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
   if(doxx){
     if(is.null(xtr$xx))
+      stopifnot(!is.null(x)) 
       xtr$xx <- as(
         tcrossprod(t(x*sqrt(obsweight))),
         "matrix")
@@ -76,13 +68,32 @@ gamlr <- function(x, y,
     xx <- as.double(xx@x)
   } else xx <- double(0) 
 
-  ## final x formatting
-  x=as(x,"dgCMatrix") 
-  if(is.null(colnames(x))) 
-    colnames(x) <- 1:p
-  stopifnot(nrow(x)==n) 
-  stopifnot(all(is.finite(x@x)))
+  ## always do precalc of xbar
+  xbar <- xtr$xbar
+  if(is.null(xbar)){
+    if(length(x)==0) xbar <- rep(0.0,p)
+    else{ 
+      xbar <- colMeans(x)
+      names(xbar) <- colnames(x)
+    }
+  }
 
+  ## get dimension and names from xbar
+  p <- length(xbar)
+  varnames <- names(xbar)
+  if(is.null(varnames)) 
+      varnames <- 1:p   
+
+  ## organized unpenalized inputs
+  if(length(free)==0) free <- NULL
+  if(!is.null(free)){
+    if(inherits(free,"character")){
+      free <- na.omit(match(free,varnames))
+      if(length(free)==0) free <- NULL
+      print(free)}
+    if(any(free < 1) | any(free>p)) stop("bad free argument.") 
+  }
+  
   ## variable weights
   if(!is.null(xtr$varweight)){
     varweight <- xtr$varweight
@@ -91,6 +102,15 @@ gamlr <- function(x, y,
   } else{ varweight <- rep(1,p) }
   varweight[free] <- 0
   varweight <- as.double(varweight)
+
+  ## final x formatting
+  if(length(x)==0) x <- Matrix(0)
+  else{
+    x=as(x,"dgCMatrix") 
+    stopifnot(nrow(x)==n) 
+    stopifnot(all(is.finite(x@x)))
+  }
+
 
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)
@@ -121,6 +141,7 @@ gamlr <- function(x, y,
             xi=x@i,
             xp=x@p,
             xv=as.double(x@x),
+            xbar=as.double(xbar),
             y=y,
             doxx=as.integer(doxx),
             xx=xx,
@@ -156,7 +177,7 @@ gamlr <- function(x, y,
   names(alpha) <- paste0('seg',(1:nlambda))
   beta <- Matrix(head(fit$beta,nlambda*p),
                     nrow=p, ncol=nlambda, 
-                    dimnames=list(colnames(x),names(alpha)),
+                    dimnames=list(varnames,names(alpha)),
                     sparse=TRUE)
 
   ## path stats
