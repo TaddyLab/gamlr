@@ -60,6 +60,7 @@ double (*reweight)(int, double, double*,
 void gamlr_cleanup(){
   if(!dirty) return;
 
+  if(xbar){ free(xbar); xbar = NULL; }
   if(xsd){ free(xsd); xsd = NULL; }
 
   if(B){ free(B); B = NULL; }
@@ -262,7 +263,6 @@ int cdsolve(double tol, int M)
             int *xi_in, // length-l row ids for nonzero x
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
-            double *xbar_in, // variable means
             double *y_in, // length-n y
             int *doxx_in, // indicator for pre-calc xx
             double *xxv_in, // dense columns of upper tri for xx
@@ -303,7 +303,11 @@ int cdsolve(double tol, int M)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
-  xbar = xbar_in;
+  xbar = new_dzero(p);
+  for(int j=0; j<p; j++){
+    for(int i=xp[j]; i<xp[j+1]; i++) 
+      xbar[j] += xv[i];
+    xbar[j] *= 1.0/nd; }
 
   doxx = *doxx_in;
   xxv = xxv_in;
