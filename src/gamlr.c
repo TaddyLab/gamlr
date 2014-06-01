@@ -238,7 +238,8 @@ int cdsolve(double tol, int M)
   }
 
   // calc preds if they were skipped
-  if(doxx){
+  if(doxx & (N>0)){
+    // got to figure out what to do with this if N=0
     zero_dvec(E,n);
     for(j=0; j<p; j++)
       if(B[j]!=0)
@@ -266,6 +267,8 @@ int cdsolve(double tol, int M)
             double *y_in, // length-n y
             int *doxx_in, // indicator for pre-calc xx
             double *xxv_in, // dense columns of upper tri for xx
+            double *xbar_in, // input mean values
+            double *xy_in, // correlation between x and y
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
@@ -303,14 +306,10 @@ int cdsolve(double tol, int M)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
-  xbar = new_dzero(p);
-  for(int j=0; j<p; j++){
-    for(int i=xp[j]; i<xp[j+1]; i++) 
-      xbar[j] += xv[i];
-    xbar[j] *= 1.0/nd; }
-
   doxx = *doxx_in;
   xxv = xxv_in;
+
+  xbar = new_dzero(p);
   H = new_dvec(p);
   W = varweight;
   omega = drep(1.0,p);  // gamma lasso adaptations
@@ -319,7 +318,21 @@ int cdsolve(double tol, int M)
   vxbar = new_dvec(p);
   vxz = new_dvec(p);
   vsum = sum_dvec(V,n);
-  docurve();
+  if(doxx){ 
+  // experimental: replace all x ops with pre-calc summaries
+    copy_dvec(xbar,xbar_in,p);
+    copy_dvec(vxbar,xbar,p);
+    copy_dvec(vxz,xy_in,p);
+    for(int j=0; j<p; j++)
+      H[j] = xxv[j*(j+1)/2+j] - xbar[j]*xbar[j]*((double) n);
+  } else{
+    for(int j=0; j<p; j++){
+      for(int i=xp[j]; i<xp[j+1]; i++) 
+        xbar[j] += xv[i];
+      xbar[j] *= 1.0/nd; 
+    }
+    docurve();
+  }
 
   xsd = drep(1.0,p);
   if(*standardize){

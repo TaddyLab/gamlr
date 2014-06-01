@@ -101,7 +101,17 @@ gamlr <- function(x, y,
     xx <- as(xtr$xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
     xx <- as.double(xx@x)
-  } else xx <- double(0) 
+    if(is.null(xtr$xbar))
+      xtr$xbar <- colMeans(x)
+    if(is.null(xtr$xy))
+      xtr$xy <- t(x)%*%y
+    xbar <- as.double(xtr$xbar)
+    xy <- as.double(as.matrix(xtr$xy))
+  } else{
+    xx <- double(0) 
+    xbar <- double(0)
+    xy <- double(0)
+  }
 
   ## final x formatting
   x=as(x,"dgCMatrix") 
@@ -139,6 +149,8 @@ gamlr <- function(x, y,
             y=y,
             doxx=as.integer(doxx),
             xx=xx,
+            xbar=xbar,
+            xy=xy,
             eta=eta,
             varweight=varweight,
             obsweight=obsweight,
