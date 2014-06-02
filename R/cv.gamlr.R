@@ -3,7 +3,7 @@
 ###########################################################
 
 ## just an R loop that calls gamlr
-cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
+cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   
   full <- gamlr(x,y, ...)
   fam <- full$family
@@ -28,7 +28,10 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
                 dimnames=list(levels(foldid),names(lambda)))
 
   if(verb) cat("fold ")
-  for(k in levels(foldid)){
+
+  ## define the folddev function
+  folddev <- function(k){
+    require(gamlr)
     train <- which(foldid!=k)
     fit <- do.call(gamlr, 
       c(list(x=x[train,],y=y[train]), argl))
@@ -46,10 +49,23 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
                       y[-train]*log(y[-train]),
                       0.0) - y[-train]) 
       dev <- dev + 2*satnllhd }
-    oos[k,1:length(fit$lambda)] <- dev 
     if(verb) cat(sprintf("%s,",k))
+    if(length(dev) < argl$nlambda) 
+      dev <- c(dev,rep(Inf,argl$nlambda-length(dev)))
+    return(dev)
   }
-  
+
+  # apply the folddev function
+  if(is.null(cl))
+    oos <- t(sapply(1:nfold,folddev))
+  else{
+    require(parallel)
+    clusterExport(cl,
+      c("x","y","foldid","argl","fam","verb"), 
+      envir=environment())
+    oos <- t(parSapply(cl,1:nfold,folddev))
+  }
+
   cvm <- apply(oos,2,mean)
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
 
