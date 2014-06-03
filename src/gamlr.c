@@ -400,7 +400,7 @@ int cdsolve(double tol, int M)
     // update parameters and objective
     itertotal += npass;
     Lold = NLLHD;
-    NLLHD =  nllhd(n, A, E, Y, V);
+    if( (s==0) | (N>0) )NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;

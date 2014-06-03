@@ -50,6 +50,7 @@ gamlr <- function(x, y,
 
   ## get x dimension and names
   if(is.null(x)){
+    nox <- TRUE
     stopifnot(all(c(
       family=="gaussian",
       !is.null(xtr$xx),
@@ -59,6 +60,7 @@ gamlr <- function(x, y,
     varnames <- names(xtr$xbar) 
     x <- Matrix(0)
   } else{
+    nox <- FALSE
     if(inherits(x,"numeric")) x <- matrix(x)
     if(inherits(x,"data.frame")) x <- as.matrix(x)
     if(inherits(x,"simple_triplet_matrix"))
@@ -177,6 +179,12 @@ gamlr <- function(x, y,
     warning("could not converge for any lambda.")
     nlambda <- 1
     fit$deviance <- NA
+  }
+
+  if(nox){
+    cat("Note: With null x, deviance caluculations (and IC) are incorrect.  
+      Selection rules will always return the smallest-lambda model.\n")
+    fit$deviance[nlambda] <- 0
   }
 
   alpha <- head(fit$alpha,nlambda)
