@@ -36,8 +36,8 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   folddev <- function(k){
     require(gamlr)
     train <- which(foldid!=k)
-    fit <- do.call(gamlr, 
-      c(list(x=x[train,],y=y[train]), argl))
+    suppressWarnings(fit <- do.call(gamlr, 
+      c(list(x=x[train,],y=y[train]), argl)))
     eta <- predict(fit, x[-train,], select=0)
 
     dev <- apply(eta,2, 

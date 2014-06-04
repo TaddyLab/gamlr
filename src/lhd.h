@@ -15,8 +15,8 @@ double bin_nllhd(int n, double a, double *e, double *y, double *v);
 double po_nllhd(int n, double a, double *e, double *y, double *v);
 
 double bin_reweight(int n, double a, double *e, 
-					double *y, double *v, double *z);
+					double *y, double *v, double *z, int *vzf);
 double po_reweight(int n, double a, double *e, 
-					double *y, double *v, double *z);
+					double *y, double *v, double *z, int *vzf);
 
 #endif

@@ -51,11 +51,13 @@ gamlr <- function(x, y,
   ## get x dimension and names
   if(is.null(x)){
     nox <- TRUE
-    stopifnot(all(c(
-      family=="gaussian",
-      !is.null(xtr$xx),
-      !is.null(xtr$xy),
-      !is.null(xtr$xbar))))
+    if(any(c(
+      family!="gaussian",
+      is.null(xtr$xx),
+      is.null(xtr$xy),
+      is.null(xtr$xbar))))
+        stop("xx,xy,xbar are NULL or family!=`gaussian'; 
+          this is not allowed if x=NULL")
     p <- length(xtr$xbar)
     varnames <- names(xtr$xbar) 
     x <- Matrix(0)
@@ -80,6 +82,10 @@ gamlr <- function(x, y,
       if(length(free)==0) free <- NULL
       print(free)}
     if(any(free < 1) | any(free>p)) stop("bad free argument.") 
+    if(length(free)==p){
+      nlambda <- 1
+      lambda.start <- 0
+    }
   }
   
   ## variable (penalty) weights
@@ -124,6 +130,7 @@ gamlr <- function(x, y,
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
   stopifnot(all(c(lambda.start)>=0))
   stopifnot(all(c(tol,maxit)>0))
+  if(lambda.start==0) nlambda <- 1
   lambda <- double(nlambda)
   lambda[1] <- lambda.start
 
@@ -181,9 +188,14 @@ gamlr <- function(x, y,
     fit$deviance <- NA
   }
 
-  if(nox){
-    cat("Note: With null x, deviance caluculations (and IC) are incorrect.  
-      Selection rules will always return the smallest-lambda model.\n")
+  if(any(fit$exits==1)) 
+    warning("numerically perfect fit for some observations.")
+
+
+  if(nox & nlambda>1){
+    cat("Note: With x=NULL, our deviance calculations are incorrect.  
+      Selection rules will return the smallest-lambda model.\n")
+    fit$deviance <- rep(1e10,nlambda)
     fit$deviance[nlambda] <- 0
   }
 

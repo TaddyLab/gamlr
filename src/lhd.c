@@ -85,7 +85,7 @@ double po_nllhd(int n, double a, double *e, double *y, double *v){
 
 // Re-weightings  
 double bin_reweight(int n, double a, double *e, 
-            double *y, double *v, double *z){
+            double *y, double *v, double *z, int *vzf){
   double q, ee, vs, f;
   vs = 0.0;
   if(!isfinite(a)) return 0.0;
@@ -94,9 +94,10 @@ double bin_reweight(int n, double a, double *e,
     ee = exp(f);
     q = ee/(1.0+ee);
     v[i] = 1.0/(2.0 + 1.0/ee + ee);
-    if(v[i]<1e-10){ // perfect separation
+    if(v[i]<1e-12){ // perfect separation
       v[i] = 0.0;
       z[i] = y[i]; 
+      *vzf = 1;
     }else{
       z[i] = f + (y[i]-q)/v[i];
       vs += v[i];
@@ -106,15 +107,16 @@ double bin_reweight(int n, double a, double *e,
 }
 
 double po_reweight(int n, double a, double *e, 
-            double *y, double *v, double *z){
+            double *y, double *v, double *z, int *vzf){
   double vs, f;
   vs = 0.0;
   for(int i=0; i<n; i++){
     f = a + e[i];
     v[i] = exp(f);
-   if(v[i]<1e-10){ // perfect fit
+   if(v[i]<1e-12){ // perfect fit
       v[i] = 0.0;
       z[i] = y[i]; 
+      *vzf = 1;
     }else{
       vs += v[i];
       z[i] = f + y[i]/v[i] - 1.0;

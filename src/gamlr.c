@@ -54,7 +54,7 @@ double *ag0 = NULL;
 // function pointers
 double (*nllhd)(int, double, double*, double*, double*) = NULL;
 double (*reweight)(int, double, double*, 
-                double *, double*, double*) = NULL;
+                double *, double*, double*, int*) = NULL;
 
 /* global cleanup function */
 void gamlr_cleanup(){
@@ -163,8 +163,8 @@ void dograd(int j){
 /* coordinate descent for log penalized regression */
 int cdsolve(double tol, int M)
 {
-  int t,i,j,dozero,dopen; 
-  double dbet,imove,Bdiff,exitstat;
+  int t,i,j,dozero,dopen,exitstat; 
+  double dbet,imove,Bdiff;
 
   // initialize
   dopen = isfinite(l1pen);
@@ -180,11 +180,7 @@ int cdsolve(double tol, int M)
     imove = 0.0;
     if(dozero)
       if(fam!=1){
-          vsum = reweight(n, A, E, Y, V, Z);
-          if(vsum==0.0){ // perfect separation
-            shout("Warning: near infinite likelihood.  ");
-            exitstat = 1;
-            break; }
+          vsum = reweight(n, A, E, Y, V, Z, &exitstat);
           docurve();
           dbet = intercept(n, E, V, Z, vsum)-A;
           A += dbet;
@@ -224,10 +220,10 @@ int cdsolve(double tol, int M)
     // iterate
     t++;
 
-    // check for irregular exits
+    // check for max iterations
     if(t == M){
       shout("Warning: hit max CD iterations.  "); 
-      exitstat = 1;
+      exitstat = 2;
       break;
     }
 
@@ -283,7 +279,7 @@ int cdsolve(double tol, int M)
             double *df, // output df
             double *alpha,  // output intercepts
             double *beta, // output coefficients
-            int *exits, // exit status.  0 is normal
+            int *exits, // exit status.  0 is normal, 1 warn, 2 break path
             int *verb) // talk? 
  {
   dirty = 1; // flag to say the function has been called
@@ -424,14 +420,14 @@ int cdsolve(double tol, int M)
 
     // exit checks
     if(deviance[s]<0.0){
-      exits[s] = 1;
+      exits[s] = 2;
       shout("Warning: negative deviance.  ");
     }
     if(df[s] >= nd){
-      exits[s] = 1;
+      exits[s] = 2;
       shout("Warning: saturated model.  "); 
     }
-    if(exits[s]){
+    if(exits[s]==2){
       shout("Finishing path early.\n");
       *nlam = s; break; }
 
