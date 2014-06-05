@@ -175,7 +175,7 @@ int cdsolve(double tol, int M, int RW)
   rw = 0;
 
   // CD loop
-  while( ( (Bdiff > tol) | dozero ) & (t < M) & (rw<RW) ){
+  while( (Bdiff > tol) | dozero ){
 
     Bdiff = 0.0;
     imove = 0.0;
@@ -228,6 +228,13 @@ int cdsolve(double tol, int M, int RW)
       exitstat = 2;
       break;
     }
+
+    if(rw == RW){
+      // just break; if you hit this we assume you're limiting
+      // re-weights as an intentional approximation.
+      break;
+    }
+
 
     // check for active set update
     if(dozero == 1) dozero = 0;
@@ -319,7 +326,6 @@ int cdsolve(double tol, int M, int RW)
   vxz = new_dvec(p);
   vsum = sum_dvec(V,n);
   if(doxx){ 
-  // experimental: replace all x ops with pre-calc summaries
     copy_dvec(xbar,xbar_in,p);
     copy_dvec(vxbar,xbar,p);
     copy_dvec(vxz,xy_in,p);
@@ -331,7 +337,7 @@ int cdsolve(double tol, int M, int RW)
         xbar[j] += xv[i];
       xbar[j] *= 1.0/nd; 
     }
-    docurve();
+    if(*standardize) docurve();
   }
 
   xsd = drep(1.0,p);

@@ -9,12 +9,10 @@
 \usage{
 gamlr(x, y, 
    family=c("gaussian","binomial","poisson"),
-   gamma=0,
-   nlambda=100, lambda.start=Inf,  
-   lambda.min.ratio=0.01, free=NULL, 
-   standardize=TRUE, doxx=p<500,
-   tol=1e-7, maxit=1e4,
-   verb=FALSE, ...)
+   gamma=0,nlambda=100, lambda.start=Inf,  
+   lambda.min.ratio=0.01, free=NULL, standardize=TRUE, 
+   obsweight=rep(1,n),varweight=rep(1,p),
+   doxx=p<500,tol=1e-7, maxit=1e4,verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=NULL, select=TRUE, df=TRUE, ...)
@@ -53,14 +51,18 @@ gamlr(x, y,
     the coefficients to have standard deviation of one.  
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
+  \item{obsweight}{For \code{family="gaussian"} only, weights associated
+  with each observation in the weighted least squares objective.  For
+  other resonse families, \code{obsweights} are overwritten by IRLS weights.}
+  \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. }
   \item{doxx}{ For \code{family="gaussian"} only, whether to pre-calculate \eqn{x'x} 
       and use gradient caluculations based on this inner product.  This can lead to massive speed-ups for big-n datasets.}
-  \item{verb}{ Whether to print some output for each path segment. }
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
     maximum coordinate change times deviance curvature after full parameter-set update. }
   \item{maxit}{ Max iterations for a single segment
          coordinate descent routine. }
+  \item{verb}{ Whether to print some output for each path segment. }
    \item{object}{ A gamlr object.}
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}

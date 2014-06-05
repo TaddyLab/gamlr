@@ -11,6 +11,8 @@ gamlr <- function(x, y,
             lambda.min.ratio=0.01, 
             free=NULL, 
             standardize=TRUE, 
+            obsweight=rep(1,n),
+            varweight=rep(1,p),
             doxx=p<500,  
             tol=1e-7, 
             maxit=1e4,
@@ -23,9 +25,11 @@ gamlr <- function(x, y,
   famid = switch(family, 
     "gaussian"=1, "binomial"=2, "poisson"=3)
 
-  ## data formatting (more follows)
+  ## data checking (more follows)
   y <- checky(y,family)
   n <- length(y)
+  stopifnot(all(obsweight>0))
+  stopifnot(length(obsweight)==n)
 
   ## extras
   xtr = list(...)
@@ -37,20 +41,13 @@ gamlr <- function(x, y,
   if(is.null(xtr$maxrw)) xtr$maxrw = 1e5 # practically inf
   maxrw = xtr$maxrw
 
-  ## fixed shifts for poisson
+  ## fixed shifts 
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
     if(family=="gaussian") y = y-xtr$fix
     else eta <- xtr$fix   } 
   stopifnot(length(eta)==n)
   eta <- as.double(eta)
-
-  ## observation weights
-  if(!is.null(xtr$obsweight)){
-    obsweight <- xtr$obsweight
-    stopifnot(all(obsweight>0))
-    stopifnot(length(obsweight)==n)
-  } else obsweight <- as.double(rep(1,n))
 
   ## get x dimension and names
   if(is.null(x)){
@@ -93,41 +90,9 @@ gamlr <- function(x, y,
   }
   
   ## variable (penalty) weights
-  if(!is.null(xtr$varweight)){
-    varweight <- xtr$varweight
-    stopifnot(all(varweight>=0))
-    stopifnot(length(varweight)==p)
-  } else{ varweight <- rep(1,p) }
+  stopifnot(all(varweight>=0))
+  stopifnot(length(varweight)==p)
   varweight[free] <- 0
-  varweight <- as.double(varweight)
-
-  ## DOXX
-  doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
-  if(doxx){
-    if(is.null(xtr$xx))
-      xtr$xx <- as(
-        tcrossprod(t(x*sqrt(obsweight))),
-        "matrix")
-    if(inherits(xtr$xx,"dgCMatrix"))
-      xtr$xx <- as.matrix(xtr$xx)
-    xx <- as(xtr$xx,"dspMatrix")
-    if(xx@uplo=="L") xx <- t(xx)
-    xx <- as.double(xx@x)
-    if(is.null(xtr$xbar))
-      xtr$xbar <- colMeans(x)
-    if(is.null(xtr$xy))
-      xtr$xy <- t(x)%*%y
-    xbar <- as.double(xtr$xbar)
-    xy <- as.double(as.matrix(xtr$xy))
-  } else{
-    xx <- double(0) 
-    xbar <- double(0)
-    xy <- double(0)
-  }
-
-  ## final x formatting
-  x=as(x,"dgCMatrix") 
-  stopifnot(all(is.finite(x@x)))
 
   ## check and clean all arguments
   stopifnot(lambda.min.ratio<=1)
@@ -150,6 +115,35 @@ gamlr <- function(x, y,
   stopifnot(length(gamvec)==p)
   gamvec[free] <- 0
 
+  ## DOXX stuff
+  doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
+  if(doxx){
+    if(is.null(xtr$xx))
+      xtr$xx <- as(
+        tcrossprod(t(x*sqrt(obsweight))),
+        "matrix")
+    if(inherits(xtr$xx,"dgCMatrix"))
+      xtr$xx <- as.matrix(xtr$xx)
+    xx <- as(xtr$xx,"dspMatrix")
+    if(xx@uplo=="L") xx <- t(xx)
+    xx <- as.double(xx@x)
+    if(is.null(xtr$xbar))
+      xtr$xbar <- colMeans(x*obsweight)
+    if(is.null(xtr$xy))
+      xtr$xy <- t(x)%*%(y*obsweight)
+    xbar <- as.double(xtr$xbar)
+    xy <- as.double(as.matrix(xtr$xy))
+  } else{
+    xx <- double(0) 
+    xbar <- double(0)
+    xy <- double(0)
+  }
+
+  ## final x formatting
+  x=as(x,"dgCMatrix") 
+  stopifnot(all(is.finite(x@x)))
+
+
   ## drop it like it's hot
   fit <- .C("gamlr",
             famid=as.integer(famid), 
@@ -165,8 +159,8 @@ gamlr <- function(x, y,
             xbar=xbar,
             xy=xy,
             eta=eta,
-            varweight=varweight,
-            obsweight=obsweight,
+            varweight=as.double(varweight),
+            obsweight=as.double(obsweight),
             standardize=as.integer(standardize>0),
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
@@ -218,7 +212,7 @@ gamlr <- function(x, y,
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
   ## iterations
-  iter <- cbind(npass=head(fit$maxit,nlambda),
+  iter <- cbind(ncycle=head(fit$maxit,nlambda),
                 nreweight=head(fit$maxrw,nlambda))
   rownames(iter) <- names(alpha)
 
@@ -261,7 +255,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     x$beta <- x$beta[-x$free,,drop=FALSE]
   p <- nrow(x$beta) 
   nzr <- unique(x$beta@i)+1
-  if(length(nzr)==0 | (x$lambda==0)) return("nothing to plot")
+  if(length(nzr)==0 | (x$lambda[1]==0)) return("nothing to plot")
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
   if(!is.null(col)){
