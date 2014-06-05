@@ -251,7 +251,7 @@ plot.gamlr <- function(x, against=c("pen","dev"),
     x$beta <- x$beta[-x$free,,drop=FALSE]
   p <- nrow(x$beta) 
   nzr <- unique(x$beta@i)+1
-  if(length(nzr)==0) return("nothing to plot")
+  if(length(nzr)==0 | (x$lambda==0)) return("nothing to plot")
   beta <- as.matrix(x$beta[nzr,,drop=FALSE])
 
   if(!is.null(col)){
@@ -269,7 +269,8 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   } else
     stop("unrecognized 'against' argument.")
 
-  if(!is.finite(xv[1])) stop("refusing to plot an unconverged fit")
+  if(!is.finite(xv[1])) 
+    stop("refusing to plot an unconverged fit")
 
   argl = list(...)
   if(is.null(argl$ylim)) argl$ylim=range(beta)
