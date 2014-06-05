@@ -33,6 +33,10 @@ gamlr <- function(x, y,
   ## alias from glmnet terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
 
+  ## max re-weights
+  if(is.null(xtr$maxrw)) xtr$maxrw = 1e5 # practically inf
+  maxrw = xtr$maxrw
+
   ## fixed shifts for poisson
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
@@ -168,7 +172,8 @@ gamlr <- function(x, y,
             delta=as.double(delta),
             gamma=gamvec,
             tol=as.double(tol),
-            maxit=as.integer(maxit),
+            maxit=as.integer(rep(maxit,nlambda)),
+            maxrw=as.integer(rep(maxrw,nlambda)),
             lambda=as.double(lambda),
             deviance=double(nlambda),
             df=double(nlambda),
@@ -212,6 +217,11 @@ gamlr <- function(x, y,
   df <- head(fit$df,nlambda)
   names(df) <- names(dev) <- names(lambda) <- names(alpha)
 
+  ## iterations
+  iter <- cbind(npass=head(fit$maxit,nlambda),
+                nreweight=head(fit$maxrw,nlambda))
+  rownames(iter) <- names(alpha)
+
   ## build return object and exit
   out <- list(lambda=lambda, 
              gamma=gamma,
@@ -221,7 +231,7 @@ gamlr <- function(x, y,
              beta=beta, 
              df=df,
              deviance=dev,
-             totalpass=fit$maxit,
+             iter=iter,
              free=free,
              call=sys.call(1)) 
 

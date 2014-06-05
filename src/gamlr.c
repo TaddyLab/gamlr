@@ -39,7 +39,7 @@ double *vxbar = NULL;
 double *vxz = NULL;
 double vsum;
 
-unsigned int itertotal,npass;
+unsigned int npass,nrw;
 
 double l1pen;
 
@@ -161,9 +161,9 @@ void dograd(int j){
 }
 
 /* coordinate descent for log penalized regression */
-int cdsolve(double tol, int M)
+int cdsolve(double tol, int M, int RW)
 {
-  int t,i,j,dozero,dopen,exitstat; 
+  int rw,t,i,j,dozero,dopen,exitstat; 
   double dbet,imove,Bdiff;
 
   // initialize
@@ -172,14 +172,16 @@ int cdsolve(double tol, int M)
   exitstat = 0;
   dozero = 1;
   t = 0;
+  rw = 0;
 
   // CD loop
-  while( ( (Bdiff > tol) | dozero ) & (t < M) ){
+  while( ( (Bdiff > tol) | dozero ) & (t < M) & (rw<RW) ){
 
     Bdiff = 0.0;
     imove = 0.0;
     if(dozero)
       if(fam!=1){
+          rw +=1;
           vsum = reweight(n, A, E, Y, V, Z, &exitstat);
           docurve();
           dbet = intercept(n, E, V, Z, vsum)-A;
@@ -243,7 +245,8 @@ int cdsolve(double tol, int M)
           E[xi[i]] += xv[i]*B[j];
   }
 
-  npass = t; 
+  npass = t;
+  nrw = rw; 
   return exitstat;
 }
 
@@ -274,6 +277,7 @@ int cdsolve(double tol, int M)
             double *gamvec,  // gamma in the GL paper
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
+            int *maxrw, // max irls reweights
             double *lambda, // output lambda
             double *deviance, // output deviance
             double *df, // output df
@@ -343,7 +347,6 @@ int cdsolve(double tol, int M)
   G = new_dzero(p);
   ag0 = new_dzero(p);
   gam = gamvec;
-  npass = itertotal = 0;
 
   // some local variables
   double Lold, NLLHD, NLsat;
@@ -391,10 +394,11 @@ int cdsolve(double tol, int M)
     l1pen = lambda[s]*nd;
 
     // run descent
-    exits[s] = cdsolve(*thresh,*maxit);
+    exits[s] = cdsolve(*thresh,maxit[s],maxrw[s]);
 
     // update parameters and objective
-    itertotal += npass;
+    maxit[s] = npass;
+    maxrw[s] = nrw;
     Lold = NLLHD;
     if( (s==0) | (N>0) )NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
@@ -434,7 +438,6 @@ int cdsolve(double tol, int M)
     itime = interact(itime); 
   }
 
-  *maxit = itertotal;
   gamlr_cleanup();
 }
 

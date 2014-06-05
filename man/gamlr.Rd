@@ -105,7 +105,7 @@ to the same domain as \code{y}.}
   \item{df}{Approximate degrees of freedom.}
   \item{deviance}{Fitted deviance: 
   \eqn{(-2/\phi)}( logLHD.fitted - logLHD.saturated ). }
-  \item{totalpass}{Total number of coordinate descent cycles. }
+  \item{iter}{Number of optimization iterations by segment, broken into coordinate descent cycles and IRLS re-weightings for \code{family!="gaussian"}. }
   \item{family}{The exponential family model.}
 }
 \author{
