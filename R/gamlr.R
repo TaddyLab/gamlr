@@ -52,8 +52,7 @@ gamlr <- function(x, y,
   ## get x dimension and names
   if(is.null(x)){
     nox <- TRUE
-    if(any(c(
-      family!="gaussian",
+    if(any(c(family!="gaussian",
       is.null(xtr$xx),
       is.null(xtr$xy),
       is.null(xtr$xbar))))
@@ -118,6 +117,9 @@ gamlr <- function(x, y,
   ## DOXX stuff
   doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
   if(doxx){
+    if(is.null(xtr$xbar))
+      xtr$xbar <- colMeans(x*obsweight)
+    xbar <- as.double(xtr$xbar)
     if(is.null(xtr$xx))
       xtr$xx <- as(
         tcrossprod(t(x*sqrt(obsweight))),
@@ -127,16 +129,13 @@ gamlr <- function(x, y,
     xx <- as(xtr$xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
     xx <- as.double(xx@x)
-    if(is.null(xtr$xbar))
-      xtr$xbar <- colMeans(x*obsweight)
     if(is.null(xtr$xy))
       xtr$xy <- t(x)%*%(y*obsweight)
-    xbar <- as.double(xtr$xbar)
     xy <- as.double(as.matrix(xtr$xy))
   } else{
+    xbar <- double(p)
     xx <- double(0) 
-    xbar <- double(0)
-    xy <- double(0)
+    xy <- double(p)
   }
 
   ## final x formatting
@@ -155,8 +154,8 @@ gamlr <- function(x, y,
             xv=as.double(x@x),
             y=y,
             doxx=as.integer(doxx),
-            xx=xx,
             xbar=xbar,
+            xx=xx,
             xy=xy,
             eta=eta,
             varweight=as.double(varweight),

@@ -51,12 +51,10 @@ gamlr(x, y,
     the coefficients to have standard deviation of one.  
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
-  \item{obsweight}{For \code{family="gaussian"} only, weights associated
-  with each observation in the weighted least squares objective.  For
+  \item{obsweight}{For \code{family="gaussian"} only, weights on each observation in the weighted least squares objective.  For
   other resonse families, \code{obsweights} are overwritten by IRLS weights.}
   \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. }
-  \item{doxx}{ For \code{family="gaussian"} only, whether to pre-calculate \eqn{x'x} 
-      and use gradient caluculations based on this inner product.  This can lead to massive speed-ups for big-n datasets.}
+  \item{doxx}{ For \code{family="gaussian"} only, whether to pre-calculate \eqn{X'VX}, where \eqn{V} are possible weights on the least-squares objective (\code{obsweights}), and use gradient caluculations based on this inner product.  This can lead to massive speed-ups for big-n datasets. See details for doing the pre-calculation yourself.}
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
     maximum coordinate change times deviance curvature after full parameter-set update. }
@@ -91,6 +89,8 @@ to the same domain as \code{y}.}
   exponential family dispersion parameter (\eqn{\sigma^2} for
   \code{family="gaussian"}, one otherwise).  Weights \eqn{\omega_j} are  
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
+
+  With \code{doxx=TRUE} and \code{family="gaussian"}, you have the option to pre-calculate [possibly weighted] sufficient statistics \code{xx} (\eqn{X'VX}), \code{xy} (\eqn{VX'y}), and \code{xbar} (weighted mean) and pass these as extra arguments.  For really Big Data you can then run with \code{x=NULL}; note that in this case our deviance calculations are incorrect and selection rules will always return the smallest-lambda model.
 
  \code{plot.gamlr} can be used to graph the results: it 
  shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis and minimum AICc selection marked.  

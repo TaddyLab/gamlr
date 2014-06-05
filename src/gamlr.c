@@ -25,8 +25,10 @@ double *W = NULL;
 double *V = NULL;
 double *gam = NULL;
 
-double *xxv = NULL;
 int doxx;
+double *vxbar = NULL;
+double *vxz = NULL;
+double *vxx = NULL;
 
 // variables to be created
 double *omega = NULL;
@@ -35,18 +37,14 @@ double A;
 double *B = NULL;
 double *E = NULL;
 double *Z = NULL;
-double *vxbar = NULL;
-double *vxz = NULL;
 double vsum;
 
 unsigned int npass,nrw;
-
 double l1pen;
 
 double ysum,ybar;
 double *xbar = NULL;
 double *xsd = NULL;
-
 double *H = NULL;
 double *G = NULL;
 double *ag0 = NULL;
@@ -60,8 +58,8 @@ double (*reweight)(int, double, double*,
 void gamlr_cleanup(){
   if(!dirty) return;
 
-  if(xbar){ free(xbar); xbar = NULL; }
   if(xsd){ free(xsd); xsd = NULL; }
+  if(xbar){ free(xbar); xbar = NULL; }
 
   if(B){ free(B); B = NULL; }
   if(G){ free(G); G = NULL; }
@@ -70,8 +68,6 @@ void gamlr_cleanup(){
 
   if(omega){ free(omega); omega = NULL; }
   if(Z){ free(Z); Z = NULL; }
-  if(vxbar){ free(vxbar); vxbar = NULL; }
-  if(vxz){ free(vxz); vxz = NULL; }
 
   dirty = 0;
 }
@@ -145,12 +141,12 @@ void docurve(void){
 void dograd(int j){
   int k;
   if(doxx){
-    G[j] = -vxz[j] + A*vxbar[j]*vsum;
+    G[j] = -vxz[j] + A*vxbar[j]*vsum; // this line seems wrong!!
     int jind = j*(j+1)/2;
     for(k=0; k<j; k++)
-      G[j] += xxv[jind+k]*B[k];
+      G[j] += vxx[jind+k]*B[k];
     for(k=j; k<p; k++)
-      G[j] += xxv[k*(k+1)/2 + j]*B[k];
+      G[j] += vxx[k*(k+1)/2 + j]*B[k];
   } 
   else{  
     G[j] = grad(xp[j+1]-xp[j], 
@@ -271,10 +267,10 @@ int cdsolve(double tol, int M, int RW)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
-            int *doxx_in, // indicator for pre-calc xx
-            double *xxv_in, // dense columns of upper tri for xx
-            double *xbar_in, // input mean values
-            double *xy_in, // correlation between x and y
+            int *doxx_in, // indicator for using covariance updates
+            double *vxbar_in, // input weighted mean values
+            double *vxx_in, // dense columns of upper tri for XVX
+            double *vxz_in, // weighted correlation between x and y
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
@@ -314,33 +310,33 @@ int cdsolve(double tol, int M, int RW)
   xp = xp_in;
   xv = xv_in;
   doxx = *doxx_in;
-  xxv = xxv_in;
 
-  xbar = new_dzero(p);
+  vxbar = vxbar_in;
+  vxx = vxx_in;
+  vxz = vxz_in;
+
   H = new_dvec(p);
   W = varweight;
   omega = drep(1.0,p);  // gamma lasso adaptations
-  V = obsweight;
   Z = new_dup_dvec(Y,n);
-  vxbar = new_dvec(p);
-  vxz = new_dvec(p);
+  V = obsweight;
   vsum = sum_dvec(V,n);
+
+  xbar = new_dzero(p);
+  xsd = drep(1.0,p);
+
   if(doxx){ 
-    copy_dvec(xbar,xbar_in,p);
-    copy_dvec(vxbar,xbar,p);
-    copy_dvec(vxz,xy_in,p);
     for(int j=0; j<p; j++)
-      H[j] = xxv[j*(j+1)/2+j] - xbar[j]*xbar[j]*((double) n);
+      H[j] = vxx[j*(j+1)/2+j]; 
   } else{
     for(int j=0; j<p; j++){
       for(int i=xp[j]; i<xp[j+1]; i++) 
         xbar[j] += xv[i];
       xbar[j] *= 1.0/nd; 
     }
-    if(*standardize) docurve();
+    if(*standardize | (fam==1)) docurve();
   }
 
-  xsd = drep(1.0,p);
   if(*standardize){
     for(int j=0; j<p; j++){
       if(fabs(H[j])<1e-10){ H[j]=0.0; W[j] = INFINITY; }
@@ -406,7 +402,7 @@ int cdsolve(double tol, int M, int RW)
     maxit[s] = npass;
     maxrw[s] = nrw;
     Lold = NLLHD;
-    if( (s==0) | (N>0) )NLLHD =  nllhd(n, A, E, Y, V);
+    if( (s==0) | (N>0) ) NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
