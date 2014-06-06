@@ -13,7 +13,7 @@ gamlr <- function(x, y,
             standardize=TRUE, 
             obsweight=rep(1,n),
             varweight=rep(1,p),
-            doxx=p<500,  
+            prexx=p<500,  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -34,8 +34,9 @@ gamlr <- function(x, y,
   ## extras
   xtr = list(...)
 
-  ## alias from glmnet terminology
+  ## aliases from glmnet or previous gamlr terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
+  if(!is.null(xtr$doxx)) prexx = xtr$doxx
 
   ## max re-weights
   if(is.null(xtr$maxrw)) xtr$maxrw = 1e5 # practically inf
@@ -51,18 +52,17 @@ gamlr <- function(x, y,
 
   ## get x dimension and names
   if(is.null(x)){
-    nox <- TRUE
     if(any(c(family!="gaussian",
-      is.null(xtr$xx),
-      is.null(xtr$xy),
-      is.null(xtr$xsum))))
-        stop("xx,xy,xsum are NULL or family!=`gaussian'; 
+      is.null(xtr$vxx),
+      is.null(xtr$vxy),
+      is.null(xtr$vxsum),
+      is.null(xtr$xbar))))
+        stop("xx,xy,xsum,xbar are NULL or family!=`gaussian'; 
           this is not allowed if x=NULL")
-    p <- length(xtr$xsum)
-    varnames <- names(xtr$xsum) 
+    p <- length(xtr$xbar)
+    varnames <- names(xtr$xbar) 
     x <- Matrix(0)
   } else{
-    nox <- FALSE
     if(inherits(x,"numeric")) x <- matrix(x)
     if(inherits(x,"data.frame")) x <- as.matrix(x)
     if(inherits(x,"simple_triplet_matrix"))
@@ -98,7 +98,9 @@ gamlr <- function(x, y,
   stopifnot(all(c(nlambda,lambda.min.ratio)>0))
   stopifnot(all(c(lambda.start)>=0))
   stopifnot(all(c(tol,maxit)>0))
-  if(lambda.start==0) nlambda <- 1
+  if(lambda.start==0){
+    nlambda <- 1
+    standardize <- 0 }
   lambda <- double(nlambda)
   lambda[1] <- lambda.start
 
@@ -115,24 +117,31 @@ gamlr <- function(x, y,
   gamvec[free] <- 0
 
   ## DOXX stuff
-  doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
-  if(doxx){
-    if(is.null(xtr$xsum))
-      xtr$xsum <- colSums(x*obsweight)
-    xsum <- as.double(xtr$xsum)
-    if(is.null(xtr$xx))
-      xtr$xx <- crossprod(x*sqrt(obsweight))
-    xx <- Matrix(xtr$xx,sparse=FALSE)
-    xx <- as(xx,"dspMatrix")
-    if(xx@uplo=="L") xx <- t(xx)
-    xx <- as.double(xx@x)
-    if(is.null(xtr$xy))
-      xtr$xy <- drop(crossprod(x,y*obsweight))
-    xy <- as.double(drop(xtr$xy))
+  prexx = (!is.null(xtr$vxx) | prexx) & (family=="gaussian")
+  if(prexx){
+    if(is.null(xtr$xbar))
+      xtr$xbar <- colMeans(x)
+    xbar <- as.double(xtr$xbar)
+    if(is.null(xtr$vxsum))
+      xtr$vxsum <- colSums(x*obsweight)
+    vxsum <- as.double(xtr$vxsum)
+    if(is.null(xtr$vxx))
+      xtr$vxx <- crossprod(x*sqrt(obsweight))
+    vxx <- Matrix(xtr$vxx,sparse=FALSE)
+    vxx <- as(vxx,"dspMatrix")
+    stopifnot(ncol(vxx)==p)
+    if(vxx@uplo=="L") vxx <- t(vxx)
+    vxx <- as.double(vxx@x)
+    if(is.null(xtr$vxy))
+      xtr$vxy <- drop(crossprod(x,y*obsweight))
+    vxy <- as.double(drop(xtr$vxy))
+    stopifnot(all(p==
+      c(length(xbar),length(vxsum),length(vxy))))
   } else{
-    xsum <- double(p)
-    xx <- double(0) 
-    xy <- double(p)
+    xbar <- double(p)
+    vxsum <- double(p)
+    vxx <- double(0) 
+    vxy <- double(p)
   }
 
   ## final x formatting
@@ -150,10 +159,11 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
-            doxx=as.integer(doxx),
-            xsum=xsum,
-            xx=xx,
-            xy=xy,
+            prexx=as.integer(prexx),
+            xbar=xbar,
+            xsum=vxsum,
+            xx=vxx,
+            xy=vxy,
             eta=eta,
             varweight=as.double(varweight),
             obsweight=as.double(obsweight),
@@ -185,14 +195,6 @@ gamlr <- function(x, y,
 
   if(any(fit$exits==1)) 
     warning("numerically perfect fit for some observations.")
-
-
-  if(nox & nlambda>1){
-    cat("Note: With x=NULL, our deviance calculations are incorrect.  
-      Selection rules will return the smallest-lambda model.\n")
-    fit$deviance <- rep(1e10,nlambda)
-    fit$deviance[nlambda] <- 0
-  }
 
   alpha <- head(fit$alpha,nlambda)
   names(alpha) <- paste0('seg',(1:nlambda))

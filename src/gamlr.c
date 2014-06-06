@@ -25,7 +25,8 @@ double *W = NULL;
 double *V = NULL;
 double *gam = NULL;
 
-int doxx;
+int prexx;
+double *xbar = NULL;
 double *vxsum = NULL;
 double *vxz = NULL;
 double *vxx = NULL;
@@ -43,8 +44,6 @@ unsigned int npass,nrw;
 double l1pen;
 
 double ysum,ybar;
-double *xbar = NULL;
-double *xsd = NULL;
 double *H = NULL;
 double *G = NULL;
 double *ag0 = NULL;
@@ -57,9 +56,6 @@ double (*reweight)(int, double, double*,
 /* global cleanup function */
 void gamlr_cleanup(){
   if(!dirty) return;
-
-  if(xsd){ free(xsd); xsd = NULL; }
-  if(xbar){ free(xbar); xbar = NULL; }
 
   if(B){ free(B); B = NULL; }
   if(G){ free(G); G = NULL; }
@@ -81,7 +77,7 @@ double dof(int s, double *lam, double L){
   //calculate absolute grads
   for(j=0; j<p; j++)
     if(isfinite(W[j]) & (B[j]==0.0))
-      ag0[j] = fabs(G[j])/(xsd[j]*W[j]);
+      ag0[j] = fabs(G[j])/W[j];
 
   // initialization  
   if(s==0){
@@ -117,9 +113,9 @@ double Bmove(int j)
   // unpenalized
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])*xsd[j].
+    // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
     double pen, ghb;
-    pen = xsd[j]*l1pen*W[j]*omega[j];
+    pen = l1pen*W[j]*omega[j];
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < pen) dbet = -B[j];
     else dbet = -(G[j]-sign(ghb)*pen)/H[j];
@@ -140,7 +136,7 @@ void docurve(void){
 
 void dograd(int j){
   int k;
-  if(doxx){
+  if(prexx){
     G[j] = -vxz[j] + A*vxsum[j]; 
     int jind = j*(j+1)/2;
     for(k=0; k<j; k++)
@@ -204,7 +200,7 @@ int cdsolve(double tol, int M, int RW)
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        if(!doxx)
+        if(!prexx)
           for(i=xp[j]; i<xp[j+1]; i++)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxsum[j]*dbet/vsum;
@@ -239,7 +235,7 @@ int cdsolve(double tol, int M, int RW)
   }
 
   // calc preds if they were skipped
-  if(doxx & (N>0)){
+  if(prexx & (N>0)){
     // got to figure out what to do with this if N=0
     zero_dvec(E,n);
     for(j=0; j<p; j++)
@@ -267,10 +263,11 @@ int cdsolve(double tol, int M, int RW)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
-            int *doxx_in, // indicator for using covariance updates
+            int *prexx_in, // indicator for using covariance updates
+            double *xbar_in,  // un-weighted covariate means
             double *vxsum_in, // weighted sums of x values
             double *vxx_in, // dense columns of upper tri for XVX
-            double *vxz_in, // weighted correlation between x and y
+            double *vxy_in, // weighted correlation between x and y
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
@@ -309,38 +306,37 @@ int cdsolve(double tol, int M, int RW)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
-  doxx = *doxx_in;
-
+  prexx = *prexx_in;
+  xbar = xbar_in;
   vxsum = vxsum_in;
   vxx = vxx_in;
-  vxz = vxz_in;
+  vxz = vxy_in;
 
   H = new_dvec(p);
   W = varweight;
   omega = drep(1.0,p);  // gamma lasso adaptations
   Z = new_dup_dvec(Y,n);
   V = obsweight;
-  vsum = sum_dvec(V,n);
+  vsum = sum_dvec(V,n);    
 
-  xbar = new_dzero(p);
-  xsd = drep(1.0,p);
-
-  if(doxx){ 
+  if(prexx){ 
     for(int j=0; j<p; j++)
-      H[j] = vxx[j*(j+1)/2+j]; 
-  } else{
+      H[j] = vxx[j*(j+1)/2+j] 
+        + xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
+  } 
+  else{
     for(int j=0; j<p; j++){
+      xbar[j] = 0.0;
       for(int i=xp[j]; i<xp[j+1]; i++) 
         xbar[j] += xv[i];
-      xbar[j] *= 1.0/nd; 
-    }
-    if(*standardize | (fam==1)) docurve();
+      xbar[j] *= 1.0/nd; }
+    if(*standardize | (fam==1)) docurve(); 
   }
 
   if(*standardize){
     for(int j=0; j<p; j++){
       if(fabs(H[j])<1e-10){ H[j]=0.0; W[j] = INFINITY; }
-      else xsd[j] = sqrt(H[j]/vsum);
+      else W[j] *= sqrt(H[j]/vsum);
     }
   }
 
@@ -402,7 +398,8 @@ int cdsolve(double tol, int M, int RW)
     maxit[s] = npass;
     maxrw[s] = nrw;
     Lold = NLLHD;
-    if( (s==0) | (N>0) ) NLLHD =  nllhd(n, A, E, Y, V);
+    if( (N>0) | (s==0) ) 
+      NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
     df[s] = dof(s, lambda, NLLHD);
     alpha[s] = A;
@@ -440,6 +437,9 @@ int cdsolve(double tol, int M, int RW)
     itime = interact(itime); 
   }
 
+  // deviance calcs are wrong for null X
+  // so we just make the last model look best
+  if( (N==0) & (s>0) ) deviance[*nlam-1] = 0.0;
   gamlr_cleanup();
 }
 

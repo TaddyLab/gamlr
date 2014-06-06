@@ -12,7 +12,7 @@ gamlr(x, y,
    gamma=0,nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, standardize=TRUE, 
    obsweight=rep(1,n),varweight=rep(1,p),
-   doxx=p<500,tol=1e-7, maxit=1e4,verb=FALSE, ...)
+   prexx=p<500,tol=1e-7,maxit=1e4,verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=NULL, select=TRUE, df=TRUE, ...)
@@ -29,7 +29,7 @@ gamlr(x, y,
       This should not include the intercept.}
   \item{y}{A vector of response values. 
       There is almost no argument checking, 
-      so be careful to match \code{y} with the appropriate \code{family}. 
+      so be careful to match \code{y} with the appropriate \code{family}
       }
   \item{family}{ Response model type; 
   either "gaussian", "poisson", or "binomial".  
@@ -53,8 +53,8 @@ gamlr(x, y,
     by each coefficient standard deviation. }
   \item{obsweight}{For \code{family="gaussian"} only, weights on each observation in the weighted least squares objective.  For
   other resonse families, \code{obsweights} are overwritten by IRLS weights.}
-  \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. }
-  \item{doxx}{ For \code{family="gaussian"} only, whether to pre-calculate \eqn{X'VX}, \eqn{y'VX}, and column sums of \eqn{VX}, where \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}). Gradient calculations are then made via these inner products.  This can lead to massive speed-ups for big-n datasets. See details.}
+  \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. These are further multiplied by \eqn{sd(x_j)} if \code{standardize=TRUE}}
+  \item{prexx}{ For \code{family="gaussian"} only, whether to pre-calculate variable means and covariances; gradient calculations are then made via these inner products.  This can lead to massive speed-ups for big-n datasets. See details.}
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
     maximum coordinate change times deviance curvature after full parameter-set update. }
@@ -90,7 +90,7 @@ to the same domain as \code{y}.}
   \code{family="gaussian"}, one otherwise).  Weights \eqn{\omega_j} are  
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
-  It is not necessary (they will be calculated for you otherwise), but with \code{doxx=TRUE} (and \code{family="gaussian"}), you have the option to pre-calculate [possibly weighted] sufficient statistics \code{xx}, \code{xy}, and \code{xsum} and pass these as extra arguments.  For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable); note that in this case our deviance calculations are incorrect and selection rules will always return the smallest-lambda model.
+  Under \code{prexx=TRUE} (and \code{family="gaussian"}), weighted covariances \eqn{(VX)'X} and \eqn{(VX)'y}, weighted column sums of \eqn{VX}, and column means \eqn{\bar{x}} will be pre-calculated. Here \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}).  It is not necessary (they will be calculated for you otherwise) but you have the option to pre-calculate these sufficient statistics yourself as arguments \code{vxx} (\code{matrix} or \code{dspMatrix}), \code{vxy}, \code{vxsum}, and \code{xbar} (all \code{vectors}) respectively.  Note that \code{xbar} is an \emph{unweighted} calculation, even if \eqn{V \neq I}.   For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable). \emph{Beware:} in this \code{x=NULL} case our deviance (and df, if \code{gamma>0}) calculations are incorrect and selection rules will always return the smallest-lambda model.
 
  \code{plot.gamlr} can be used to graph the results: it 
  shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis and minimum AICc selection marked.  
