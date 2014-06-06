@@ -26,7 +26,7 @@ double *V = NULL;
 double *gam = NULL;
 
 int doxx;
-double *vxbar = NULL;
+double *vxsum = NULL;
 double *vxz = NULL;
 double *vxx = NULL;
 
@@ -118,7 +118,7 @@ double Bmove(int j)
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
     // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])*xsd[j].
-    double pen,ghb;
+    double pen, ghb;
     pen = xsd[j]*l1pen*W[j]*omega[j];
     ghb = (G[j] - H[j]*B[j]);
     if(fabs(ghb) < pen) dbet = -B[j];
@@ -131,7 +131,7 @@ void docurve(void){
   for(int j=0; j<p; j++){
     H[j] = curve(xp[j+1]-xp[j], 
         &xv[xp[j]], &xi[xp[j]], xbar[j],
-        V, vsum, &vxbar[j]);
+        V, vsum, &vxsum[j]);
     vxz[j] = 0.0;
     for(int i=xp[j]; i<xp[j+1]; i++)
       vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
@@ -141,7 +141,7 @@ void docurve(void){
 void dograd(int j){
   int k;
   if(doxx){
-    G[j] = -vxz[j] + A*vxbar[j]*vsum; // this line seems wrong!!
+    G[j] = -vxz[j] + A*vxsum[j]; 
     int jind = j*(j+1)/2;
     for(k=0; k<j; k++)
       G[j] += vxx[jind+k]*B[k];
@@ -151,7 +151,7 @@ void dograd(int j){
   else{  
     G[j] = grad(xp[j+1]-xp[j], 
       &xv[xp[j]], &xi[xp[j]], 
-      vxbar[j]*vsum, vxz[j],
+      vxsum[j], vxz[j],
       A, E, V); 
   }
 }
@@ -207,7 +207,7 @@ int cdsolve(double tol, int M, int RW)
         if(!doxx)
           for(i=xp[j]; i<xp[j+1]; i++)
             E[xi[i]] += xv[i]*dbet; 
-        A += -vxbar[j]*dbet;
+        A += -vxsum[j]*dbet/vsum;
         Bdiff = fmax(Bdiff,H[j]*dbet*dbet);
       }
     }
@@ -268,7 +268,7 @@ int cdsolve(double tol, int M, int RW)
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
             int *doxx_in, // indicator for using covariance updates
-            double *vxbar_in, // input weighted mean values
+            double *vxsum_in, // weighted sums of x values
             double *vxx_in, // dense columns of upper tri for XVX
             double *vxz_in, // weighted correlation between x and y
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
@@ -311,7 +311,7 @@ int cdsolve(double tol, int M, int RW)
   xv = xv_in;
   doxx = *doxx_in;
 
-  vxbar = vxbar_in;
+  vxsum = vxsum_in;
   vxx = vxx_in;
   vxz = vxz_in;
 

@@ -55,11 +55,11 @@ gamlr <- function(x, y,
     if(any(c(family!="gaussian",
       is.null(xtr$xx),
       is.null(xtr$xy),
-      is.null(xtr$xbar))))
-        stop("xx,xy,xbar are NULL or family!=`gaussian'; 
+      is.null(xtr$xsum))))
+        stop("xx,xy,xsum are NULL or family!=`gaussian'; 
           this is not allowed if x=NULL")
-    p <- length(xtr$xbar)
-    varnames <- names(xtr$xbar) 
+    p <- length(xtr$xsum)
+    varnames <- names(xtr$xsum) 
     x <- Matrix(0)
   } else{
     nox <- FALSE
@@ -117,9 +117,9 @@ gamlr <- function(x, y,
   ## DOXX stuff
   doxx = (!is.null(xtr$xx) | doxx) & (family=="gaussian")
   if(doxx){
-    if(is.null(xtr$xbar))
-      xtr$xbar <- colMeans(x*obsweight)
-    xbar <- as.double(xtr$xbar)
+    if(is.null(xtr$xsum))
+      xtr$xsum <- colSums(x*obsweight)
+    xsum <- as.double(xtr$xsum)
     if(is.null(xtr$xx))
       xtr$xx <- as(
         tcrossprod(t(x*sqrt(obsweight))),
@@ -133,7 +133,7 @@ gamlr <- function(x, y,
       xtr$xy <- t(x)%*%(y*obsweight)
     xy <- as.double(as.matrix(xtr$xy))
   } else{
-    xbar <- double(p)
+    xsum <- double(p)
     xx <- double(0) 
     xy <- double(p)
   }
@@ -154,7 +154,7 @@ gamlr <- function(x, y,
             xv=as.double(x@x),
             y=y,
             doxx=as.integer(doxx),
-            xbar=xbar,
+            xsum=xsum,
             xx=xx,
             xy=xy,
             eta=eta,

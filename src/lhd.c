@@ -24,18 +24,17 @@ double grad(int n, double *x, int *o,
 
 
 double curve(int n, double *x, int *o, double xm,  
-          double *v, double vsum, double *vxm){
+          double *v, double vsum, double *vxs){
   double h = 0.0;
-  double vxs = 0.0;
+  *vxs = 0.0;
 
   for(int i=0; i<n; i++){
-    vxs += x[i]*v[o[i]];
+    *vxs += x[i]*v[o[i]];
     h += x[i]*v[o[i]]*x[i];
   }
   
   // center
-  h += xm*xm*vsum - 2.0*vxs*xm;
-  *vxm = vxs/vsum;
+  h += xm*xm*vsum - 2.0*vxs[0]*xm;
 
   return h;
 }
