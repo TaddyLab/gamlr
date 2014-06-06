@@ -121,17 +121,14 @@ gamlr <- function(x, y,
       xtr$xsum <- colSums(x*obsweight)
     xsum <- as.double(xtr$xsum)
     if(is.null(xtr$xx))
-      xtr$xx <- as(
-        tcrossprod(t(x*sqrt(obsweight))),
-        "matrix")
-    if(inherits(xtr$xx,"dgCMatrix"))
-      xtr$xx <- as.matrix(xtr$xx)
+      xtr$xx <- Matrix(crossprod(x*sqrt(obsweight)),sparse=FALSE)
+    xtr$xx <- Matrix(xtr$xx,sparse=FALSE)
     xx <- as(xtr$xx,"dspMatrix")
     if(xx@uplo=="L") xx <- t(xx)
     xx <- as.double(xx@x)
     if(is.null(xtr$xy))
-      xtr$xy <- t(x)%*%(y*obsweight)
-    xy <- as.double(as.matrix(xtr$xy))
+      xtr$xy <- drop(crossprod(x,y*obsweight))
+    xy <- as.double(xtr$xy)
   } else{
     xsum <- double(p)
     xx <- double(0) 
