@@ -123,6 +123,14 @@ double Bmove(int j)
   return dbet;
 }
 
+void doxbar(void){
+  for(int j=0; j<p; j++){
+      xbar[j] = 0.0;
+      for(int i=xp[j]; i<xp[j+1]; i++) 
+        xbar[j] += xv[i];
+      xbar[j] *= 1.0/nd; }
+}
+
 void docurve(void){
   for(int j=0; j<p; j++){
     H[j] = curve(xp[j+1]-xp[j], 
@@ -306,7 +314,7 @@ int cdsolve(double tol, int M, int RW)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
-  prexx = *prexx_in;
+  prexx = prexx_in[0];
   xbar = xbar_in;
   vxsum = vxsum_in;
   vxx = vxx_in;
@@ -319,17 +327,13 @@ int cdsolve(double tol, int M, int RW)
   V = obsweight;
   vsum = sum_dvec(V,n);    
 
-  if(prexx){ 
+  if(prexx){
     for(int j=0; j<p; j++)
       H[j] = vxx[j*(j+1)/2+j] 
         + xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
   } 
   else{
-    for(int j=0; j<p; j++){
-      xbar[j] = 0.0;
-      for(int i=xp[j]; i<xp[j+1]; i++) 
-        xbar[j] += xv[i];
-      xbar[j] *= 1.0/nd; }
+    doxbar();
     if(*standardize | (fam==1)) docurve(); 
   }
 

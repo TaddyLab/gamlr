@@ -25,7 +25,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   argl$lambda.min.ratio <- tail(lambda,1)/lambda[1]
 
   ## remove any pre-calculated summaries
-  argl$xx <- argl$xbar <- argl$xy <- NULL
+  argl$vxx <- argl$vxsum <- argl$vxy <- argl$xbar <- NULL
 
   oos <- matrix(Inf, nrow=nfold, ncol=argl$nlambda,
                 dimnames=list(levels(foldid),names(lambda)))

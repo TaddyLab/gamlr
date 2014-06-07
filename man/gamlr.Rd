@@ -54,7 +54,8 @@ gamlr(x, y,
   \item{obsweight}{For \code{family="gaussian"} only, weights on each observation in the weighted least squares objective.  For
   other resonse families, \code{obsweights} are overwritten by IRLS weights.}
   \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. These are further multiplied by \eqn{sd(x_j)} if \code{standardize=TRUE}}
-  \item{prexx}{ For \code{family="gaussian"} only, whether to pre-calculate variable means and covariances; gradient calculations are then made via these inner products.  This can lead to massive speed-ups for big-n datasets. }
+  \item{prexx}{ For \code{family="gaussian"} only, whether to pre-calculate variable means and covariances; gradient calculations are then made via these inner products.  This can lead to massive speed-ups for big-n datasets. See note.
+  }
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
     maximum coordinate change times deviance curvature after full parameter-set update. }
@@ -90,8 +91,6 @@ to the same domain as \code{y}.}
   \code{family="gaussian"}, one otherwise).  Weights \eqn{\omega_j} are  
   set as \eqn{1/(1+\gamma|b_j^{t-1}|)} where \eqn{b_j^{t-1}} is our estimate of \eqn{\beta_j} for the previous path segment (or zero if \eqn{t=0}).  This adaptation is what makes the penalization `concave'; see Taddy (2013) for details.
 
-  % Under \code{prexx=TRUE} (and \code{family="gaussian"}), weighted covariances \eqn{(VX)'X} and \eqn{(VX)'y}, weighted column sums of \eqn{VX}, and column means \eqn{\bar{x}} will be pre-calculated. Here \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}).  It is not necessary (they will be calculated for you otherwise) but you have the option to pre-calculate these sufficient statistics yourself as arguments \code{vxx} (\code{matrix} or \code{dspMatrix}), \code{vxy}, \code{vxsum}, and \code{xbar} (all \code{vectors}) respectively.  Note that \code{xbar} is an \emph{unweighted} calculation, even if \eqn{V \neq I}.   For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable). \emph{Beware:} in this \code{x=NULL} case our deviance (and df, if \code{gamma>0}) calculations are incorrect and selection rules will always return the smallest-lambda model.
-
  \code{plot.gamlr} can be used to graph the results: it 
  shows the regularization paths for penalized \eqn{\beta}, with degrees of freedom along the top axis and minimum AICc selection marked.  
 
@@ -112,6 +111,8 @@ to the same domain as \code{y}.}
 }
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
+}
+\note{Under \code{prexx=TRUE} (and \code{family="gaussian"}), weighted covariances \eqn{(VX)'X} and \eqn{(VX)'y}, weighted column sums of \eqn{VX}, and column means \eqn{\bar{x}} will be pre-calculated. Here \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}).  It is not necessary (they will be calculated for you otherwise) but you have the option to pre-calculate these sufficient statistics yourself as arguments \code{vxx} (\code{matrix} or \code{dspMatrix}), \code{vxy}, \code{vxsum}, and \code{xbar} (all \code{vectors}) respectively.  Search \code{PREXX} in \code{gamlr.R} to see examples.  Note that \code{xbar} is an \emph{unweighted} calculation, even if \eqn{V \neq I}.   For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable). \emph{Beware:} in this \code{x=NULL} case our deviance (and df, if \code{gamma>0}) calculations are incorrect and selection rules will always return the smallest-lambda model.
 }
 \references{Taddy (2013), The Gamma Lasso, http://arxiv.org/abs/1308.5623}
 

@@ -116,7 +116,7 @@ gamlr <- function(x, y,
   stopifnot(length(gamvec)==p)
   gamvec[free] <- 0
 
-  ## DOXX stuff
+  ## PREXX stuff
   prexx = (!is.null(xtr$vxx) | prexx) & (family=="gaussian")
   if(prexx){
     if(is.null(xtr$xbar))
