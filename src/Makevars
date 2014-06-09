@@ -1,2 +1,1 @@
-PKG_CFLAGS = -DRPRINT -fopenmp
-PKG_LIBS = -lgomp
+PKG_CFLAGS = -DRPRINT

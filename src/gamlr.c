@@ -133,12 +133,14 @@ void doxbar(void){
 
 void docurve(void){
   for(int j=0; j<p; j++){
-    H[j] = curve(xp[j+1]-xp[j], 
-        &xv[xp[j]], &xi[xp[j]], xbar[j],
-        V, vsum, &vxsum[j]);
-    vxz[j] = 0.0;
-    for(int i=xp[j]; i<xp[j+1]; i++)
+    vxsum[j] = vxz[j] = 0.0;
+    for(int i=xp[j]; i<xp[j+1]; i++){
+      vxsum[j] += V[xi[i]]*xv[i];
       vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
+    }
+    H[j] = curve(xp[j+1]-xp[j], 
+      &xv[xp[j]], &xi[xp[j]], xbar[j],
+      V, vsum, vxsum[j]);
   }
 }
 

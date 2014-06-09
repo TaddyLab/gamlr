@@ -5,9 +5,6 @@
 #include <Rmath.h>
 #include "lhd.h"
 #include "vec.h"
-#ifdef _OPENMP
-  #include <omp.h>
-#endif
 
 // Weighted least squares functions
 double grad(int n, double *x, int *o, 
@@ -16,41 +13,10 @@ double grad(int n, double *x, int *o,
   double vi = 1.0;
   int irls = (v[0]!=0);
   double g = -vxz + a*vxsum;
-  double *vxe = NULL;
 
-#ifdef _OPENMP
-  int nt = omp_get_max_threads();
-  int step = (n + nt + 1)/nt;
-  //printf("nt %d, step %d, n %d\n",nt,step,n);
-
-  if(step>1e3){
-    vxe = new_dzero(nt);
-    #pragma omp parallel
-    {
-      int moi=omp_get_thread_num();
-      int debut=moi*step;
-      int fin=debut+step;
-      if(fin>n) fin = n;
-      //printf("moi %d, debut %d, fin %d of %d\n",moi,debut,fin,n);
-      for(int i=debut; i<fin; i++){
-        if(irls) vi = v[o[i]];
-        vxe[moi] += vi*x[i]*e[o[i]]; }
-    }
-  }
-#endif
-
-  if(vxe){
-    //printf("omp\n");
-    for(int k=0; k<nt; k++)
-      g+=vxe[k];
-    free(vxe);
-  } 
-  else{
-    //printf("serial\n");
-    for(int i=0; i<n; i++){
-      if(irls) vi = v[o[i]];
-      g += vi*x[i]*e[o[i]];
-    }
+  for(int i=0; i<n; i++){
+    if(irls) vi = v[o[i]];
+    g += vi*x[i]*e[o[i]];
   }
 
   return g;
@@ -58,17 +24,14 @@ double grad(int n, double *x, int *o,
 
 
 double curve(int n, double *x, int *o, double xm,  
-          double *v, double vsum, double *vxs){
+          double *v, double vsum, double vxs){
   double h = 0.0;
-  *vxs = 0.0;
 
-  for(int i=0; i<n; i++){
-    *vxs += x[i]*v[o[i]];
+  for(int i=0; i<n; i++)
     h += x[i]*v[o[i]]*x[i];
-  }
   
   // center
-  h += xm*xm*vsum - 2.0*vxs[0]*xm;
+  h += xm*xm*vsum - 2.0*vxs*xm;
 
   return h;
 }
