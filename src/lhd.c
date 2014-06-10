@@ -6,37 +6,9 @@
 #include "lhd.h"
 #include "vec.h"
 
-// Weighted least squares functions
-double grad(int n, double *x, int *o, 
-            double vxsum, double vxz,
-            double a, double *e, double *v){
-  double vi = 1.0;
-  int irls = (v[0]!=0);
-  double g = -vxz + a*vxsum;
 
-  for(int i=0; i<n; i++){
-    if(irls) vi = v[o[i]];
-    g += vi*x[i]*e[o[i]];
-  }
-
-  return g;
-}
-
-
-double curve(int n, double *x, int *o, double xm,  
-          double *v, double vsum, double vxs){
-  double h = 0.0;
-
-  for(int i=0; i<n; i++)
-    h += x[i]*v[o[i]]*x[i];
-  
-  // center
-  h += xm*xm*vsum - 2.0*vxs*xm;
-
-  return h;
-}
-
-double intercept(int n, double *e, double *v, double *z, double vsum){
+double intercept(int n, double *e, 
+  double *v, double *z, double vsum){
   int i;
 
   double rsum = 0.0;

@@ -133,32 +133,32 @@ void doxbar(void){
 
 void docurve(void){
   for(int j=0; j<p; j++){
-    vxsum[j] = vxz[j] = 0.0;
+    H[j] = vxsum[j] = vxz[j] = 0.0;
     for(int i=xp[j]; i<xp[j+1]; i++){
       vxsum[j] += V[xi[i]]*xv[i];
       vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
     }
-    H[j] = curve(xp[j+1]-xp[j], 
-      &xv[xp[j]], &xi[xp[j]], xbar[j],
-      V, vsum, vxsum[j]);
+    if(!prexx){
+      for(int i=xp[j]; i<xp[j+1]; i++)
+        H[j] += V[xi[i]]*xv[i]*xv[i];
+      H[j] += xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
+    }
   }
 }
 
 void dograd(int j){
   int k;
+  G[j] = -vxz[j] + A*vxsum[j]; 
   if(prexx){
-    G[j] = -vxz[j] + A*vxsum[j]; 
     int jind = j*(j+1)/2;
     for(k=0; k<j; k++)
       G[j] += vxx[jind+k]*B[k];
     for(k=j; k<p; k++)
       G[j] += vxx[k*(k+1)/2 + j]*B[k];
   } 
-  else{  
-    G[j] = grad(xp[j+1]-xp[j], 
-      &xv[xp[j]], &xi[xp[j]], 
-      vxsum[j], vxz[j],
-      A, E, V); 
+  else{
+    for(int i=xp[j]; i<xp[j+1]; i++) 
+        G[j] += V[xi[i]]*xv[i]*E[xi[i]];
   }
 }
 
