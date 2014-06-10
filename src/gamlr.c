@@ -138,11 +138,9 @@ void docurve(void){
       vxsum[j] += V[xi[i]]*xv[i];
       vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
     }
-    if(!prexx){
-      for(int i=xp[j]; i<xp[j+1]; i++)
-        H[j] += V[xi[i]]*xv[i]*xv[i];
-      H[j] += xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
-    }
+    for(int i=xp[j]; i<xp[j+1]; i++)
+      H[j] += V[xi[i]]*xv[i]*xv[i];
+    H[j] += xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
   }
 }
 
