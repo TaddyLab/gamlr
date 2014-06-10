@@ -13,7 +13,7 @@ gamlr <- function(x, y,
             standardize=TRUE, 
             obsweight=rep(1,n),
             varweight=rep(1,p),
-            prexx=p<500,  
+            doxx=(p<500)&(family=="gaussian"),  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -36,7 +36,6 @@ gamlr <- function(x, y,
 
   ## aliases from glmnet or previous gamlr terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
-  if(!is.null(xtr$doxx)) prexx = xtr$doxx
 
   ## max re-weights
   if(is.null(xtr$maxrw)) xtr$maxrw = 1e5 # practically inf
@@ -117,7 +116,7 @@ gamlr <- function(x, y,
   gamvec[free] <- 0
 
   ## PREXX stuff
-  prexx = (!is.null(xtr$vxx) | prexx) & (family=="gaussian")
+  prexx = (!is.null(xtr$vxx) | doxx) & (family=="gaussian")
   if(prexx){
     if(is.null(xtr$xbar))
       xtr$xbar <- colMeans(x)
@@ -140,8 +139,11 @@ gamlr <- function(x, y,
   } else{
     xbar <- double(p)
     vxsum <- double(p)
-    vxx <- double(0) 
     vxy <- double(p)
+    if(doxx)
+      vxx <- double((p-1)*p/2 + p)
+    else
+      vxx <- double(0)
   }
 
   ## final x formatting
@@ -159,6 +161,7 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
+            doxx=as.integer(doxx),
             prexx=as.integer(prexx),
             xbar=xbar,
             xsum=vxsum,
