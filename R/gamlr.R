@@ -11,9 +11,9 @@ gamlr <- function(x, y,
             lambda.min.ratio=0.01, 
             free=NULL, 
             standardize=TRUE, 
-            obsweight=rep(1,n),
-            varweight=rep(1,p),
-            doxx=(p<500)&(family=="gaussian"),  
+            obsweight=NULL,
+            varweight=NULL,
+            prexx=(p<500),  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -28,6 +28,14 @@ gamlr <- function(x, y,
   ## data checking (more follows)
   y <- checky(y,family)
   n <- length(y)
+
+  # observation weights
+  if(!is.null(obsweight))
+    if(family!="gaussian"){ 
+      warning("non-null obsweight are ignored for family!=gaussian")
+      obsweight <- NULL
+  }
+  if(is.null(obsweight)) obsweight <- rep(1,n)
   stopifnot(all(obsweight>0))
   stopifnot(length(obsweight)==n)
 
@@ -88,6 +96,7 @@ gamlr <- function(x, y,
   }
   
   ## variable (penalty) weights
+  if(is.null(varweight)) varweight <- rep(1,p)
   stopifnot(all(varweight>=0))
   stopifnot(length(varweight)==p)
   varweight[free] <- 0
@@ -116,7 +125,7 @@ gamlr <- function(x, y,
   gamvec[free] <- 0
 
   ## PREXX stuff
-  prexx = (!is.null(xtr$vxx) | doxx) & (family=="gaussian")
+  prexx = (prexx | !is.null(xtr$vxx)) & (family=="gaussian")
   if(prexx){
     if(is.null(xtr$xbar))
       xtr$xbar <- colMeans(x)
@@ -140,10 +149,7 @@ gamlr <- function(x, y,
     xbar <- double(p)
     vxsum <- double(p)
     vxy <- double(p)
-    if(doxx)
-      vxx <- double((p-1)*p/2 + p)
-    else
-      vxx <- double(0)
+    vxx <- double(0)
   }
 
   ## final x formatting
@@ -161,7 +167,6 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
-            doxx=as.integer(doxx),
             prexx=as.integer(prexx),
             xbar=xbar,
             xsum=vxsum,

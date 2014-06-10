@@ -11,8 +11,8 @@ gamlr(x, y,
    family=c("gaussian","binomial","poisson"),
    gamma=0,nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, standardize=TRUE, 
-   obsweight=rep(1,n),varweight=rep(1,p),
-   doxx=(p<500)&(family=="gaussian"),tol=1e-7,maxit=1e4,verb=FALSE, ...)
+   obsweight=NULL,varweight=NULL,prexx=(p<500),
+   tol=1e-7,maxit=1e4,verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=NULL, select=TRUE, df=TRUE, ...)
@@ -52,9 +52,9 @@ gamlr(x, y,
     This is equivalent to multiplying the L1 penalty 
     by each coefficient standard deviation. }
   \item{obsweight}{For \code{family="gaussian"} only, weights on each observation in the weighted least squares objective.  For
-  other resonse families, \code{obsweights} are overwritten by IRLS weights.}
-  \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. These are further multiplied by \eqn{sd(x_j)} if \code{standardize=TRUE}}
-  \item{doxx}{ Whether to use pre-calculated weighted variable covariances in gradient calculations.  This leads to massive speed-ups for big-n datasets, but can be slow for \eqn{p>n} datasets or \code{family="gaussian"} (where the covariances must be re-calculated after each re-weighting). See note.
+  other resonse families, \code{obsweights} are overwritten by IRLS weights.  Defaults to \code{rep(1,n)}.}
+  \item{varweight}{Multipliers on the penalty associated with each covariate coefficient.  Must be non-negative. These are further multiplied by \eqn{sd(x_j)} if \code{standardize=TRUE}.  Defaults to \code{rep(1,p)}.}
+  \item{prexx}{ Only possible for \code{family="gaussian"}; Whether to use pre-calculated weighted variable covariances in gradient calculations.  This leads to massive speed-ups for big-n datasets, but can be slow for \eqn{p>n} datasets. See note.
   }
   \item{tol}{ Optimization convergence tolerance relative to the null model deviance for each 
     inner coordinate-descent loop.  This is measured against the 
@@ -112,7 +112,7 @@ to the same domain as \code{y}.}
 \author{
   Matt Taddy \email{taddy@chicagobooth.edu}
 }
-\note{Under \code{doxx=TRUE}, weighted covariances \eqn{(VX)'X} and \eqn{(VX)'y}, weighted column sums of \eqn{VX}, and column means \eqn{\bar{x}} will be pre-calculated after each re-weighting. Here \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}).  For \code{family="gaussian"} only, you have the option to pre-calculate these sufficient statistics yourself as arguments \code{vxx} (\code{matrix} or \code{dspMatrix}), \code{vxy}, \code{vxsum}, and \code{xbar} (all \code{vectors}) respectively.  Search \code{PREXX} in \code{gamlr.R} to see the steps involved, and notice that there is very little argument checking -- replace with pre-calculations at your own reask.  Note that \code{xbar} is an \emph{unweighted} calculation, even if \eqn{V \neq I}.   For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable). \emph{Beware:} in this \code{x=NULL} case our deviance (and df, if \code{gamma>0}) calculations are incorrect and selection rules will always return the smallest-lambda model.
+\note{Under \code{prexx=TRUE}, weighted covariances \eqn{(VX)'X} and \eqn{(VX)'y}, weighted column sums of \eqn{VX}, and column means \eqn{\bar{x}} will be pre-calculated after each re-weighting. Here \eqn{V} is the diagonal matrix of least squares weights (\code{obsweights}, so \eqn{V} defaults to \eqn{I}).  For \code{family="gaussian"} only, you have the option to pre-calculate these sufficient statistics yourself as arguments \code{vxx} (\code{matrix} or \code{dspMatrix}), \code{vxy}, \code{vxsum}, and \code{xbar} (all \code{vectors}) respectively.  Search \code{PREXX} in \code{gamlr.R} to see the steps involved, and notice that there is very little argument checking -- replace with pre-calculations at your own reask.  Note that \code{xbar} is an \emph{unweighted} calculation, even if \eqn{V \neq I}.   For really Big Data you can then run with \code{x=NULL} (e.g., if these statistics were calculated on distributed machines and full design is unavailable). \emph{Beware:} in this \code{x=NULL} case our deviance (and df, if \code{gamma>0}) calculations are incorrect and selection rules will always return the smallest-lambda model.
 }
 \references{Taddy (2013), The Gamma Lasso, http://arxiv.org/abs/1308.5623}
 

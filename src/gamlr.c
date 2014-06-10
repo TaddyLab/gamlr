@@ -25,7 +25,7 @@ double *W = NULL;
 double *V = NULL;
 double *gam = NULL;
 
-int doxx;
+int prexx;
 double *xbar = NULL;
 double *vxsum = NULL;
 double *vxz = NULL;
@@ -132,29 +132,15 @@ void doxbar(void){
 }
 
 void docurve(void){
+  double vx;  
   for(int j=0; j<p; j++){
-    vxsum[j] = vxz[j] = 0.0;
+    H[j] = vxsum[j] = vxz[j] = 0.0;
     for(int i=xp[j]; i<xp[j+1]; i++){
-      vxsum[j] += V[xi[i]]*xv[i];
-      vxz[j] += V[xi[i]]*xv[i]*Z[xi[i]];
+      vx = V[xi[i]]*xv[i];
+      vxsum[j] += vx;
+      vxz[j] += vx*Z[xi[i]];
+      H[j] += vx*xv[i];
     }
-    if(doxx){ 
-      int jj = j*(j+1)/2;
-      for(int k=0; k<j; k++){
-        vxx[jj+k] = 0.0;
-        for(int i=xp[j]; i<xp[j+1]; i++)
-          for(int l=xp[k]; l<xp[k+1]; l++)
-            if(xi[i]==xi[l]) vxx[jj+k] += xv[i]*xv[l];
-      }
-    }
-  }
-  for(int j=0; j<p; j++){
-    H[j] = 0.0;
-    if(doxx)
-      H[j] = vxx[j*(j+1)/2+j];
-    else
-      for(int i=xp[j]; i<xp[j+1]; i++)
-        H[j] += V[xi[i]]*xv[i]*xv[i];
     H[j] += xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
   }
 }
@@ -162,7 +148,7 @@ void docurve(void){
 void dograd(int j){
   int k;
   G[j] = -vxz[j] + A*vxsum[j]; 
-  if(doxx){
+  if(prexx){
     int jind = j*(j+1)/2;
     for(k=0; k<j; k++)
       G[j] += vxx[jind+k]*B[k];
@@ -223,7 +209,7 @@ int cdsolve(double tol, int M, int RW)
       dbet = Bmove(j);
       if(dbet!=0.0){ 
         B[j] += dbet;
-        if(!doxx)
+        if(!prexx)
           for(i=xp[j]; i<xp[j+1]; i++)
             E[xi[i]] += xv[i]*dbet; 
         A += -vxsum[j]*dbet/vsum;
@@ -258,7 +244,7 @@ int cdsolve(double tol, int M, int RW)
   }
 
   // calc preds if they were skipped
-  if(doxx & (N>0)){
+  if(prexx & (N>0)){
     // got to figure out what to do with this if N=0
     zero_dvec(E,n);
     for(j=0; j<p; j++)
@@ -286,7 +272,6 @@ int cdsolve(double tol, int M, int RW)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
-            int *doxx_in, // indicator for using covariance updates
             int *prexx_in, // indicator for pre-calculated covariances
             double *xbar_in,  // un-weighted covariate means
             double *vxsum_in, // weighted sums of x values
@@ -330,7 +315,7 @@ int cdsolve(double tol, int M, int RW)
   xi = xi_in;
   xp = xp_in;
   xv = xv_in;
-  doxx = *doxx_in;
+  prexx = *prexx_in;
   xbar = xbar_in;
   vxsum = vxsum_in;
   vxx = vxx_in;
@@ -343,7 +328,7 @@ int cdsolve(double tol, int M, int RW)
   V = obsweight;
   vsum = sum_dvec(V,n);    
 
-  if(*prexx_in){
+  if(prexx){
     for(int j=0; j<p; j++)
       H[j] = vxx[j*(j+1)/2+j] 
         + xbar[j]*(xbar[j]*vsum - 2.0*vxsum[j]); 
