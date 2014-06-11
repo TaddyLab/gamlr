@@ -11,7 +11,8 @@ gamlr(x, y,
    family=c("gaussian","binomial","poisson"),
    gamma=0,nlambda=100, lambda.start=Inf,  
    lambda.min.ratio=0.01, free=NULL, standardize=TRUE, 
-   obsweight=NULL,varweight=NULL,prexx=(p<500),
+   obsweight=NULL,varweight=NULL,
+   prexx=(p<500)&(family=="gaussian"),
    tol=1e-7,maxit=1e4,verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 

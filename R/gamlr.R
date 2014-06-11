@@ -13,7 +13,7 @@ gamlr <- function(x, y,
             standardize=TRUE, 
             obsweight=NULL,
             varweight=NULL,
-            prexx=(p<500),  
+            prexx=(p<500)&(family=="gaussian"),  
             tol=1e-7, 
             maxit=1e4,
             verb=FALSE, ...)
@@ -30,11 +30,6 @@ gamlr <- function(x, y,
   n <- length(y)
 
   # observation weights
-  if(!is.null(obsweight))
-    if(family!="gaussian"){ 
-      warning("non-null obsweight are ignored for family!=gaussian")
-      obsweight <- NULL
-  }
   if(is.null(obsweight)) obsweight <- rep(1,n)
   stopifnot(all(obsweight>0))
   stopifnot(length(obsweight)==n)
@@ -46,7 +41,7 @@ gamlr <- function(x, y,
   if(!is.null(xtr$thresh)) tol = xtr$thresh
 
   ## max re-weights
-  if(is.null(xtr$maxrw)) xtr$maxrw = 1e5 # practically inf
+  if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
   maxrw = xtr$maxrw
 
   ## fixed shifts 
@@ -125,7 +120,7 @@ gamlr <- function(x, y,
   gamvec[free] <- 0
 
   ## PREXX stuff
-  prexx = (prexx | !is.null(xtr$vxx)) & (family=="gaussian")
+  prexx = (prexx | !is.null(xtr$vxx))
   if(prexx){
     if(is.null(xtr$xbar))
       xtr$xbar <- colMeans(x)
@@ -143,12 +138,16 @@ gamlr <- function(x, y,
     if(is.null(xtr$vxy))
       xtr$vxy <- drop(crossprod(x,y*obsweight))
     vxy <- as.double(drop(xtr$vxy))
+    if(is.null(xtr$z)) 
+      xtr$z <- y
+    z <- as.double(xtr$z)
     stopifnot(all(p==
       c(length(xbar),length(vxsum),length(vxy))))
   } else{
     xbar <- double(p)
     vxsum <- double(p)
     vxy <- double(p)
+    z <- as.double(y)
     vxx <- double(0)
   }
 
@@ -167,6 +166,7 @@ gamlr <- function(x, y,
             xp=x@p,
             xv=as.double(x@x),
             y=y,
+            z=z,
             prexx=as.integer(prexx),
             xbar=xbar,
             xsum=vxsum,

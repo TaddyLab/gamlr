@@ -18,6 +18,7 @@ double nd, pd;
 
 // pointers to arguments
 double *Y = NULL;
+double *Z = NULL;
 double *xv = NULL;
 int *xi = NULL;
 int *xp = NULL;
@@ -37,7 +38,6 @@ unsigned int fam;
 double A;
 double *B = NULL;
 double *E = NULL;
-double *Z = NULL;
 double vsum;
 
 unsigned int npass,nrw;
@@ -61,9 +61,7 @@ void gamlr_cleanup(){
   if(G){ free(G); G = NULL; }
   if(H){ free(H); H = NULL; }
   if(ag0){ free(ag0); ag0 = NULL; }
-
   if(omega){ free(omega); omega = NULL; }
-  if(Z){ free(Z); Z = NULL; }
 
   dirty = 0;
 }
@@ -181,8 +179,9 @@ int cdsolve(double tol, int M, int RW)
     Bdiff = 0.0;
     imove = 0.0;
     if(dozero)
-      if(fam!=1){
+      if( (fam!=1) & (RW>0) ){
           rw +=1;
+          prexx = 0;
           vsum = reweight(n, A, E, Y, V, Z, &exitstat);
           docurve();
           dbet = intercept(n, E, V, Z, vsum)-A;
@@ -218,7 +217,7 @@ int cdsolve(double tol, int M, int RW)
     }
 
     // break for intercept only linear model
-    if( (fam==1) & (Bdiff==0.0) & dozero ) break;
+    if( ((fam==1)|(RW==0)) & (Bdiff==0.0) & dozero ) break;
 
     // iterate
     t++;
@@ -229,13 +228,6 @@ int cdsolve(double tol, int M, int RW)
       exitstat = 2;
       break;
     }
-
-    if(rw == RW){
-      // just break; if you hit this we assume you're limiting
-      // re-weights as an intentional approximation.
-      break;
-    }
-
 
     // check for active set update
     if(dozero == 1) dozero = 0;
@@ -272,6 +264,7 @@ int cdsolve(double tol, int M, int RW)
             int *xp_in, // length-p+1 pointers to each column start
             double *xv_in, // nonzero x entry values
             double *y_in, // length-n y
+            double *z_in, // length-n irls pseudo-response
             int *prexx_in, // indicator for pre-calculated covariances
             double *xbar_in,  // un-weighted covariate means
             double *vxsum_in, // weighted sums of x values
@@ -309,6 +302,7 @@ int cdsolve(double tol, int M, int RW)
 
   E = eta;
   Y = y_in;
+  Z = z_in;
   ysum = sum_dvec(Y,n); 
   ybar = ysum/nd;
 
@@ -324,7 +318,6 @@ int cdsolve(double tol, int M, int RW)
   H = new_dvec(p);
   W = varweight;
   omega = drep(1.0,p);  // gamma lasso adaptations
-  Z = new_dup_dvec(Y,n);
   V = obsweight;
   vsum = sum_dvec(V,n);    
 
@@ -361,13 +354,17 @@ int cdsolve(double tol, int M, int RW)
     case 2:
       nllhd = &bin_nllhd;
       reweight = &bin_reweight;
-      A = log(ybar/(1-ybar));
+      if(prexx)
+        A = intercept(n, E, V, Z, vsum);
+      else A = log(ybar/(1-ybar));
       NLsat = 0.0;
       break;
     case 3:
       nllhd = &po_nllhd;
       reweight = &po_reweight;
-      A = log(ybar);
+      if(prexx)
+        A = intercept(n, E, V, Z, vsum);
+      else A = log(ybar);
       // nonzero saturated negative log likelihood
       NLsat = ysum;
       for(int i=0; i<n; i++)
