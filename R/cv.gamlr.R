@@ -3,17 +3,18 @@
 ###########################################################
 
 ## just an R loop that calls gamlr
-cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
+cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   
   full <- gamlr(x,y, ...)
   fam <- full$family
+  y <- checky(y,fam)
 
+  nobs <- full$nobs
   if(is.null(foldid)){
-    nfold <- min(nfold,full$nobs)
-    rando <- sample.int(full$nobs)
-    chunks <- round(seq.int(0,full$nobs,length.out=nfold+1))
-    foldid <- rep.int(1:nfold,times=diff(chunks))[rando]
-  } else  stopifnot(length(foldid)==full$nobs)
+    nfold <- min(nfold,nobs)
+    foldsize <- ceiling(nobs/nfold)
+    foldid <- rep.int(1:nfold,times=foldsize)[sample.int(nobs)]
+  } else  stopifnot(length(foldid)==nobs)
   foldid <- factor(foldid)
   nfold <- nlevels(foldid)
 
@@ -23,14 +24,20 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
   argl$nlambda <- length(lambda)
   argl$lambda.min.ratio <- tail(lambda,1)/lambda[1]
 
+  ## remove any pre-calculated summaries
+  argl$vxx <- argl$vxsum <- argl$vxy <- argl$xbar <- NULL
+
   oos <- matrix(Inf, nrow=nfold, ncol=argl$nlambda,
                 dimnames=list(levels(foldid),names(lambda)))
 
   if(verb) cat("fold ")
-  for(k in levels(foldid)){
+
+  ## define the folddev function
+  folddev <- function(k){
+    require(gamlr)
     train <- which(foldid!=k)
-    fit <- do.call(gamlr, 
-      c(list(x=x[train,],y=y[train]), argl))
+    suppressWarnings(fit <- do.call(gamlr, 
+      c(list(x=x[train,],y=y[train]), argl)))
     eta <- predict(fit, x[-train,], select=0)
 
     dev <- apply(eta,2, 
@@ -45,10 +52,23 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, ...){
                       y[-train]*log(y[-train]),
                       0.0) - y[-train]) 
       dev <- dev + 2*satnllhd }
-    oos[k,1:length(fit$lambda)] <- dev 
     if(verb) cat(sprintf("%s,",k))
+    if(length(dev) < argl$nlambda) 
+      dev <- c(dev,rep(Inf,argl$nlambda-length(dev)))
+    return(dev)
   }
-  
+
+  # apply the folddev function
+  if(is.null(cl))
+    oos <- t(sapply(1:nfold,folddev))
+  else{
+    require(parallel)
+    clusterExport(cl,
+      c("x","y","foldid","argl","fam","verb"), 
+      envir=environment())
+    oos <- t(parSapply(cl,1:nfold,folddev))
+  }
+
   cvm <- apply(oos,2,mean)
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
 

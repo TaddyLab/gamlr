@@ -1,25 +1,9 @@
-A python wrapper for Matt Taddy's C code in the gamlr package.
+The Gamma Lasso    
+==
 
-To do:
+This package implements the gamma lasso algorithm for regularization paths corresponding to a range of non-convex cost functions between L0 and L1 norms.  As much as possible, usage is analogous to that for the glmnet package (which does the same thing for penalization between L1 and L2 norms).     
 
-1. Decide on what type of python-c linkage	
-DONE: ctypes
+The CRAN page is at http://www.cran.r-project.org/web/packages/gamlr/index.html.    
 
-2. Familiarize self with ctypes:	
-DONE: github.com/nelsonauner/ctypes
+If you use gamlr, please cite Taddy (2013), The Gamma Lasso. http://arxiv.org/abs/1308.5623    
 
-3. Familiarize self with gamlr.R wrapper	
-DONE: I included error checking, but some options (precalc of XX) is left out
-
-4. Simple python wrapper for gamlr.c
-	- TODO:
-	- Error: cannot find Rmath.h (even though I copied it from Rcpp)..this shouldn't be necessary?
-	- Goal: Maintain original C code
-	- Numerous examples for passing double * and int * to c function
-
-
-5. Error-checking in python wrapper	
-	- Run same example in R & Python and check result
-
-6. Additional features missing in original wrapper	
-	- Precalculation of XX

@@ -6,7 +6,7 @@
 \title{ Cross Validation for gamlr}
 \description{Cross validation for gamma lasso penalty selection. }
 \usage{
-cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, ...)
+cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...)
 \method{plot}{cv.gamlr}(x, ...)
 \method{coef}{cv.gamlr}(object, select=c("1se","min"), ...)
 \method{predict}{cv.gamlr}(object, newdata, select=c("1se","min"), ...)
@@ -17,6 +17,7 @@ cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, ...)
   \item{nfold}{ The number of cross validation folds. }
   \item{foldid}{ An optional length-n vector of fold memberships for each observation.  If specified, this dictates \code{nfold}.}
   \item{verb}{ Whether to print progress through folds. }
+  \item{cl}{possible \code{parallel} library cluster.  If this is not-\code{NULL}, the CV folds are executed in parallel.  This copies the data \code{nfold} times, so make sure you have the memory space.}
   \item{...}{ Arguments to \code{gamlr}. }
   \item{object}{ A gamlr object.}
   \item{newdata}{ New \code{x} data for prediction.}
