@@ -7,6 +7,7 @@
 #include "vec.h"
 #include "lhd.h"
 #include "gui.h"
+#include "sign.h" 
 /**** global variables ****/
 
 // argument variables
