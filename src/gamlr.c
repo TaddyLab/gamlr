@@ -3,8 +3,6 @@
 #include <math.h>  //For python version
 #include <stdlib.h>
 #include <string.h>
-#define MATHLIB_STANDALONE 
-//#include "Rmath.h"
 #include <time.h>
 #include "vec.h"
 #include "lhd.h"
