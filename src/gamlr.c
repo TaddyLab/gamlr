@@ -1,5 +1,6 @@
 /* The Gamma Lasso -- Matt Taddy 2013 */
 
+#include <math.h>  //For python version
 #include <stdlib.h>
 #include <string.h>
 #define MATHLIB_STANDALONE 
@@ -8,7 +9,6 @@
 #include "vec.h"
 #include "lhd.h"
 #include "gui.h"
-
 /**** global variables ****/
 
 // argument variables
