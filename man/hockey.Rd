@@ -60,8 +60,7 @@ p <- 1/(1+exp(-B))
 ppm <- ng*(2*p-1)
 
 # organize the data together and print top 20
-effect <- data.frame(player=names(B),
-  beta=round(B,3),ppm=round(ppm,3),pm=pm)
+effect <- data.frame(b=round(B,3),ppm=round(ppm,3),pm=pm)
 effect <- effect[order(-effect$ppm),]
 print(effect[1:20,])
 }
