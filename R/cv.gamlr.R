@@ -96,7 +96,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
 
 ## S3 method functions
 
-plot.cv.gamlr <- function(x, ...){
+plot.cv.gamlr <- function(x, select=TRUE, ...){
 
   argl = list(...)
 
@@ -124,8 +124,9 @@ plot.cv.gamlr <- function(x, ...){
   argl$type <- NULL
   suppressWarnings(do.call(points, argl))
 
-  abline(v=log(x$lambda.min), lty=3, col="grey20")
-  abline(v=log(x$lambda.1se), lty=3, col="grey20")
+  if(select){
+    abline(v=log(x$lambda.min), lty=3, col="grey20")
+    abline(v=log(x$lambda.1se), lty=3, col="grey20") }
 
   dfi <- unique(round(
     seq(1,length(argl$x),length=ceiling(length(axTicks(1))))))

@@ -7,7 +7,7 @@
 \description{Cross validation for gamma lasso penalty selection. }
 \usage{
 cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...)
-\method{plot}{cv.gamlr}(x, ...)
+\method{plot}{cv.gamlr}(x, select=TRUE, ...)
 \method{coef}{cv.gamlr}(object, select=c("1se","min"), ...)
 \method{predict}{cv.gamlr}(object, newdata, select=c("1se","min"), ...)
 }
@@ -25,7 +25,7 @@ cv.gamlr(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...)
   select which "best" model to return: 
   \code{select="min"} is that with minimum average OOS deviance,
   and  \code{select="1se"} is that whose average OOS deviance is
-  no more than 1 standard error away from the minimum.}
+  no more than 1 standard error away from the minimum. In \code{plot}, whether to draw these selections.}
 }
 \details{ Fits a \code{gamlr} regression to the full dataset, and then performs \code{nfold} 
 cross validation to evaluate out-of-sample (OOS)
