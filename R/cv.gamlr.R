@@ -70,8 +70,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
       cl <- NULL
     }
   }
-  if(is.null(cl)) 
-    oos <- t(sapply(1:nfold,folddev))
+  if(is.null(cl)) oos <- t(sapply(1:nfold,folddev))
 
   cvm <- apply(oos,2,mean)
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
