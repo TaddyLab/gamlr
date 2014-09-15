@@ -59,15 +59,19 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   }
 
   # apply the folddev function
-  if(is.null(cl))
-    oos <- t(sapply(1:nfold,folddev))
-  else{
-    require(parallel)
-    clusterExport(cl,
-      c("x","y","foldid","argl","fam","verb"), 
-      envir=environment())
-    oos <- t(parSapply(cl,1:nfold,folddev))
+  if(!is.null(cl)){
+    if (requireNamespace("parallel", quietly = TRUE)) {
+      parallel::clusterExport(cl,
+        c("x","y","foldid","argl","fam","verb"), 
+        envir=environment())
+      oos <- t(parallel::parSapply(cl,1:nfold,folddev))
+    } else {
+      warning("cl is not NULL, but parallle package unavailable.")
+      cl <- NULL
+    }
   }
+  if(is.null(cl)) 
+    oos <- t(sapply(1:nfold,folddev))
 
   cvm <- apply(oos,2,mean)
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
