@@ -48,7 +48,7 @@ gamlr <- function(x, y,
   if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
   maxrw = xtr$maxrw
 
-  # ridge
+  # ridge (undocumented option: replaces L1 with L2 throughout)
   if(is.null(xtr$ridge)) xtr$ridge=0
   ridge=xtr$ridge
 

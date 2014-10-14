@@ -67,54 +67,6 @@ void gamlr_cleanup(){
   dirty = 0;
 }
 
-
-// calculates degrees of freedom, as well as
-// other gradient dependent statistics.
-void dodf(int s, double *lam, double L){
-  int j;
-  
-  //calculate absolute grads
-  for(j=0; j<p; j++){
-    if(ridge & (s==0))
-      ag0[j] = fabs(G[j])/W[j];
-    else if( isfinite(W[j]) & (B[j]==0.0) ) 
-      ag0[j] = fabs(G[j])/W[j];
-  }
-
-  // initialization  
-  if(s==0){
-    if(!isfinite(lam[0]))
-      lam[0] = dmax(ag0,p)/nd;
-  }
-
-  dof[s] = 1.0;
-
-  // penalized bit
-  double shape,phi;
-  if(fam==1) phi = L*2/nd; 
-  else phi = 1.0;
-  if(ridge){ 
-    for(j=0; j<p; j++)
-      if(isfinite(W[j])){
-        shape = W[j]*ag0[j];
-        phi = fabs(G[j]);
-        dof[s] += fmax(1.0 - phi/shape,0.0);
-    }
-  } 
-  else{ 
-    for(j=0; j<p; j++)
-      if(isfinite(W[j])){
-        if( (gam[j]==0.0) | (W[j]==0.0) ){  
-          if( (B[j]!=0.0) ) dof[s] ++;
-        } else{ 
-          shape = lam[s]*nd/gam[j];
-          dof[s] += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
-        }
-      }
-  }
-
-}
-
 /* The gradient descent move for given direction */
 double Bmove(int j)
 {
@@ -135,6 +87,41 @@ double Bmove(int j)
     }
   }
   return dbet;
+}
+
+void donullgrad(void){
+  for(int j=0; j<p; j++)
+    if( isfinite(W[j]) & (B[j]==0.0) )
+      ag0[j] = fabs(G[j])/W[j];
+}
+
+
+double getdf(double L){
+  int j;
+  double dfs = 1.0;
+
+  // penalized bit
+  double shape,phi;
+  if(fam==1) phi = L*2/nd; 
+  else phi = 1.0;
+  if(ridge){ 
+    for(j=0; j<p; j++)
+      if(isfinite(W[j])){
+        dfs += fmax(1.0 - fabs(G[j])/(W[j]*ag0[j]),0.0);
+    }
+  } 
+  else{ 
+    for(j=0; j<p; j++)
+      if(isfinite(W[j])){
+        if( (gam[j]==0.0) | (W[j]==0.0) ){  
+          if( (B[j]!=0.0) ) dfs++;
+        } else{ 
+          shape = ntimeslam/gam[j];
+          dfs += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
+        }
+      }
+  }
+  return(dfs);
 }
 
 void doxbar(void){
@@ -391,12 +378,17 @@ int cdsolve(double tol, int M, int RW)
       for(int j=0; j<p; j++) dograd(j);
   }
 
-  ntimeslam = INFINITY;
-  Lold = INFINITY;
   NLLHD =  nllhd(n, A, E, Y, V);
-
   if(*verb)
     speak("*** n=%d observations and p=%d covariates ***\n", n,p);
+
+  if(ridge){ // special init for ridge
+    ntimeslam = INFINITY;
+    cdsolve(*thresh,*maxit,*maxrw);
+    donullgrad();
+    if(!isfinite(lambda[0]))
+      lambda[0] = 1e2*dmax(ag0,p)/nd;
+  }
 
   // move along the path
   for(s=0; s<*nlam; s++){
@@ -413,10 +405,16 @@ int cdsolve(double tol, int M, int RW)
     maxit[s] = npass;
     maxrw[s] = nrw;
     Lold = NLLHD;
-    if( (N>0) | (s==0) ) 
+    if( (s==0) | (N>0) ) 
       NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
-    dodf(s, lambda, NLLHD);
+
+    donullgrad();
+    if( (s==0) & !isfinite(lambda[0])){ 
+      lambda[0] = dmax(ag0,p)/nd;
+      ntimeslam = lambda[0]*nd; }
+
+    dof[s] = getdf(NLLHD); 
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
