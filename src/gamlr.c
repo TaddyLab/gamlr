@@ -24,6 +24,7 @@ int *xp = NULL;
 double *W = NULL;
 double *V = NULL;
 double *gam = NULL;
+double *dof = NULL;
 
 int prexx;
 double *xbar = NULL;
@@ -33,7 +34,7 @@ double *vxx = NULL;
 
 // variables to be created
 double *omega = NULL;
-unsigned int fam;
+unsigned int fam,ridge;
 double A;
 double *B = NULL;
 double *E = NULL;
@@ -41,7 +42,7 @@ double *Z = NULL;
 double vsum;
 
 unsigned int npass,nrw;
-double l1pen;
+double ntimeslam;
 
 double ysum,ybar;
 double *H = NULL;
@@ -69,37 +70,49 @@ void gamlr_cleanup(){
 
 // calculates degrees of freedom, as well as
 // other gradient dependent statistics.
-double dof(int s, double *lam, double L){
+void dodf(int s, double *lam, double L){
   int j;
   
   //calculate absolute grads
-  for(j=0; j<p; j++)
-    if(isfinite(W[j]) & (B[j]==0.0))
+  for(j=0; j<p; j++){
+    if(ridge & (s==0))
       ag0[j] = fabs(G[j])/W[j];
+    else if( isfinite(W[j]) & (B[j]==0.0) ) 
+      ag0[j] = fabs(G[j])/W[j];
+  }
 
   // initialization  
   if(s==0){
-    if(!isfinite(lam[0]))  
+    if(!isfinite(lam[0]))
       lam[0] = dmax(ag0,p)/nd;
   }
 
-  double df = 1.0;
+  dof[s] = 1.0;
 
   // penalized bit
   double shape,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
-  for(j=0; j<p; j++)
-    if(isfinite(W[j])){
-      if( (gam[j]==0.0) | (W[j]==0.0) ){  
-        if( (B[j]!=0.0) ) df ++;
-      } else{ // gamma lasso
-        shape = lam[s]*nd/gam[j];
-        df += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
-      }
+  if(ridge){ 
+    for(j=0; j<p; j++)
+      if(isfinite(W[j])){
+        shape = W[j]*ag0[j];
+        phi = fabs(G[j]);
+        dof[s] += fmax(1.0 - phi/shape,0.0);
     }
+  } 
+  else{ 
+    for(j=0; j<p; j++)
+      if(isfinite(W[j])){
+        if( (gam[j]==0.0) | (W[j]==0.0) ){  
+          if( (B[j]!=0.0) ) dof[s] ++;
+        } else{ 
+          shape = lam[s]*nd/gam[j];
+          dof[s] += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
+        }
+      }
+  }
 
-  return df;
 }
 
 /* The gradient descent move for given direction */
@@ -111,12 +124,15 @@ double Bmove(int j)
   // unpenalized
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
-    // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
-    double pen, ghb;
-    pen = l1pen*W[j]*omega[j];
-    ghb = (G[j] - H[j]*B[j]);
-    if(fabs(ghb) < pen) dbet = -B[j];
-    else dbet = -(G[j]-sign(ghb)*pen)/H[j];
+    double pen;
+    pen = ntimeslam*W[j]*omega[j];
+    if(ridge) dbet = -(G[j]+pen*B[j])/(H[j]+pen);
+    else{
+      // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
+      double ghb = (G[j] - H[j]*B[j]);
+      if(fabs(ghb) < pen) dbet = -B[j];
+      else dbet = -(G[j]-sign(ghb)*pen)/H[j];
+    }
   }
   return dbet;
 }
@@ -166,7 +182,7 @@ int cdsolve(double tol, int M, int RW)
   double dbet,imove,Bdiff;
 
   // initialize
-  dopen = isfinite(l1pen);
+  dopen = isfinite(ntimeslam);
   Bdiff = INFINITY;
   exitstat = 0;
   dozero = 1;
@@ -275,12 +291,13 @@ int cdsolve(double tol, int M, int RW)
             int *nlam, // length of the path
             double *delta, // path stepsize
             double *gamvec,  // gamma in the GL paper
+            int *doridge, // whether to use L2 instead of L1
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
             int *maxrw, // max irls reweights
             double *lambda, // output lambda
             double *deviance, // output deviance
-            double *df, // output df
+            double *dofvec, // output dof
             double *alpha,  // output intercepts
             double *beta, // output coefficients
             int *exits, // exit status.  0 is normal, 1 warn, 2 break path
@@ -289,6 +306,7 @@ int cdsolve(double tol, int M, int RW)
   dirty = 1; // flag to say the function has been called
   // time stamp for periodic R interaction
   time_t itime = time(NULL);  
+  ridge = *doridge;
 
   /** Build global variables **/
   fam = *famid;
@@ -341,6 +359,7 @@ int cdsolve(double tol, int M, int RW)
   G = new_dzero(p);
   ag0 = new_dzero(p);
   gam = gamvec;
+  dof = dofvec;
 
   // some local variables
   double Lold, NLLHD, NLsat;
@@ -372,7 +391,7 @@ int cdsolve(double tol, int M, int RW)
       for(int j=0; j<p; j++) dograd(j);
   }
 
-  l1pen = INFINITY;
+  ntimeslam = INFINITY;
   Lold = INFINITY;
   NLLHD =  nllhd(n, A, E, Y, V);
 
@@ -385,7 +404,7 @@ int cdsolve(double tol, int M, int RW)
     // deflate the penalty
     if(s>0)
       lambda[s] = lambda[s-1]*(*delta);
-    l1pen = lambda[s]*nd;
+    ntimeslam = lambda[s]*nd;
 
     // run descent
     exits[s] = cdsolve(*thresh,maxit[s],maxrw[s]);
@@ -397,7 +416,7 @@ int cdsolve(double tol, int M, int RW)
     if( (N>0) | (s==0) ) 
       NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
-    df[s] = dof(s, lambda, NLLHD);
+    dodf(s, lambda, NLLHD);
     alpha[s] = A;
     copy_dvec(&beta[s*p],B,p);
 
@@ -407,8 +426,11 @@ int cdsolve(double tol, int M, int RW)
     for(int j=0; j<p; j++) 
       if(gam[j]>0.0){
         if(isfinite(gam[j])){
-          if( (W[j]>0.0) & isfinite(W[j]) )
-            omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); } 
+          if( (W[j]>0.0) & isfinite(W[j]) ){
+            if(ridge) omega[j] = 1.0/(1.0+gam[j]*B[j]*B[j]);
+            else omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); 
+          }
+        } 
         else if(B[j]!=0.0) omega[j] = 0.0; 
       }
       
@@ -422,7 +444,7 @@ int cdsolve(double tol, int M, int RW)
       exits[s] = 2;
       shout("Warning: negative deviance.  ");
     }
-    if(df[s] >= nd){
+    if(dof[s] >= nd){
       exits[s] = 2;
       shout("Warning: saturated model.  "); 
     }

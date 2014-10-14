@@ -48,6 +48,10 @@ gamlr <- function(x, y,
   if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
   maxrw = xtr$maxrw
 
+  # ridge
+  if(is.null(xtr$ridge)) xtr$ridge=0
+  ridge=xtr$ridge
+
   ## fixed shifts 
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
@@ -178,6 +182,7 @@ gamlr <- function(x, y,
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
             gamma=gamvec,
+            ridge=as.integer(ridge),
             tol=as.double(tol),
             maxit=as.integer(rep(maxit,nlambda)),
             maxrw=as.integer(rep(maxrw,nlambda)),
