@@ -104,21 +104,13 @@ double getdf(double L){
   double shape,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
-  if(ridge){ 
-    for(j=0; j<p; j++)
-      if(isfinite(W[j])){
-        dfs += fmax(1.0 - fabs(G[j])/(W[j]*ag0[j]),0.0);
-    }
-  } 
-  else{ 
-    for(j=0; j<p; j++)
-      if(isfinite(W[j])){
-        if( (gam[j]==0.0) | (W[j]==0.0) ){  
-          if( (B[j]!=0.0) ) dfs++;
-        } else{ 
-          shape = ntimeslam/gam[j];
-          dfs += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
-        }
+  for(j=0; j<p; j++)
+    if(isfinite(W[j])){
+      if( (gam[j]==0.0) | (W[j]==0.0) ){  
+        if( (B[j]!=0.0) ) dfs++;
+      } else{ 
+        shape = ntimeslam/gam[j];
+        dfs += pgamma(ag0[j], shape/phi, phi*gam[j], 1, 0); 
       }
   }
   return(dfs);
@@ -382,14 +374,6 @@ int cdsolve(double tol, int M, int RW)
   if(*verb)
     speak("*** n=%d observations and p=%d covariates ***\n", n,p);
 
-  if(ridge){ // special init for ridge
-    ntimeslam = INFINITY;
-    cdsolve(*thresh,*maxit,*maxrw);
-    donullgrad();
-    if(!isfinite(lambda[0]))
-      lambda[0] = 1e2*dmax(ag0,p)/nd;
-  }
-
   // move along the path
   for(s=0; s<*nlam; s++){
 
@@ -425,8 +409,7 @@ int cdsolve(double tol, int M, int RW)
       if(gam[j]>0.0){
         if(isfinite(gam[j])){
           if( (W[j]>0.0) & isfinite(W[j]) ){
-            if(ridge) omega[j] = 1.0/(1.0+gam[j]*B[j]*B[j]);
-            else omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); 
+            omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); 
           }
         } 
         else if(B[j]!=0.0) omega[j] = 0.0; 
