@@ -124,6 +124,18 @@ void doxbar(void){
       xbar[j] *= 1.0/nd; }
 }
 
+void dohetero(void){
+  double xe;
+  for(int j=0; j<p; j++){
+      W[j] = 0.0;
+    for(int i=xp[j]; i<xp[j+1]; i++){
+      xe = V[xi[i]]*xv[i]*(Y[xi[i]]-E[xi[i]]);
+      W[j] += xe*xe;
+    }
+    W[j] = sqrt(W[j])/nd;
+  }
+}
+
 void docurve(void){
   double vx;  
   for(int j=0; j<p; j++){
@@ -267,6 +279,7 @@ int cdsolve(double tol, int M, int RW)
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
             int *standardize, // whether to scale penalty by sd(x_j)
+            int *hetero, // whether to scale penalty by sd(x_j*e)
             int *nlam, // length of the path
             double *delta, // path stepsize
             double *gamvec,  // gamma in the GL paper
@@ -384,6 +397,9 @@ int cdsolve(double tol, int M, int RW)
 
     // run descent
     exits[s] = cdsolve(*thresh,maxit[s],maxrw[s]);
+
+    // heteroskedastic error adaptation
+    if(*hetero) dohetero();
 
     // update parameters and objective
     maxit[s] = npass;
