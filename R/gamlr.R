@@ -217,7 +217,7 @@ gamlr <- function(x, y,
   names(alpha) <- paste0('seg',(1:nlambda))
   beta <- Matrix(head(fit$beta,nlambda*p),
                     nrow=p, ncol=nlambda, 
-                    dimnames=list(colnames(x),names(alpha)),
+                    dimnames=list(varnames,names(alpha)),
                     sparse=TRUE)
 
   ## path stats
