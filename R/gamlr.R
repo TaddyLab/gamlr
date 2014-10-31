@@ -44,6 +44,7 @@ gamlr <- function(x, y,
   ## aliases from glmnet or other gamlr terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
   if(!is.null(xtr$lmr)) lambda.min.ratio = xtr$lmr
+  if(!is.null(xtr$scale)) standardize = xtr$scale
 
   ## max re-weights
   if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
