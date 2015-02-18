@@ -314,8 +314,10 @@ plot.gamlr <- function(x, against=c("pen","dev"),
 
 coef.gamlr <- function(object, select=NULL, k=2, ...)
 {
-  if(length(select)==0)
+  if(length(select)==0){
     select <- which.min(AICc(object,k=k))
+    if(length(select)==0) select <- 1
+  }
   else if(select==0)
    select <- 1:ncol(object$beta)
 
@@ -367,8 +369,8 @@ summary.gamlr <- function(object, ...){
 print.gamlr <- function(x, ...){
   cat("\n")
   cat(sprintf(
-    "gamma = %g %s gamlr with %d inputs and %d segments.", 
-    x$gamma, x$family, nrow(x$beta), ncol(x$beta)))
+    "%s gamlr with %d inputs and %d segments.", 
+    x$family, nrow(x$beta), ncol(x$beta)))
   cat("\n\n")
 }
 
