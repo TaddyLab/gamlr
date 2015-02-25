@@ -428,7 +428,7 @@ int cdsolve(double tol, int M, int RW)
     for(int j=0; j<p; j++) 
       if(gam[j]>0.0){
         if(isfinite(gam[j])){
-          if( (W[j]>0.0) & isfinite(W[j]) & (!FREE[j]) ){
+          if( (W[j]>0.0) & isfinite(W[j]) & (!FREE[j])) ){
             omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); 
           }
         } 
