@@ -22,7 +22,6 @@ double *xv = NULL;
 int *xi = NULL;
 int *xp = NULL;
 double *W = NULL;
-int *FREE = NULL;
 double *V = NULL;
 double *gam = NULL;
 double *dof = NULL;
@@ -78,8 +77,7 @@ double Bmove(int j)
   if(W[j]==0.0) dbet = -G[j]/H[j]; 
   else{
     double pen;
-    if(FREE[j]) pen = nd*W[j];
-    else pen = ntimeslam*W[j]*omega[j];
+    pen = ntimeslam*W[j]*omega[j];
     if(ridge) dbet = -(G[j]+pen*B[j])/(H[j]+pen);
     else{
       // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
@@ -93,7 +91,7 @@ double Bmove(int j)
 
 void donullgrad(void){
   for(int j=0; j<p; j++)
-    if( isfinite(W[j]) & (B[j]==0.0) & (!FREE[j]) )
+    if( isfinite(W[j]) & (B[j]==0.0) )
       ag0[j] = fabs(G[j])/W[j];
 }
 
@@ -108,7 +106,7 @@ double getdf(double L){
   else phi = 1.0;
   for(j=0; j<p; j++)
     if(isfinite(W[j])){
-      if( (gam[j]==0.0) | (W[j]==0.0) | (FREE[j]) ){  
+      if( (gam[j]==0.0) | (W[j]==0.0) ){  
         if( (B[j]!=0.0) ) dfs++;
       } else{ 
         shape = ntimeslam/gam[j];
@@ -204,13 +202,13 @@ int cdsolve(double tol, int M, int RW)
       if(!isfinite(W[j])) continue;
 
       // skip the in-active set unless 'dozero'
-      if(!dozero & (B[j]==0.0) & (W[j]>0.0) & (!FREE[j])) continue;
+      if(!dozero & (B[j]==0.0) & (W[j]>0.0)) continue;
 
       // update gradient
       dograd(j);
 
       // for null model skip penalized variables
-      if(!dopen & (W[j]>0.0) & (!FREE[j])){ dbet = 0.0; continue; }
+      if(!dopen & (W[j]>0.0)){ dbet = 0.0; continue; }
 
       // calculate the move and update
       dbet = Bmove(j);
@@ -278,7 +276,6 @@ int cdsolve(double tol, int M, int RW)
             double *vxx_in, // dense columns of upper tri for XVX
             double *vxy_in, // weighted correlation between x and y
             double *eta, // length-n fixed shifts (assumed zero for gaussian)
-            int *freebool, // length-p indicator for no lambda multiplier
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
             int *standardize, // whether to scale penalty by sd(x_j)
@@ -328,7 +325,6 @@ int cdsolve(double tol, int M, int RW)
 
   H = new_dvec(p);
   W = varweight;
-  FREE = freebool;
   omega = drep(1.0,p);  // gamma lasso adaptations
   V = obsweight;
   vsum = sum_dvec(V,n);    
@@ -428,7 +424,7 @@ int cdsolve(double tol, int M, int RW)
     for(int j=0; j<p; j++) 
       if(gam[j]>0.0){
         if(isfinite(gam[j])){
-          if( (W[j]>0.0) & isfinite(W[j]) & (!FREE[j])) ){
+          if( (W[j]>0.0) & isfinite(W[j]) ){
             omega[j] = 1.0/(1.0+gam[j]*fabs(B[j])); 
           }
         } 
