@@ -437,6 +437,10 @@ int cdsolve(double tol, int M, int RW)
           s+1, lambda[s], deviance[s], npass);
 
     // exit checks
+    if(deviance[s]!=deviance[s]){
+      exits[s] = 2;
+      shout("Warning: NaN deviance.  ");
+    }
     if(deviance[s]<0.0){
       exits[s] = 2;
       shout("Warning: negative deviance.  ");
