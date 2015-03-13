@@ -82,8 +82,8 @@ double Bmove(int j)
     double pen;
     pen = ntimeslam*W[j]*omega[j];
     if(dol2){
-      G[j] += l2pen[j]*B[j];
-      H[j] += l2pen[j];
+      G[j] += nd*l2pen[j]*B[j];
+      H[j] += nd*l2pen[j];
     }
     // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
     double ghb = (G[j] - H[j]*B[j]);
@@ -108,8 +108,7 @@ double getdf(double L){
   double shape,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
-  for(j=0; j<p; j++)
-    if(isfinite(W[j])){
+  for(j=0; j<p; j++){
       if( (gam[j]==0.0) | (W[j]==0.0) ){  
         if( (B[j]!=0.0) ) dfs++;
       } else{ 
