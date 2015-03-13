@@ -50,13 +50,6 @@ gamlr <- function(x, y,
   if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
   maxrw = xtr$maxrw
 
-  # ridge (undocumented: replaces L1 with L2 throughout)
-  if(is.null(xtr$ridge)) xtr$ridge=0
-
-  # hetero (undocumented: adapts penalty for heteroscedasticity)
-  if(is.null(xtr$hetero)) xtr$hetero=0
-  if(xtr$hetero) standardize=0
-
   ## fixed shifts 
   eta <- rep(0.0,n)
   if(!is.null(xtr$fix)){
@@ -88,6 +81,16 @@ gamlr <- function(x, y,
     stopifnot(nrow(x)==n) 
   }
   if(is.null(varnames)) varnames <- 1:p
+
+  # ridge (undocumented: additional fixed ridge penalty)
+  if(!is.null(xtr$ridge)){
+    ridgepen = xtr$ridge
+    doridge = 1
+    if(length(ridgepen)!=p){ 
+      ridgepen <- rep(ridgepen[1],p) }
+  } else{
+    ridgepen = doridge = 0
+  }
 
   ## unpenalized columns
   if(length(free)==0) free <- NULL
@@ -184,11 +187,11 @@ gamlr <- function(x, y,
             varweight=as.double(varweight),
             obsweight=as.double(obsweight),
             standardize=as.integer(standardize>0),
-            hetero=as.integer(xtr$hetero),
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
             gamma=gamvec,
-            ridge=as.integer(xtr$ridge),
+            doridge=as.integer(doridge),
+            ridgepen=as.double(ridgepen),
             tol=as.double(tol),
             maxit=as.integer(rep(maxit,nlambda)),
             maxrw=as.integer(rep(maxrw,nlambda)),

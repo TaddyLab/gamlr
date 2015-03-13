@@ -34,12 +34,15 @@ double *vxx = NULL;
 
 // variables to be created
 double *omega = NULL;
-unsigned int fam,ridge;
+unsigned int fam;
 double A;
 double *B = NULL;
 double *E = NULL;
 double *Z = NULL;
 double vsum;
+
+unsigned int dol2;
+double *l2pen = NULL;
 
 unsigned int npass,nrw;
 double ntimeslam;
@@ -78,13 +81,14 @@ double Bmove(int j)
   else{
     double pen;
     pen = ntimeslam*W[j]*omega[j];
-    if(ridge) dbet = -(G[j]+pen*B[j])/(H[j]+pen);
-    else{
-      // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
-      double ghb = (G[j] - H[j]*B[j]);
-      if(fabs(ghb) < pen) dbet = -B[j];
-      else dbet = -(G[j]-sign(ghb)*pen)/H[j];
+    if(dol2){
+      G[j] += l2pen[j]*B[j];
+      H[j] += l2pen[j];
     }
+    // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
+    double ghb = (G[j] - H[j]*B[j]);
+    if(fabs(ghb) < pen) dbet = -B[j];
+    else dbet = -(G[j]-sign(ghb)*pen)/H[j];
   }
   return dbet;
 }
@@ -122,18 +126,6 @@ void doxbar(void){
       for(int i=xp[j]; i<xp[j+1]; i++) 
         xbar[j] += xv[i];
       xbar[j] *= 1.0/nd; }
-}
-
-void dohetero(void){
-  double xe;
-  for(int j=0; j<p; j++){
-      W[j] = 0.0;
-    for(int i=xp[j]; i<xp[j+1]; i++){
-      xe = V[xi[i]]*xv[i]*(Y[xi[i]]-E[xi[i]]);
-      W[j] += xe*xe;
-    }
-    W[j] = sqrt(W[j])/nd;
-  }
 }
 
 void docurve(void){
@@ -279,11 +271,11 @@ int cdsolve(double tol, int M, int RW)
             double *varweight, // length-p weights
             double *obsweight, // length-n weights
             int *standardize, // whether to scale penalty by sd(x_j)
-            int *hetero, // whether to scale penalty by sd(x_j*e)
             int *nlam, // length of the path
             double *delta, // path stepsize
             double *gamvec,  // gamma in the GL paper
-            int *doridge, // whether to use L2 instead of L1
+            int *doridge, // whether to add l2 costs
+            double *ridgepen, // amount to add
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
             int *maxrw, // max irls reweights
@@ -298,7 +290,8 @@ int cdsolve(double tol, int M, int RW)
   dirty = 1; // flag to say the function has been called
   // time stamp for periodic R interaction
   time_t itime = time(NULL);  
-  ridge = *doridge;
+  dol2 = *doridge;
+  l2pen = ridgepen;
 
   /** Build global variables **/
   fam = *famid;
@@ -397,9 +390,6 @@ int cdsolve(double tol, int M, int RW)
 
     // run descent
     exits[s] = cdsolve(*thresh,maxit[s],maxrw[s]);
-
-    // heteroskedastic error adaptation
-    if(*hetero) dohetero();
 
     // update parameters and objective
     maxit[s] = npass;
