@@ -108,7 +108,8 @@ double getdf(double L){
   double shape,phi;
   if(fam==1) phi = L*2/nd; 
   else phi = 1.0;
-  for(j=0; j<p; j++){
+  for(j=0; j<p; j++)
+    if(isfinite(W[j])){
       if( (gam[j]==0.0) | (W[j]==0.0) ){  
         if( (B[j]!=0.0) ) dfs++;
       } else{ 
