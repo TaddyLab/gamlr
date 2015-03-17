@@ -15,7 +15,7 @@ gamlr <- function(x, y,
             varweight=NULL,
             prexx=(p<500),  
             tol=1e-7, 
-            maxit=1e4,
+            maxit=1e5,
             verb=FALSE, ...)
 {
   on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))

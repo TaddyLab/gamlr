@@ -13,7 +13,7 @@ gamlr(x, y,
    lambda.min.ratio=0.01, free=NULL, standardize=TRUE, 
    obsweight=NULL,varweight=NULL,
    prexx=(p<500),
-   tol=1e-7,maxit=1e4,verb=FALSE, ...)
+   tol=1e-7,maxit=1e5,verb=FALSE, ...)
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=NULL, select=TRUE, df=TRUE, ...)
