@@ -86,11 +86,11 @@ double Bmove(int j)
 
 void donullgrad(void){
   for(int j=0; j<p; j++)
-    if( (W[j]>0) & isfinite(W[j]) & (B[j]==0.0) ){
-      ag0[j] = fabs(G[j])/W[j];
+    if( (W[j]>0.0) & isfinite(W[j]) & (B[j]==0.0) ){
+      ag0[j] = fabs(G[j])/W[j] - l1fixedcost[j]*nd;
+      if(ag0[j]<0.0) ag0[j] = 0.0; 
     }
 }
-
 
 double getdf(double L){
   int j;
