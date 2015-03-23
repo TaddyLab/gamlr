@@ -41,8 +41,7 @@ double *E = NULL;
 double *Z = NULL;
 double vsum;
 
-unsigned int dol2;
-double *l2pen = NULL;
+double *l1fixedcost = NULL;
 
 unsigned int npass,nrw;
 double ntimeslam;
@@ -73,30 +72,23 @@ void gamlr_cleanup(){
 /* The gradient descent move for given direction */
 double Bmove(int j)
 {
-  double dbet;
+  double dbet, pen, ghb;
   if(H[j]==0) return -B[j];
 
-  // unpenalized
-  if(W[j]==0.0) dbet = -G[j]/H[j]; 
-  else{
-    double pen;
-    pen = ntimeslam*W[j]*omega[j];
-    if(dol2){
-      G[j] += nd*l2pen[j]*B[j];
-      H[j] += nd*l2pen[j];
-    }
-    // penalty is lam[s]*nd*W[j]*omega[j]*fabs(B[j])
-    double ghb = (G[j] - H[j]*B[j]);
-    if(fabs(ghb) < pen) dbet = -B[j];
-    else dbet = -(G[j]-sign(ghb)*pen)/H[j];
-  }
+  pen = l1fixedcost[j]*nd;
+  if(W[j] > 0.0) pen += ntimeslam*W[j]*omega[j];
+  ghb = (G[j] - H[j]*B[j]);
+  if(fabs(ghb) < pen) dbet = -B[j];
+  else dbet = -(G[j]-sign(ghb)*pen)/H[j];
+
   return dbet;
 }
 
 void donullgrad(void){
   for(int j=0; j<p; j++)
-    if( isfinite(W[j]) & (B[j]==0.0) )
+    if( (W[j]>0) & isfinite(W[j]) & (B[j]==0.0) ){
       ag0[j] = fabs(G[j])/W[j];
+    }
 }
 
 
@@ -274,8 +266,7 @@ int cdsolve(double tol, int M, int RW)
             int *nlam, // length of the path
             double *delta, // path stepsize
             double *gamvec,  // gamma in the GL paper
-            int *doridge, // whether to add l2 costs
-            double *ridgepen, // amount to add
+            double *fixedcost, // additional fixed cost
             double *thresh,  // cd convergence
             int *maxit, // cd max iterations 
             int *maxrw, // max irls reweights
@@ -290,8 +281,7 @@ int cdsolve(double tol, int M, int RW)
   dirty = 1; // flag to say the function has been called
   // time stamp for periodic R interaction
   time_t itime = time(NULL);  
-  dol2 = *doridge;
-  l2pen = ridgepen;
+  l1fixedcost = fixedcost;
 
   /** Build global variables **/
   fam = *famid;

@@ -45,6 +45,7 @@ gamlr <- function(x, y,
   if(!is.null(xtr$thresh)) tol = xtr$thresh
   if(!is.null(xtr$lmr)) lambda.min.ratio = xtr$lmr
   if(!is.null(xtr$scale)) standardize = xtr$scale
+  if(!is.null(xtr[['fix']])) xtr$shift = xtr$fix
 
   ## max re-weights
   if(is.null(xtr$maxrw)) xtr$maxrw = maxit # practically inf
@@ -52,9 +53,9 @@ gamlr <- function(x, y,
 
   ## fixed shifts 
   eta <- rep(0.0,n)
-  if(!is.null(xtr$fix)){
-    if(family=="gaussian") y = y-xtr$fix
-    else eta <- xtr$fix   } 
+  if(!is.null(xtr$shift)){
+    if(family=="gaussian") y = y-xtr$shift
+    else eta <- xtr$shift   } 
   stopifnot(length(eta)==n)
   eta <- as.double(eta)
 
@@ -82,15 +83,12 @@ gamlr <- function(x, y,
   }
   if(is.null(varnames)) varnames <- 1:p
 
-  # ridge (undocumented: additional fixed ridge penalty)
-  if(!is.null(xtr$ridge)){
-    ridgepen = xtr$ridge
-    doridge = 1
-    if(length(ridgepen)!=p){ 
-      ridgepen <- rep(ridgepen[1],p) }
-  } else{
-    ridgepen = doridge = 0
-  }
+  # fixedcost (undocumented: additional fixed l1 penalty)
+  if(is.null(xtr$fixedcost))
+    xtr$fixedcost <- 0
+  fixedcost = xtr$fixedcost
+  if(length(fixedcost)!=p){ 
+      fixedcost <- rep(fixedcost[1],p) }
 
   ## unpenalized columns
   if(length(free)==0) free <- NULL
@@ -190,8 +188,7 @@ gamlr <- function(x, y,
             nlambda=as.integer(nlambda),
             delta=as.double(delta),
             gamma=gamvec,
-            doridge=as.integer(doridge),
-            ridgepen=as.double(ridgepen),
+            fixedcost=as.double(fixedcost),
             tol=as.double(tol),
             maxit=as.integer(rep(maxit,nlambda)),
             maxrw=as.integer(rep(maxrw,nlambda)),
