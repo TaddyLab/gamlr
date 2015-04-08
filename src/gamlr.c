@@ -425,10 +425,10 @@ int cdsolve(double tol, int M, int RW)
       exits[s] = 2;
       shout("Warning: negative deviance.  ");
     }
-    if(dof[s] >= nd){
-      exits[s] = 2;
-      shout("Warning: saturated model.  "); 
-    }
+    // if(dof[s] >= nd){
+    //   exits[s] = 2;
+    //   shout("Warning: saturated model.  "); 
+    // }
     if(exits[s]==2){
       shout("Finishing path early.\n");
       *nlam = s; break; }
