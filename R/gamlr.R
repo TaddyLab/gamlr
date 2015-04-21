@@ -144,7 +144,7 @@ gamlr <- function(x, y,
     vxsum <- as.double(xtr$vxsum)
     if(is.null(xtr$vxx))
       xtr$vxx <- crossprod(x*sqrt(obsweight))
-    vxx <- Matrix(xtr$vxx,sparse=FALSE)
+    vxx <- Matrix(xtr$vxx,sparse=FALSE,doDiag=FALSE)
     vxx <- as(vxx,"dspMatrix")
     stopifnot(ncol(vxx)==p)
     if(vxx@uplo=="L") vxx <- t(vxx)
