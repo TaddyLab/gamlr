@@ -51,7 +51,7 @@ B[order(-B)[1:10]] # 10 biggest
 
 ## convert to 2013-2014 season partial plus-minus
 now <- goal$season=="20132014"
-pm <- colSums(player[now,names(B)]) # traditional plus minus
+pm <- colSums(player[now,names(B)]*c(-1,1)[y[now]+1]) # traditional plus minus
 ng <- colSums(abs(player[now,names(B)])) # total number of goals
 # The individual effect on probability that a
 # given goal is for vs against that player's team
