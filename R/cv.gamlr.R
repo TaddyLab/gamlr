@@ -19,7 +19,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   nfold <- nlevels(foldid)
 
   argl <- list(...)
-  if(!is.null(argl$fix)) fix <- argl$fix
+  if(!is.null(argl$shift)) shift <- argl$shift
   lambda <- as.double(full$lambda)
   argl$lambda.start <- lambda[1]
   argl$nlambda <- length(lambda)
@@ -37,11 +37,11 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   folddev <- function(k){
     require(gamlr)
     train <- which(foldid!=k)
-    if(!is.null(argl$fix)) argl$fix <- fix[train]
+    if(!is.null(argl$shift)) argl$shift <- shift[train]
     suppressWarnings(fit <- do.call(gamlr, 
       c(list(x=x[train,],y=y[train]), argl)))
     eta <- predict(fit, x[-train,], select=0)
-    if(!is.null(argl$fix)) eta <- eta + fix[-train]
+    if(!is.null(argl$shift)) eta <- eta + shift[-train]
 
     dev <- apply(eta,2, 
       function(e) 
