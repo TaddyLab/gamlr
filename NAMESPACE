@@ -1,5 +1,9 @@
 useDynLib(gamlr)
 import(Matrix)
+importFrom("graphics", "abline", "axTicks", "axis", "matplot", "plot",
+             "points", "segments")
+importFrom("methods", "as")
+importFrom("stats", "coef", "logLik", "na.omit", "predict", "sd")
 
 export(gamlr,cv.gamlr,AICc)
 
