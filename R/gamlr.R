@@ -81,7 +81,7 @@ gamlr <- function(x, y,
     varnames <- colnames(x)
     stopifnot(nrow(x)==n) 
   }
-  if(is.null(varnames)) varnames <- 1:p
+  if(is.null(varnames)) varnames <- paste(1:p)
 
   # fixedcost (undocumented: additional fixed l1 penalty)
   if(is.null(xtr$fixedcost))

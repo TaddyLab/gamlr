@@ -1,6 +1,6 @@
 Package: gamlr  
 Title:  Gamma Lasso Regression  
-Version: 1.13-2  
+Version: 1.13-3  
 Author: Matt Taddy <taddy@chicagobooth.edu>  
 Maintainer: Matt Taddy <taddy@chicagobooth.edu>  
 Depends: R (>= 2.15), Matrix
