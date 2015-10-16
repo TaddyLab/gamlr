@@ -102,7 +102,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
 
 ## S3 method functions
 
-plot.cv.gamlr <- function(x, select=TRUE, ...){
+plot.cv.gamlr <- function(x, select=TRUE, df=TRUE, ...){
 
   argl = list(...)
 
@@ -134,10 +134,12 @@ plot.cv.gamlr <- function(x, select=TRUE, ...){
     abline(v=log(x$lambda.min), lty=3, col="grey20")
     abline(v=log(x$lambda.1se), lty=3, col="grey20") }
 
-  dfi <- unique(round(
-    seq(1,length(argl$x),length=ceiling(length(axTicks(1))))))
-  axis(3,at=argl$x[dfi], 
-    labels=round(x$gamlr$df[dfi],1),tick=FALSE, line=-.5)
+  if(df){
+    dfi <- unique(round(
+      seq(1,length(argl$x),length=ceiling(length(axTicks(1))))))
+    axis(3,at=argl$x[dfi], 
+      labels=round(x$gamlr$df[dfi],1),tick=FALSE, line=-.5)
+  }
 
 }
 
