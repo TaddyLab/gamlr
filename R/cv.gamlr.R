@@ -40,7 +40,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
     if(!is.null(argl$shift)) argl$shift <- shift[train]
     suppressWarnings(fit <- do.call(gamlr, 
       c(list(x=x[train,],y=y[train]), argl)))
-    eta <- predict(fit, x[-train,], select=0)
+    eta <- predict(fit, x[-train,,drop=FALSE], select=0)
     if(!is.null(argl$shift)) eta <- eta + shift[-train]
 
     dev <- apply(eta,2, 
