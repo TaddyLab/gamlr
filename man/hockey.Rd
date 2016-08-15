@@ -13,8 +13,7 @@
   See the Chicago hockey analytics project at \code{github.com/mataddy/hockey}.}
 \value{
    \item{goal}{ Info about each goal scored, including \code{homegoal} -- an indicator for the home team scoring.}
-   \item{player}{ Sparse Matrix with entries for who was on the ice for each goal: +1 for a home team player, -1 for an away
-	 team player, zero otherwise. }
+   \item{player}{ Sparse Matrix with entries for who was on the ice for each goal: +1 for a home team player, -1 for an away team player, zero otherwise. }
    \item{team}{ Sparse Matrix with indicators for each team*season interaction: +1 for home team, -1 for away team. }
    \item{config}{ Special teams info. For example,
    \code{S5v4} is a 5 on 4 powerplay,
@@ -23,12 +22,13 @@
  }
 
 \references{Gramacy, Jensen, and Taddy (2013): "Estimating Player
-  Contribution in Hockey with Regularized Logistic Regression."
-  http://arxiv.org/abs/1209.5026.
+  Contribution in Hockey with Regularized Logistic Regression", the Journal of Quantitative Analysis in Sport.
+
+  Gramacy, Taddy, and Tian (2015): "Hockey Player Performance via Regularized Logistic Regression", the Handbook of statistical methods for design and analysis in sports.
 }
 
 \author{
-Matt Taddy, \email{taddy@chicagobooth.edu}
+Matt Taddy, \email{mataddy@gmail.com}
 }
 
 \examples{

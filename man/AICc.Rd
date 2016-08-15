@@ -16,7 +16,7 @@ AICc(object, k=2)
   A numeric value for every model evaluated.
 }
 \author{
-  Matt Taddy \email{taddy@chicagobooth.edu}
+  Matt Taddy \email{mataddy@gmail.com}
 }
 \references{Hurvich, C. M. and C-L Tsai, 1989.  "Regression and Time Series Model Selection in Small Samples", Biometrika 76.}
 
