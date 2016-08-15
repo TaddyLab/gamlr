@@ -5,5 +5,5 @@ This package implements the gamma lasso algorithm for regularization paths corre
 
 The CRAN page is at http://www.cran.r-project.org/web/packages/gamlr/index.html.    
 
-If you use gamlr, please cite Taddy (2013), The Gamma Lasso. http://arxiv.org/abs/1308.5623    
+If you use gamlr, please cite Taddy (2016), One-step estimator paths for concave regularization, Journal of Computational and Graphical Statistics.  
 
