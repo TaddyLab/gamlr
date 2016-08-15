@@ -312,10 +312,13 @@ plot.gamlr <- function(x, against=c("pen","dev"),
   }
 }
 
-coef.gamlr <- function(object, select=NULL, k=2, ...)
+coef.gamlr <- function(object, select=NULL, k=2, corrected=TRUE, ...)
 {
   if(length(select)==0){
-    select <- which.min(AICc(object,k=k))
+  	if(corrected)
+    	select <- which.min(AICc(object,k=k))
+    else
+    	select <- which.min(AIC(object,k=k))
     if(length(select)==0) select <- 1
   }
   else if(select==0)

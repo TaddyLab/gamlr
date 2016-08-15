@@ -17,7 +17,7 @@ gamlr(x, y,
 
 \method{plot}{gamlr}(x, against=c("pen","dev"), 
     col=NULL, select=TRUE, df=TRUE, ...)
-\method{coef}{gamlr}(object, select=NULL, k=2, ...)
+\method{coef}{gamlr}(object, select=NULL, k=2, corrected=TRUE, ...)
 \method{predict}{gamlr}(object, newdata,
             type = c("link", "response"), ...)
 \method{logLik}{gamlr}(object, ...)
@@ -67,11 +67,12 @@ gamlr(x, y,
   \item{against}{ Whether to plot paths 
   against log penalty or deviance.}
 \item{select}{ In \code{coef} (and \code{predict}, which calls \code{coef}), the index of path segments
-  for which you want coefficients or prediction (e.g., do \code{select=which.min(BIC(object))} for BIC selection).  If null, the segments are selected via our \emph{corrected} \code{AICc} function with \code{k} as specified.  If \code{select=0} all segments are returned.
+  for which you want coefficients or prediction (e.g., do \code{select=which.min(BIC(object))} for BIC selection).  If null, the segments are selected via our \code{AICc} function with \code{k} as specified (see also \code{corrected}).  If \code{select=0} all segments are returned.
 
   In \code{plot},
   \code{select} is just a flag for whether to add lines marking AICc and BIC selected models.}
 \item{k}{ If \code{select=NULL} in \code{coef} or \code{predict}, the \code{AICc} complexity penalty.  \code{k} defaults to the usual 2. }
+\item{corrected}{ A flag that swaps corrected (for high dimensional bias) \code{AICc} in for the standard \code{AIC}.  You almost always want \code{corrected=TRUE}, unless you want to apply the BIC in which case use \code{k=log(n), corrected=FALSE}. }
 \item{newdata}{ New \code{x} data for prediction.}
 \item{type}{ Either "link" for the linear equation, 
 or "response" for predictions transformed 
