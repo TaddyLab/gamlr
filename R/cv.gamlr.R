@@ -28,9 +28,6 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   ## remove any pre-calculated summaries
   argl$vxx <- argl$vxsum <- argl$vxy <- argl$xbar <- NULL
 
-  oos <- matrix(Inf, nrow=nfold, ncol=argl$nlambda,
-                dimnames=list(levels(foldid),names(lambda)))
-
   if(verb) cat("fold ")
 
   ## define the folddev function
@@ -75,6 +72,10 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
   }
   if(is.null(cl)) oos <- t(sapply(1:nfold,folddev))
 
+  # fix dimension and names
+  oos <- matrix(oos, nrow=nfold, ncol=argl$nlambda,
+                dimnames=list(levels(foldid),names(lambda)))
+    
   cvm <- apply(oos,2,mean)
   cvs <- apply(oos,2,sd)/sqrt(nfold-1)
 
