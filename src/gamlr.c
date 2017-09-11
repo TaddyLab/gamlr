@@ -364,7 +364,7 @@ int cdsolve(double tol, int M, int RW)
     doxbar();
     if(*standardize | (fam==1)) docurve(); 
   }
-  printvec(H, p);
+  //printvec(H, p);
 
   if(*standardize){
     int j;
@@ -374,7 +374,7 @@ int cdsolve(double tol, int M, int RW)
     }
   }
   
-  printvec(W, p);
+  //printvec(W, p);
 
   A=0.0;
   B = new_dzero(p);
