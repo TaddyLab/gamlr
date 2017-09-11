@@ -39,7 +39,7 @@ gamlr <- function(x, y,
   stopifnot(length(obsweight)==n)
 
   ## extras
-  xtr = list(...)
+  xtr = list()
 
   ## aliases from glmnet or other gamlr terminology
   if(!is.null(xtr$thresh)) tol = xtr$thresh
