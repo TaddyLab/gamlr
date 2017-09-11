@@ -1,0 +1,386 @@
+[
+    {
+        "definitions" : [
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 60,
+                "name" : "gamlr_cleanup",
+                "parent_name" : "",
+                "usr" : "c:@F@gamlr_cleanup"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 73,
+                "name" : "Bmove(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@Bmove"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 87,
+                "name" : "donullgrad",
+                "parent_name" : "",
+                "usr" : "c:@F@donullgrad"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 95,
+                "name" : "getdf(double)",
+                "parent_name" : "",
+                "usr" : "c:@F@getdf"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 115,
+                "name" : "doxbar",
+                "parent_name" : "",
+                "usr" : "c:@F@doxbar"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 123,
+                "name" : "docurve",
+                "parent_name" : "",
+                "usr" : "c:@F@docurve"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 137,
+                "name" : "dograd(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@dograd"
+            },
+            {
+                "column" : 5,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 154,
+                "name" : "cdsolve(double, int, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@cdsolve"
+            },
+            {
+                "column" : 7,
+                "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+                "kind" : 6,
+                "line" : 249,
+                "name" : "gamlr(int *, int *, int *, int *, int *, int *, double *, double *, int *, double *, double *, double *, double *, double *, double *, double *, int *, int *, double *, double *, double *, double *, int *, int *, double *, double *, double *, double *, double *, int *, int *)",
+                "parent_name" : "",
+                "usr" : "c:@F@gamlr"
+            }
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/gamlr.c",
+        "file_last_write" : 1505152853
+    },
+    {
+        "definitions" : [
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gui.c",
+                "kind" : 6,
+                "line" : 11,
+                "name" : "speak(const char *, ...)",
+                "parent_name" : "",
+                "usr" : "c:@F@speak"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/gui.c",
+                "kind" : 6,
+                "line" : 25,
+                "name" : "shout(const char *, ...)",
+                "parent_name" : "",
+                "usr" : "c:@F@shout"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/gui.c",
+                "kind" : 6,
+                "line" : 41,
+                "name" : "interact(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@interact"
+            }
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/gui.c",
+        "file_last_write" : 1504932987
+    },
+    {
+        "definitions" : [
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/gui.h",
+        "file_last_write" : 1504932987
+    },
+    {
+        "definitions" : [
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 10,
+                "name" : "intercept(int, double *, double *, double *, double)",
+                "parent_name" : "",
+                "usr" : "c:@F@intercept"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 21,
+                "name" : "sse(int, double, double *, double *, double *)",
+                "parent_name" : "",
+                "usr" : "c:@F@sse"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 34,
+                "name" : "bin_nllhd(int, double, double *, double *, double *)",
+                "parent_name" : "",
+                "usr" : "c:@F@bin_nllhd"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 44,
+                "name" : "po_nllhd(int, double, double *, double *, double *)",
+                "parent_name" : "",
+                "usr" : "c:@F@po_nllhd"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 55,
+                "name" : "bin_reweight(int, double, double *, double *, double *, double *, int *)",
+                "parent_name" : "",
+                "usr" : "c:@F@bin_reweight"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+                "kind" : 6,
+                "line" : 77,
+                "name" : "po_reweight(int, double, double *, double *, double *, double *, int *)",
+                "parent_name" : "",
+                "usr" : "c:@F@po_reweight"
+            }
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/lhd.c",
+        "file_last_write" : 1505152853
+    },
+    {
+        "definitions" : [
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/lhd.h",
+        "file_last_write" : 1504932987
+    },
+    {
+        "definitions" : [
+            {
+                "column" : 9,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 9,
+                "name" : "new_dvec(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_dvec"
+            },
+            {
+                "column" : 9,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 18,
+                "name" : "new_dseq(double, double, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_dseq"
+            },
+            {
+                "column" : 9,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 30,
+                "name" : "new_dzero(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_dzero"
+            },
+            {
+                "column" : 9,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 38,
+                "name" : "new_dup_dvec(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_dup_dvec"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 45,
+                "name" : "sum_dvec(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@sum_dvec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 55,
+                "name" : "zero_dvec(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@zero_dvec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 61,
+                "name" : "copy_dvec(double *, double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@copy_dvec"
+            },
+            {
+                "column" : 9,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 69,
+                "name" : "drep(double, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@drep"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 77,
+                "name" : "dmin(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@dmin"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 83,
+                "name" : "dmax(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@dmax"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 89,
+                "name" : "dabsmin(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@dabsmin"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 95,
+                "name" : "dabsmax(double *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@dabsmax"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 101,
+                "name" : "new_ivec(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_ivec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 110,
+                "name" : "new_iseq(int, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_iseq"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 122,
+                "name" : "new_izero(int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_izero"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 130,
+                "name" : "new_dup_ivec(int *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@new_dup_ivec"
+            },
+            {
+                "column" : 5,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 137,
+                "name" : "sum_ivec(int *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@sum_ivec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 147,
+                "name" : "zero_ivec(int *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@zero_ivec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 153,
+                "name" : "copy_ivec(int *, int *, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@copy_ivec"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+                "kind" : 6,
+                "line" : 160,
+                "name" : "irep(int, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@irep"
+            }
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/vec.c",
+        "file_last_write" : 1505152853
+    },
+    {
+        "definitions" : [
+        ],
+        "file" : "/Users/kushal/Documents/gamlr/src/vec.h",
+        "file_last_write" : 1504932987
+    }
+]
