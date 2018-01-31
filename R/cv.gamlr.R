@@ -20,6 +20,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
 
   argl <- list(...)
   if(!is.null(argl$shift)) shift <- argl$shift
+  if(!is.null(argl$obsweight)) obsweight <- argl$obsweight
   lambda <- as.double(full$lambda)
   argl$lambda.start <- lambda[1]
   argl$nlambda <- length(lambda)
@@ -35,6 +36,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
     require(gamlr)
     train <- which(foldid!=k)
     if(!is.null(argl$shift)) argl$shift <- shift[train]
+    if(!is.null(argl$obsweight)) argl$obsweight <- obsweight[train]
     suppressWarnings(fit <- do.call(gamlr, 
       c(list(x=x[train,],y=y[train]), argl)))
     eta <- predict(fit, x[-train,,drop=FALSE], select=0)
@@ -66,7 +68,7 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
         envir=environment())
       oos <- t(parallel::parSapply(cl,1:nfold,folddev))
     } else {
-      warning("cl is not NULL, but parallle package unavailable.")
+      warning("cl is not NULL, but parallel package unavailable.")
       cl <- NULL
     }
   }
