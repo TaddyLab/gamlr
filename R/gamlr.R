@@ -167,7 +167,7 @@ gamlr <- function(x, y,
 
 
   ## drop it like it's hot
-  fit <- .C("gamlr",
+  fit <- .C("gamlr_inc",
             famid=as.integer(famid), 
             n=n,
             p=p,

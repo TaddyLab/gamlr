@@ -278,7 +278,7 @@ int cdsolve(double tol, int M, int RW)
  *
  */
 
- void gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
+ void gamlr_inc(int *famid, // 1 gaus, 2 bin, 3 pois
             int *n_in, // nobs 
             int *p_in, // nvar
             int *N_in, // length of nonzero x entries
