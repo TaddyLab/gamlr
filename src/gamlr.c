@@ -56,29 +56,30 @@ double (*nllhd)(int, double, double*, double*, double*) = NULL;
 double (*reweight)(int, double, double*, 
                 double *, double*, double*, int*) = NULL;
 
-void printArray(int *ptr, size_t length)          
-{         
-  //for statment to print values using array             
-  size_t i = 0;
-  for( ; i < length; ++i )      
-    printf("%d", ptr[i]);        
-}   
+// old print functions, unused
+// void printArray(int *ptr, size_t length)          
+// {         
+//   //for statment to print values using array             
+//   size_t i = 0;
+//   for( ; i < length; ++i )      
+//     printf("%d", ptr[i]);        
+// }   
 
-void printString(const char *ptr)          
-{         
-  //for statment to print values using array             
-  for( ; *ptr!=NULL; ++ptr)        
-    printf("%c", *ptr);        
-}         
+// void printString(const char *ptr)          
+// {         
+//   //for statment to print values using array             
+//   for( ; *ptr!=NULL; ++ptr)        
+//     printf("%c", *ptr);        
+// }         
 
 
-void printvec(double *ptr, int num){
-  double *ptrval = &ptr[0];
-  int idx;
-  for(idx = 0; idx < num; idx++){
-    printf("%f, %d \n", *(ptrval+idx), (ptrval+idx));
-  }
-}
+// void printvec(double *ptr, int num){
+//   double *ptrval = &ptr[0];
+//   int idx;
+//   for(idx = 0; idx < num; idx++){
+//     printf("%f, %d \n", *(ptrval+idx), (ptrval+idx));
+//   }
+// }
 
 
 
@@ -186,7 +187,7 @@ void dograd(int j){
 int cdsolve(double tol, int M, int RW)
 {
   int rw,t,i,j,dozero,dopen,exitstat; 
-  double dbet,imove,Bdiff;
+  double dbet,Bdiff;
 
   // initialize
   dopen = isfinite(ntimeslam);
@@ -200,7 +201,6 @@ int cdsolve(double tol, int M, int RW)
   while( (Bdiff > tol) | dozero ){
 
     Bdiff = 0.0;
-    imove = 0.0;
     if(dozero)
       if( (fam!=1) & (RW>rw) ){
           rw +=1;
@@ -384,7 +384,7 @@ int cdsolve(double tol, int M, int RW)
   dof = dofvec;
 
   // some local variables
-  double Lold, NLLHD, NLsat;
+  double NLLHD, NLsat;
   int s;
 
   // family dependent settings
@@ -433,7 +433,6 @@ int cdsolve(double tol, int M, int RW)
     // update parameters and objective
     maxit[s] = npass;
     maxrw[s] = nrw;
-    Lold = NLLHD;
     if( (s==0) | (N>0) ) 
       NLLHD =  nllhd(n, A, E, Y, V);
     deviance[s] = 2.0*(NLLHD - NLsat);
