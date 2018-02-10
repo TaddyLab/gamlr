@@ -47,9 +47,9 @@ shows mean OOS deviance with 1se error bars.
   \item{lambda.1se}{ Penalty at \code{1se} \code{cvm}. }
  }
 \author{
-  Matt Taddy \email{taddy@chicagobooth.edu}
+  Matt Taddy \email{mataddy@gmail.com}
 }
-\references{Taddy (2013), The Gamma Lasso, http://arxiv.org/abs/1308.5623}
+\references{Taddy (2017 JCGS), One-Step Estimator Paths for Concave Regularization, http://arxiv.org/abs/1308.5623}
 
 \examples{
 
