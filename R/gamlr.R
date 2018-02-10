@@ -18,7 +18,7 @@ gamlr <- function(x, y,
             maxit=1e5,
             verb=FALSE, ...)
 {
-  on.exit(.C("gamlr_cleanup", PACKAGE = "gamlr"))
+  on.exit(.C("_gamlr_cleanup", PACKAGE = "gamlr"))
 
   ## integer family codes
   family=match.arg(family)
@@ -167,7 +167,7 @@ gamlr <- function(x, y,
 
 
   ## drop it like it's hot
-  fit <- .C("gamlr_inc",
+  fit <- .C("_gamlr",
             famid=as.integer(famid), 
             n=n,
             p=p,

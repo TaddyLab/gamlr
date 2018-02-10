@@ -1,4 +1,5 @@
 useDynLib(gamlr, .registration = TRUE)
+
 import(Matrix)
 importFrom("graphics", "abline", "axTicks", "axis", "matplot", "plot",
              "points", "segments")

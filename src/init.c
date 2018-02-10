@@ -1,14 +1,13 @@
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-
 /* .C calls */
-extern void gamlr_cleanup();
-extern void gamlr_inc(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
+extern void _gamlr(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
+extern void _gamlr_cleanup();
 
 static const R_CMethodDef CEntries[] = {
-    {"gamlr_cleanup", (DL_FUNC) &gamlr_cleanup,  0},
-    {"gamlr_inc",     (DL_FUNC) &gamlr_inc,     32},
+    {"_gamlr",         (DL_FUNC) &_gamlr,         32},
+    {"_gamlr_cleanup", (DL_FUNC) &_gamlr_cleanup,  0},
     {NULL, NULL, 0}
 };
 

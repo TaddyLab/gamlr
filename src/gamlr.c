@@ -84,7 +84,7 @@ double (*reweight)(int, double, double*,
 
 
 /* global cleanup function */
-void gamlr_cleanup(){
+void _gamlr_cleanup(){
   if(!dirty) return;
   if(Z){ free(Z); Z = NULL; }
   if(B){ free(B); B = NULL; }
@@ -273,12 +273,12 @@ int cdsolve(double tol, int M, int RW)
 }
 
 /*
- * Main Function: gamlr
+ * Main Function: _gamlr
  * path estimation of adaptively penalized coefficients
  *
  */
 
- void gamlr_inc(int *famid, // 1 gaus, 2 bin, 3 pois
+ void _gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
             int *n_in, // nobs 
             int *p_in, // nvar
             int *N_in, // length of nonzero x entries
@@ -484,7 +484,7 @@ int cdsolve(double tol, int M, int RW)
   // deviance calcs are wrong for null X
   // so we just make the last model look best
   if( (N==0) & (s>0) ) deviance[*nlam-1] = 0.0;
-  gamlr_cleanup();
+  _gamlr_cleanup();
 }
 
 
