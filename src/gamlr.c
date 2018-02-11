@@ -84,7 +84,7 @@ double (*reweight)(int, double, double*,
 
 
 /* global cleanup function */
-void _gamlr_cleanup(){
+void R_gamlr_cleanup(){
   if(!dirty) return;
   if(Z){ free(Z); Z = NULL; }
   if(B){ free(B); B = NULL; }
@@ -278,7 +278,7 @@ int cdsolve(double tol, int M, int RW)
  *
  */
 
- void _gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
+ void R_gamlr(int *famid, // 1 gaus, 2 bin, 3 pois
             int *n_in, // nobs 
             int *p_in, // nvar
             int *N_in, // length of nonzero x entries
@@ -484,7 +484,7 @@ int cdsolve(double tol, int M, int RW)
   // deviance calcs are wrong for null X
   // so we just make the last model look best
   if( (N==0) & (s>0) ) deviance[*nlam-1] = 0.0;
-  _gamlr_cleanup();
+  R_gamlr_cleanup();
 }
 
 

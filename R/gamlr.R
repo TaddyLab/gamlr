@@ -18,8 +18,6 @@ gamlr <- function(x, y,
             maxit=1e5,
             verb=FALSE, ...)
 {
-  on.exit(.C("_gamlr_cleanup", PACKAGE = "gamlr"))
-
   ## integer family codes
   family=match.arg(family)
   famid = switch(family, 
@@ -167,7 +165,8 @@ gamlr <- function(x, y,
 
 
   ## drop it like it's hot
-  fit <- .C("_gamlr",
+  on.exit(.C(R_gamlr_cleanup, PACKAGE = "gamlr"))
+  fit <- .C(R_gamlr,
             famid=as.integer(famid), 
             n=n,
             p=p,
