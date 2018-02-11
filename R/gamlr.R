@@ -165,8 +165,8 @@ gamlr <- function(x, y,
 
 
   ## drop it like it's hot
-  on.exit(.C(R_gamlr_cleanup, PACKAGE = "gamlr"))
-  fit <- .C(R_gamlr,
+  on.exit(.C("R_gamlr_cleanup", PACKAGE = "gamlr"))
+  fit <- .C("R_gamlr",
             famid=as.integer(famid), 
             n=n,
             p=p,
