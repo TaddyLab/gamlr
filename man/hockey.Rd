@@ -1,5 +1,9 @@
 \name{hockey}
 \alias{hockey}
+\alias{config}
+\alias{goal}
+\alias{team}
+\alias{player}
 
 \title{ NHL hockey data }
 
@@ -34,7 +38,7 @@ Matt Taddy, \email{mataddy@gmail.com}
 \examples{
 ## design 
 data(hockey)
-x <- cBind(config,team,player)
+x <- cbind(config,team,player)
 y <- goal$homegoal
 
 ## fit the plus-minus regression model
