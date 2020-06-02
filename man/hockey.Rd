@@ -43,7 +43,9 @@ y <- goal$homegoal
 
 ## fit the plus-minus regression model
 ## (non-player effects are unpenalized)
-fit <- gamlr(x, y, gamma=10, lambda.min.ratio=0.1,
+
+fit <- gamlr(x, y, 
+  lambda.min.ratio=0.05, nlambda=40, ## just so it runs in under 5 sec
   free=1:(ncol(config)+ncol(team)),
   standardize=FALSE, family="binomial")
 plot(fit)

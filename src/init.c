@@ -6,7 +6,9 @@
 */
 
 /* .C calls */
-extern void R_gamlr(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
+extern void R_gamlr(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *,
+	 				void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, 
+	 				void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void * );
 extern void R_gamlr_cleanup();
 
 static const R_CMethodDef CEntries[] = {

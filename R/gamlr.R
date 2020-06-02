@@ -324,7 +324,7 @@ coef.gamlr <- function(object, select=NULL, k=2, corrected=TRUE, ...)
    select <- 1:ncol(object$beta)
 
   select[select>ncol(object$beta)] <- ncol(object$beta)
-  return(rBind(intercept=object$alpha[select], 
+  return(rbind(intercept=object$alpha[select], 
               object$beta[,select,drop=FALSE]))
 }
 
