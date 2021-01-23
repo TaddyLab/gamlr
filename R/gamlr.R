@@ -93,8 +93,7 @@ gamlr <- function(x, y,
   if(!is.null(free)){
     if(inherits(free,"character")){
       free <- na.omit(match(free,varnames))
-      if(length(free)==0) free <- NULL
-      print(free)}
+      if(length(free)==0) free <- NULL }
     if(any(free < 1) | any(free>p)) stop("bad free argument.") 
     if(length(free)==p){
       nlambda <- 1

@@ -4,9 +4,9 @@ import(Matrix)
 importFrom("graphics", "abline", "axTicks", "axis", "matplot", "plot",
              "points", "segments")
 importFrom("methods", "as")
-importFrom("stats", "coef", "logLik", "na.omit", "predict", "sd", "AIC")
+importFrom("stats", "coef", "logLik", "na.omit", "predict", "sd", "AIC", "lm")
 
-export(gamlr, cv.gamlr, AICc, naref)
+export(gamlr, cv.gamlr, AICc, naref, orthoML)
 
 S3method(plot,gamlr)
 S3method(coef,gamlr)
