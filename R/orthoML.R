@@ -6,7 +6,7 @@ orthoML <- function(x, d, y, nfold=2, foldid=NULL,
 	# check arguments
 	nobs <- length(y)
 	if(is.null(dim(x))) x <- as.matrix(x)
-	if(is.null(dim(d))) d <- as.matrix(d)
+	if(is.null(dim(d)) | is.data.frame(d)) d <- as.matrix(d)
 	if(nrow(x)!=nobs | nrow(d)!=nobs) 
 		stop("mismatch in number of observations in x, y, d")
 	if(length(dfam)!=ncol(d)){

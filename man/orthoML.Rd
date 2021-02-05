@@ -17,7 +17,7 @@ orthoML(x, d, y, nfold=2, foldid=NULL, dfam="gaussian", yfam="gaussian", cl=NULL
   \item{cl}{possible \code{parallel} library cluster.  If this is not-\code{NULL}, the CV folds are executed in parallel.  This copies the data \code{nfold} times, so make sure you have the memory space.}
   \item{...}{ Arguments to all the \code{gamlr} regressions. }
 }
-\details{ Performs the orthogonal or double ML procedure of Chernozhukov et al. (2017) to produce an unbiased estimate of the average treatment effects of \code{d} on \code{y}.  This procedure uses \code{gamlr} to regress \code{y} and each column of \code{d} onto \code{x}.  In the cross-fitting routine described in Taddy (2019), these regressions are trained on a portion of the data and the out-of-sample residuals are calculated on the left-out fold.  The response residuals are then regressed onto the treatment residuals using \code{lm} and the resulting estimates and standard errors are unbiased for the treatment effects under the assumptions of Chernozhukov et al.
+\details{ Performs the orthogonal or double ML procedure of Chernozhukov et al. (2017) to produce an unbiased estimate of the average treatment effects of \code{d} on \code{y}.  This procedure uses \code{gamlr} to regress \code{y} and each column of \code{d} onto \code{x}.  In the cross-fitting routine described in Taddy (2019), these regressions are trained on a portion of the data and the out-of-sample residuals are calculated on the left-out fold.  Model selection for these residualization steps is based on the AICc selection rule.  The response residuals are then regressed onto the treatment residuals using \code{lm} and the resulting estimates and standard errors are unbiased for the treatment effects under the assumptions of Chernozhukov et al.
 } 
 \value{
   A fitted \code{lm} object estimating the treatment effect of \code{d} on \code{y}.
@@ -37,4 +37,4 @@ orthoML(x=player[,-who], d=player[,who], y=goal$homegoal, standardize=FALSE)
 
 }
 
-\seealso{gamlr, hockey}
+\seealso{gamlr, hockey, AICc}
