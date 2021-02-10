@@ -60,6 +60,6 @@ orthoML <- function(x, d, y, nfold=2, foldid=NULL,
 		y[I[[k]]] <- resids[[k]][,1]
 		d[I[[k]],] <- resids[[k]][,-1]
 	}
-	lm( y ~ d -1 ) 
+	lm( y ~ d - 1, x=TRUE ) 
 }
 
