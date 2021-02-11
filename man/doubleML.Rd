@@ -3,7 +3,7 @@
 \title{double ML}
 \description{double (i.e., double) Machine Learning for treatment effect estimation }
 \usage{
-doubleML(x, d, y, nfold=2, foldid=NULL, dfam="gaussian", yfam="gaussian", cl=NULL, ...)}
+doubleML(x, d, y, nfold=2, foldid=NULL, family="gaussian", cl=NULL, ...)}
 \arguments{
   \item{x}{ Covariates; see \code{gamlr}. }
   \item{d}{ The matrix of treatment variables.  Each column is used as a response by \code{gamlr} during the residualization procedure.}
