@@ -1,7 +1,7 @@
 # double ML with cross-fitting
 
 doubleML <- function(x, d, y, nfold=2, foldid=NULL, 
-					dfam="gaussian", yfam="gaussian", cl=NULL, ...)
+					family="gaussian", cl=NULL, ...)
 {
 	# check arguments
 	nobs <- length(y)
@@ -9,9 +9,9 @@ doubleML <- function(x, d, y, nfold=2, foldid=NULL,
 	if(is.null(dim(d)) | is.data.frame(d)) d <- as.matrix(d)
 	if(nrow(x)!=nobs | nrow(d)!=nobs) 
 		stop("mismatch in number of observations in x, y, d")
-	if(length(dfam)!=ncol(d)){
-		if(length(dfam)==1) dfam <- rep(dfam, ncol(d))
-		else stop("argument dfam length doesn't match number of d columns")
+	if(length(family)!=ncol(d)){
+		if(length(family)==1) family <- rep(family, ncol(d))
+		else stop("argument family length doesn't match number of d columns")
 	}
 	argl <- list(...)
 
@@ -27,14 +27,14 @@ doubleML <- function(x, d, y, nfold=2, foldid=NULL,
 	getresids <- function(k){
 		# response
 		yfit <- do.call(gamlr, 
-			c(list(x=x[-I[[k]],], y=y[-I[[k]]], family=yfam), argl))
+			c(list(x=x[-I[[k]],], y=y[-I[[k]]]), argl))
 		yhat <- predict(yfit, x[I[[k]],], type="response")
 		ytil <- drop(y[I[[k]]] - yhat)
 		# treatments
 		dtil <- c()
 		for(j in 1:ncol(d)){
 			dfit <- do.call(gamlr,
-				c(list(x=x[-I[[k]],], y=d[-I[[k]],j], family=dfam[j]), argl))
+				c(list(x=x[-I[[k]],], y=d[-I[[k]],j], family=family[j]), argl))
 			dhat <- predict(dfit, x[I[[k]],], type="response")
 			dtil <- cbind(dtil, drop(d[I[[k]],j] - dhat))
 		}
@@ -45,7 +45,7 @@ doubleML <- function(x, d, y, nfold=2, foldid=NULL,
   	if(!is.null(cl)){
    	 if (requireNamespace("parallel", quietly = TRUE)) {
     	  parallel::clusterExport(cl,
-        	c("x","d","y","I","argl","dfam","yfam"), 
+        	c("x","d","y","I","argl","family"), 
         	envir=environment())
       	resids <- parallel::parLapply(cl,1:nfold,getresids)
     	} else {
