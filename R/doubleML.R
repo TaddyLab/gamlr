@@ -1,6 +1,6 @@
-# orthogonal ML with cross-fitting
+# double ML with cross-fitting
 
-orthoML <- function(x, d, y, nfold=2, foldid=NULL, 
+doubleML <- function(x, d, y, nfold=2, foldid=NULL, 
 					dfam="gaussian", yfam="gaussian", cl=NULL, ...)
 {
 	# check arguments

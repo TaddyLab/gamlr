@@ -6,7 +6,7 @@ importFrom("graphics", "abline", "axTicks", "axis", "matplot", "plot",
 importFrom("methods", "as")
 importFrom("stats", "coef", "logLik", "na.omit", "predict", "sd", "AIC", "lm")
 
-export(gamlr, cv.gamlr, AICc, naref, orthoML)
+export(gamlr, cv.gamlr, AICc, naref, doubleML)
 
 S3method(plot,gamlr)
 S3method(coef,gamlr)
