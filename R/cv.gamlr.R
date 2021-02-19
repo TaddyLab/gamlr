@@ -43,11 +43,16 @@ cv.gamlr <- function(x, y, nfold=5, foldid=NULL, verb=FALSE, cl=NULL, ...){
     if(!is.null(argl$shift)) eta <- eta + shift[-train]
 
     dev <- apply(eta,2, 
-      function(e) 
-        mean(switch(fam, 
-          "gaussian" = (e-y[-train])^2, 
-          "binomial" = -2*(y[-train]*e - log(1+exp(e))),
-          "poisson" = -2*(y[-train]*e - exp(e)))))
+        function(e){ 
+          dev <- switch(fam, 
+            "gaussian" = (e-y[-train])^2, 
+            "binomial" = -2*(y[-train]*e - log(1+exp(e))),
+            "poisson" = -2*(y[-train]*e - exp(e)))
+          if(!is.null(argl$obsweight)){
+            dev <- sum(obsweight[-train]*dev)/sum(obsweight[-train]) 
+          } else{ dev <- mean(dev) }
+         return(dev)
+        } )
 
     if(fam=="poisson"){
       satnllhd <- mean(ifelse(y[-train]>0,
