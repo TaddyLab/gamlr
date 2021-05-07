@@ -31,7 +31,8 @@ Matt Taddy, 2019.  Business Data Science, McGraw-Hill}
 
 data(hockey)
 who <- which(colnames(player)=="SIDNEY_CROSBY")
-doubleML(x=player[,-who], d=player[,who], y=goal$homegoal, standardize=FALSE)
+s <- sample.int(nrow(player),10000) # subsample for a fast example
+doubleML(x=player[s,-who], d=player[s,who], y=goal$homegoal[s], standardize=FALSE)
 
 }
 
