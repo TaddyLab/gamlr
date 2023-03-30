@@ -1,8 +1,8 @@
 citHeader("To cite textir use the appropriate of:")
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "One-Step Estimator Paths for Concave Regularization",
-  author       = personList(as.person("Matt Taddy")),
+  author       = c(as.person("Matt Taddy")),
   year         = "2015",
   journal       = "http://arxiv.org/abs/1308.5623",
 

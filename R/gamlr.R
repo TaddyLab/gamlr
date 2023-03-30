@@ -142,7 +142,7 @@ gamlr <- function(x, y,
     if(is.null(xtr$vxx))
       xtr$vxx <- crossprod(x*sqrt(obsweight))
     vxx <- Matrix(xtr$vxx,sparse=FALSE,doDiag=FALSE)
-    vxx <- as(vxx,"dspMatrix")
+    vxx <- as(vxx,"packedMatrix")
     stopifnot(ncol(vxx)==p)
     if(vxx@uplo=="L") vxx <- t(vxx)
     vxx <- as.double(vxx@x)
