@@ -1,15 +1,11 @@
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-/* FIXME:
-   Check these declarations against the C/Fortran source code.
-*/
-
 /* .C calls */
 extern void R_gamlr(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *,
 	 				void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, 
 	 				void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void * );
-extern void R_gamlr_cleanup();
+extern void R_gamlr_cleanup(void);
 
 static const R_CMethodDef CEntries[] = {
     {"R_gamlr",         (DL_FUNC) &R_gamlr,         32},

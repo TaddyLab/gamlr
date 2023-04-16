@@ -84,7 +84,7 @@ double (*reweight)(int, double, double*,
 
 
 /* global cleanup function */
-void R_gamlr_cleanup(){
+void R_gamlr_cleanup(void){
   if(!dirty) return;
   if(Z){ free(Z); Z = NULL; }
   if(B){ free(B); B = NULL; }
