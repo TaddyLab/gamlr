@@ -1,11 +1,14 @@
 Package: gamlr  
 Title:  Gamma Lasso Regression  
 Version: 1.13-8
-Author: Matt Taddy <mataddy@gmail.com>  
-Maintainer: Matt Taddy <mataddy@gmail.com>  
+Authors@R: person(given = "Matt",
+                  family = "Taddy",
+                  role = c("aut", "cre"),
+                  email = "mataddy@gmail.com")
 Depends: R (>= 2.15), Matrix, methods, graphics, stats
 Suggests: parallel    
-Description: The gamma lasso algorithm provides regularization paths corresponding to a range of non-convex cost functions between L0 and L1 norms.  As much as possible, usage for this package is analogous to that for the glmnet package (which does the same thing for penalization between L1 and L2 norms).  For details see: Taddy (2017 JCGS), 'One-Step Estimator Paths for Concave Regularization', <arXiv:1308.5623>.
+Description: The gamma lasso algorithm provides regularization paths corresponding to a range of non-convex cost functions between L0 and L1 norms.  As much as possible, usage for this package is analogous to that for the glmnet package (which does the same thing for penalization between L1 and L2 norms).  For details see: Taddy (2017 JCGS), 'One-Step Estimator Paths for Concave Regularization', <doi:10.48550/arXiv.1308.5623>.
 License: GPL-3  
 URL: https://github.com/TaddyLab/gamlr
+BugReports: https://github.com/TaddyLab/gamlr/issues
 
